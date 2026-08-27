@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Trackboard{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&family=Karla:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/app.css?v=20260827_2">
+</head>
+<body>
+<div class="topbar"><div class="wrap" style="display:flex;justify-content:space-between;align-items:center;">
+  <div style="display:flex;align-items:center;gap:20px;">
+    <a class="brand" href="/">Trackboard</a>
+    <nav>
+      <a href="/" class="{% if nav=='today' %}on{% endif %}">Today</a>
+      <a href="/jobs" class="{% if nav=='jobs' %}on{% endif %}">Jobs</a>
+      <a href="/pipeline" class="{% if nav=='pipeline' %}on{% endif %}">Pipeline</a>
+      <a href="/patterns" class="{% if nav=='patterns' %}on{% endif %}">Patterns</a>
+      <a href="/practice" class="{% if nav=='practice' %}on{% endif %}">Practice</a>
+      <a href="/drill" class="{% if nav=='drill' %}on{% endif %}">Drill</a>
+      <a href="/system" class="{% if nav=='system' %}on{% endif %}">System</a>
+    </nav>
+  </div>
+  <div>
+    {% if user and user.email %}
+    <a href="/login" style="font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none;padding:4px 8px;border-radius:4px;border:1px solid var(--rule);background:var(--slate);" title="Switch user profile">
+      👤 {{ user.email.split('@')[0] }}
+    </a>
+    {% endif %}
+  </div>
+</div></div>
+<div class="wrap">{% block body %}{% endblock %}</div>
+</body>
+</html>

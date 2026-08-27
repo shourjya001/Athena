@@ -1,0 +1,317 @@
+# Sources to index. Run: python scripts/index_youtube.py
+# role: concept (teaches the pattern/thinking, shown first) | walkthrough | revision
+# maps_to: a pattern slug, `_auto` (match problem titles), or `_general`
+#          (problem-solving method itself — surfaced on /drill)
+#
+# title_aliases: video_id -> "Exact DB problem title"
+#   Use when Striver's YouTube title doesn't contain the canonical LeetCode title.
+#   Never guess: only add entries where the DB problem exists.
+# general_video_ids: list of video_ids that are concept/intro videos (no specific problem).
+
+channels:
+  - name: takeUforward
+    playlists:
+      - id: PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz     # Striver's A2Z DSA course
+        role: walkthrough
+        maps_to: _auto
+        tag: striver_a2z
+
+        # Intro / concept videos — no specific LeetCode problem
+        general_video_ids:
+          - 0bHoB32fuj0   # Don't watch my A2Z DSA Course
+          - h3uDCJ5mvgw   # How to setup VS code for DSA
+          - EAR7De6Goz4   # C++ Basics in One Shot
+          - FPu9Uld7W-E   # Time and Space Complexity
+          - tNm_NNSB3_w   # Solve any Pattern Question - 22 Patterns
+          - RRVYpIET_RU   # Complete C++ STL in 1 Video
+          - 1xNbjMdbjug   # Basic Maths for DSA | Euclidean Algorithm
+          - yVdKa8dnKiE   # Re 1. Introduction to Recursion
+          - un6PLygfXrA   # Re 2. Problems on Recursion
+          - 69ZCDFy-OUo   # Re 3. Parameterised and Functional Recursion
+          - twuC1F6gLI8   # Re 4. Problems on Functional Recursion
+          - kvRjNm4rVBE   # Re 5. Multiple Recursion Calls
+          - KEs5UyBJ39g   # Hashing | Maps | Time Complexity
+          - HGk_ypEuS24   # Sorting - Part 1 | Selection, Bubble, Insertion
+          - ogjf7ORKfd8   # Merge Sort | Algorithm | Pseudocode
+          - WIrA4YexLRQ   # Quick Sort For Beginners
+          - 6zhGS79oQ4k   # BS-2. Lower Bound / Upper Bound / Search Insert / Floor Ceil
+          - _ANrF3FJm7I   # L1. Introduction to Trees
+          - ctCpP0RFDFc   # L2. Binary Tree Representation C++
+          - hyLyW7rP24I   # L3. Binary Tree Representation Java
+          - jmy0LaGET1I   # L4. Binary Tree Traversals | BFS | DFS
+          - RlUu72JrOCQ   # L5. Preorder Traversal
+          - Z_NEgBgbRVI   # L6. Inorder Traversal
+          - COQOU6klsBg   # L7. Postorder Traversal
+          - Bfqd8BsPVuw   # L9. Iterative Preorder
+          - lxTGsVXjwvM   # L10. Iterative Inorder
+          - 2YBhNLodD8Q   # L11. Iterative Postorder (2 stacks)
+          - NzIGLLwZBS8   # L12. Iterative Postorder (1 stack)
+          - ySp2epYvgTE   # L13. Pre/In/Post in One Traversal
+          - 9GMECGQgWrQ   # L33. Requirements for Unique Binary Tree (theory)
+          - M3_pLsDdeuU   # G-1. Introduction to Graph
+          - 3oI-34aPMWM   # G-2. Graph Representation C++
+          - OsNklbh9gYI   # G-3. Graph Representation Java
+          - lea-Wl_uWXY   # G-4. What are Connected Components
+          - ZSPjZuZWCME   # G-44. Minimum Spanning Tree - Theory
+          - aBxjDBC4M1U   # G-46. Disjoint Set | Union by Rank | Size | Path Compression
+          - tyB0ztf0DNY   # DP 1. Introduction to Dynamic Programming
+          - Nq7ok-OyEpg   # L1. Introduction to LinkedList
+          - VaECK03Dz-g   # L2. Deletion and Insertion in LL
+          - 0eKMU10uEDI   # L3. Introduction to Doubly LinkedList
+          - u3WUW2qe6ww   # L4. Reverse a DLL
+          - Ae_Ag_saG9s   # L2. Print all Divisors (Maths)
+          - MJcckSfoYdI   # L3. Check if Prime (Maths)
+          - LT7XhVdeRyg   # L4. Print all prime factors (Maths)
+          - hFWckDXE-K8   # L5. Power Exponentiation (Maths)
+          - g5Fuxn_AvSk   # L6. Sieve of Eratosthenes (Maths)
+          - os82DjD2-MA   # L7. Count Prime in range L-R (Maths)
+          - glKWkmKFlMw   # L8. Smallest Prime Factor (Maths)
+          - 9kdHxplyl5I   # L1. Introduction to Sliding Window and 2 Pointers
+          - 3-QbX1iDbXs   # L3. Shortest Job First (CPU Scheduling)
+          - n_tmibEhO6Q   # L2. Lemonade Change (Greedy intro)
+          - tqQ5fTamIN4   # L1. Introduction to Stack and Queue
+          - 4pIc9UBHJtk   # L3. Prefix Infix Postfix Conversion
+          - M4IHWsk-EAM   # Private video — skip
+
+        # title_aliases: video_id -> exact DB problem title
+        # Only for videos where Striver's title doesn't contain the canonical LeetCode name.
+        title_aliases:
+          # Arrays
+          "37E9ckMDdTk": "Remove Duplicates from Sorted Array"
+          "wvcQg43_V8U": "Rotate Array"
+          "frf7qxiN2qU": "Subarray Sum Equals K"
+          "UXDSeD9mN-k": "Two Sum"
+          "tp8JIuCXBaU": "Sort Colors"
+          "nP_ns3uSh80": "Majority Element"
+          "AHZpyENo7k4": "Maximum Subarray"
+          "JDOXKqF60RQ": "Next Permutation"
+          "oO5uLE7EUlM": "Longest Consecutive Sequence"
+          "N0MgLvceX7M": "Set Matrix Zeroes"
+          "Z0R2u6gd3GU": "Rotate Image"
+          "3Zv-s9UUrFM": "Spiral Matrix"
+          "bR7mQgwQ_o8": "Pascal's Triangle"
+          "vwZj1K0e9U8": "Majority Element II"
+          "DhFh8Kw7ymk": "3Sum"
+          "eD95WRfh81c": "4Sum"
+          "IexN60k62jo": "Merge Intervals"
+          "n7uwj04E0I4": "Merge Sorted Array"
+          "2D0D8HE6uak": "Find All Numbers Disappeared in an Array"
+          # Binary Search
+          "hjR1IYVx9lY": "Find First and Last Position of Element in Sorted Array"
+          "5qGrJbHhqFs": "Search in Rotated Sorted Array"
+          "w2G2W8l__pc": "Search in Rotated Sorted Array II"
+          "nhEMDKMB44g": "Find Minimum in Rotated Sorted Array"
+          "AZOmHuHadxQ": "Single Element in a Sorted Array"
+          "cXxmbemS6XM": "Find Peak Element"
+          "thUd_WJn6wk": "Split Array Largest Sum"
+          "C2rRzz-JDk8": "Find Median from Data Stream"
+          "Q9wXgdxJq48": "Search a 2D Matrix"
+          # Trees
+          "EoAsWbO7sqg": "Binary Tree Level Order Traversal"
+          "eD3tmO66aBA": "Maximum Depth of Binary Tree"
+          "Yt50Jfbd8Po": "Balanced Binary Tree"
+          "WszrfSwMz58": "Binary Tree Maximum Path Sum"
+          "BhuvF_-PWS0": "Same Tree"
+          "3OXWEdlIGl4": "Binary Tree Zigzag Level Order Traversal"
+          "0ca1nvR0be4": "Binary Tree Right Side View"
+          "q_a6lpbKJdw": "Vertical Order Traversal of a Binary Tree"
+          "Et9OCDNvJ78": "Binary Tree Right Side View"
+          "0FtVY6I4pB8": "Binary Tree Right Side View"
+          "KV4mRzTjlAk": "Binary Tree Right Side View"
+          "nKggNAiEpBE": "Symmetric Tree"
+          "fmflMqVOC7k": "Path Sum II"
+          "_-QHfMDde90": "Lowest Common Ancestor of a Binary Tree"
+          "ZbybYvcVLks": "Maximum Width of Binary Tree"
+          "u-yWemKGWO0": "Count Complete Tree Nodes"
+          "aZNaLrVebKQ": "Construct Binary Tree from Preorder and Inorder Traversal"
+          "-YbXySKJsX8": "Serialize and Deserialize Binary Tree"
+          "80Zug6D1_r4": "Binary Tree Inorder Traversal"
+          "sWf7k1x9XR4": "Flatten Binary Tree to Linked List"
+          "9TJYWh0adfk": "Kth Smallest Element in a BST"
+          "f-sj7I5oXEI": "Validate Binary Search Tree"
+          "ZWGW7FminDM": "Recover Binary Search Tree"
+          # Graphs
+          "-tgVpUgsQ5k": "Number of Islands"
+          "Qzf1a--rhp8": "Number of Islands"
+          "C-2_uSRli8o": "Flood Fill"
+          "yf3oUhkvqA0": "Rotting Oranges"
+          "BPlrALf1LDU": "Redundant Connection"
+          "zQ3zgFypzX4": "Redundant Connection"
+          "edXdVwkYHF8": "01 Matrix"
+          "rxKcepXQgU4": "Number of Enclaves"
+          "-vu34sct1g8": "Is Graph Bipartite?"
+          "KG5YFfR0j8A": "Is Graph Bipartite?"
+          "9twcmtQj4DU": "Course Schedule"
+          "5lZ0iJMrUMk": "Course Schedule"
+          "73sneFXuTEg": "Course Schedule II"
+          "iTBaI90lpDQ": "Course Schedule II"
+          "U3N_je7tWAs": "Alien Dictionary"
+          "C4gxoTaI71U": "Shortest Path in Binary Matrix"
+          "V6H1qAeB-l4": "Path With Minimum Effort"
+          "PATgNiuTP20": "Network Delay Time"
+          "3dINsjyfooY": "Network Delay Time"
+          "rp1SMw7HSO8": "Network Delay Time"
+          "U5Mw4eyUmw4": "Shortest Path in Binary Matrix"
+          "0vVofAhAYjc": "Cheapest Flights Within K Stops"
+          "YbY8cVwWAvw": "Find the City With the Smallest Number of Neighbors at a Threshold Distance"
+          "PwMVNSJ5SLI": "Find the City With the Smallest Number of Neighbors at a Threshold Distance"
+          "DMnDM_sxVig": "Redundant Connection"
+          "FYrl7iz9_ZU": "Satisfiability of Equality Equations"
+          "OwMNX8SPavM": "Most Stones Removed with Same Row or Column"
+          "R6uoSjZ2imo": "Strongly Connected Components"
+          # Dynamic Programming
+          "EgG3jsGoPvQ": "Climbing Stairs"
+          "Kmh3rhyEtB8": "Climbing Stairs"
+          "AE39gJYuRog": "Unique Paths"
+          "SrP-PiLSYC0": "Triangle"
+          "N_aJ5qQbYA0": "Minimum Falling Path Sum"
+          "QGfn7JeXK54": "Cherry Pickup II"
+          "fWX9xDmIzRI": "Partition Equal Subset Sum"
+          "zoilQD1kYSg": "Target Sum"
+          "GqOmJHQZivw": "0-1 Knapsack Problem"
+          "myPeWb3Y68A": "Coin Change"
+          "_wP9mWNPL5w": "Longest Common Subsequence"
+          "yMnH0jrir0Q": "Edit Distance"
+          "xElxAuBcvsU": "Shortest Common Supersequence"
+          "nVG7eTiD2bY": "Distinct Subsequences"
+          "ZmlQ3vgAOMo": "Wildcard Matching"
+          "nGJmxkUJQGs": "Best Time to Buy and Sell Stock II"
+          "-uQGzhYj8BQ": "Best Time to Buy and Sell Stock III"
+          "IV1dHbk5CDc": "Best Time to Buy and Sell Stock IV"
+          "IGIe46xw3YY": "Best Time to Buy and Sell Stock with Cooldown"
+          "k4eK-vEmnKg": "Best Time to Buy and Sell Stock with Transaction Fee"
+          "y4vN0WNdrlg": "Longest Increasing Subsequence"
+          "vRVfmbCFW7Y": "Burst Balloons"
+          "pDCXsbAw5Cg": "Burst Balloons"
+          "xwomavsC86c": "Minimum Cost to Cut a Stick"
+          "PhWWJmaKfMc": "Partition Array for Maximum Sum"
+          "tOylVCugy9k": "Maximal Rectangle"
+          "auS1fynpnjo": "Count Square Submatrices with All Ones"
+          # Linked List
+          "XmRrGzR6udg": "Add Two Numbers"
+          "qf6qp7GzD5Q": "Odd Even Linked List"
+          "gRII7LhdJWc": "Sort List"
+          "3kMKYQ2wNIU": "Remove Nth Node From End of List"
+          "D2vI2DNJGd8": "Reverse Linked List"
+          "lRY_G-u_8jk": "Palindrome Linked List"
+          "0DYoPz2Tpt4": "Intersection of Two Linked Lists"
+          "7LjQ57RqgEc": "Middle of the Linked List"
+          "wiOo4DC5GGA": "Linked List Cycle"
+          "I4g1qbkTPus": "Linked List Cycle II"
+          "2Kd0KKmmHFc": "Linked List Cycle II"
+          "YJKVTnOJXSY": "Remove Duplicates from Sorted List"
+          "lIar1skcQYI": "Reverse Nodes in k-Group"
+          "uT7YI7XbTY8": "Rotate List"
+          "jXu-H7XuClE": "Merge Two Sorted Lists"
+          "ykelywHJWLg": "Merge k Sorted Lists"
+          "8ocB7a_c-Cc": "Sort List"
+          "q570bKdrnlw": "Copy List with Random Pointer"
+          # Sliding Window / 2 Pointers
+          "pBWCOCS636U": "Maximum Points You Can Obtain from Cards"
+          "3E4JBHSLpYk": "Max Consecutive Ones III"
+          "e3bs0uA1NhQ": "Fruit Into Baskets"
+          "teM9ZsVRQyc": "Longest Substring with At Most K Distinct Characters"
+          "xtqN4qlgr8s": "Number of Substrings Containing All Three Characters"
+          "XnMdNUkX6VM": "Binary Subarrays With Sum"
+          # Greedy
+          "mKfhTotEguk": "Meeting Rooms II"
+          "HDHQ8lAWakY": "Non-overlapping Intervals"
+          "cHT6sG_hUZI": "Valid Parenthesis String"
+          "IIqVFvKE6RY": "Candy"
+          # Stack & Queue
+          "xwjS0iZhw4I": "Valid Parentheses"
+          "NdDIaH91P0g": "Min Stack"
+          "e7XQLtOQM3I": "Next Greater Element I"
+          "7PrncD7v9YQ": "Next Greater Element II"
+          "zMdbdGJNlh4": "Daily Temperatures"
+          "1_5VuquLbXg": "Trapping Rain Water"
+          "v0e8p9JCgRc": "Sum of Subarray Minimums"
+          "_eYGqw_VDR4": "Asteroid Collision"
+          "ttVu6G7Ayik": "Maximal Rectangle"
+          "eay-zoSRkVc": "Online Stock Span"
+          "z9bJUPxzFOw": "LRU Cache"
+          "mzqHlAW7jeE": "LFU Cache"
+
+          "h4aBagy4Uok": "Rearrange Array Elements by Sign"
+          "jtSiWTPLwd0": "Find Minimum in Rotated Sorted Array"
+          "xPBLEj41rFU": "Minimum Insertion Steps to Make a String Palindrome"
+          "ePpV-_pfOeI": "Delete the Middle Node of a Linked List"
+          "cEadsbTeze4": "Find the Celebrity"
+          "gIrMptNPf5M": "Sum of Subarray Ranges"
+          "eay-zoSRkVc": "Online Stock Span"
+          "_-0mx0SmYxA": "Number of Ways to Arrive at Destination"
+          "j_QOv9OT9Og": "Count Number of Nice Subarrays"
+          "7wYGbV_LsX4": "Subarrays with K Different Integers"
+  - name: Anthony D. Mays
+    playlists:
+      - id: PLOhP7ezs5hMiiai_pypcDaxxY3B2cCvNC     # Coding Interview Prep
+        role: concept
+        maps_to: _general
+        tag: interview_prep
+
+  - name: TheAdityaVerma
+    playlists:
+      - id: PL_z_8CaSLPWekqhdCPmFohncHwz8TY2Go     # Dynamic Programming Series
+        role: concept
+        maps_to: _auto
+        tag: aditya_verma_dp
+        # General intro/unmatched
+        general_video_ids:
+          - skBfifaWwlk   # Private video
+          - ot_XBHyqpFc   # Count subset with given diff
+          - F7wqWbqYn9g   # Count of Subsets Sum
+          - -GtpxG6l_Mc   # Min Subset Sum Diff
+          - VDhRg-ZJTuc   # Print shortest common supersequence
+          - hbTaCmQGqLg   # Longest repeating subsequence
+          - QVntmksK2es   # Sequence Pattern Matching
+          - CFwCCNbRuLY   # Min deletions to make palindrome
+        pattern_aliases:
+          "nqowUJzG-iM": "dp-knapsack"      # Dynamic Programming | Introduction
+          "l02UxPYRmCQ": "dp-knapsack"      # 2 Types of knapsack
+          "kvyShbFVaY8": "dp-knapsack"      # 3 01 Knapsack Recursive
+          "fJbIuhs24zQ": "dp-knapsack"      # 4 01Knapsack Memoization
+          "ntCGbPMeqgg": "dp-knapsack"      # 5 01 Knapsack Top Down DP
+          "iBnWHZmlIyY": "dp-knapsack"      # 6 Identification of Knapsack Problems
+          "_gPcYovP7wc": "dp-knapsack"      # 7 Subset Sum Problem
+          "aycn9KO8_Ls": "dp-knapsack"      # 13 Unbounded Knapsack
+          "SZqAQLjDsag": "dp-knapsack"      # 14 Rod Cutting Problem
+          "4dMlCZTONj8": "dp-subsequence"   # 18 Longest common subsequence Introduction
+          "4Urd0a0BNng": "dp-subsequence"   # 19 Longest common subsequence Recursive
+          "g_hIx4yn9zg": "dp-subsequence"   # 20 Longest common subsequence Memoization
+          "hR3s9rGlMTU": "dp-subsequence"   # 21 Longest common subsequence Top down DP
+          "HrybPYpOvz0": "dp-subsequence"   # 22 Longest Common Substring
+          "x5hQvnUcjiM": "dp-subsequence"   # 23 Printing Longest common subsequence
+          "-fx6aDxcWyg": "dp-subsequence"   # 25 Min Number of Insertion & Deletion
+          "D7AFvtnDeMU": "dp-2d"            # 33 Matrix chain multiplication Intro
+          "kMK148J9qEE": "dp-2d"            # 34 Matrix Chain Multiplication Recursive
+          "9uUVFNOT3_Y": "dp-2d"            # 35 Matrix chain multiplication Memoization
+          "pGVguAcWX4g": "dp-2d"            # 39 Evaluate Expression to True Boolean Parenthesization
+          "bzXM1Zond9U": "dp-2d"            # 40 Boolean Parenthesization Memoized
+          "SqA0o-DGmEw": "dp-2d"            # 41 Scrambled String Recursive
+          "VyHEglhbm-A": "dp-2d"            # 42 Scrambled String Memoized
+          "S49zeUjeUL0": "dp-2d"            # 43 Egg Dropping Problem Recursive
+          "gr2NtY-2QUY": "dp-2d"            # 44 Egg Dropping Problem Memoization
+          "jkygQmOiCCI": "dp-2d"            # 45 Egg Dropping Optimization
+          "qZ5zayHSH2g": "tree-dfs"         # 46 DP on Trees Intro
+          "d1u2t018Kjg": "tree-dfs"         # 47 DP on Tree General Syntax
+          "ArNyupe-XH0": "tree-dfs"         # 50 Max Path Sum leaf to leaf
+        title_aliases:
+          "UmMh7xp07kY": "Partition Equal Subset Sum"
+          "Hw6Ygp3JBYw": "Target Sum"
+          "I4UR2T6Ro3w": "Coin Change II"
+          "I-l6PBeERuc": "Coin Change"
+          "rMfOgY07TFs": "Coin Change"
+          "823Grn4_dCQ": "Shortest Common Supersequence"
+          "wuOOOATz_IA": "Longest Palindromic Subsequence"
+          "AEcRW4ylm_c": "Minimum Insertion Steps to Make a String Palindrome"
+          "szKVpQtBHh8": "Palindrome Partitioning"
+          "fOUlNlawdAU": "Palindrome Partitioning"
+          "9h10fqkI7Nk": "Palindrome Partitioning"
+          "zmPj_Ee3B8c": "Diameter of Binary Tree"
+          "Osz-Vwer6rw": "Binary Tree Maximum Path Sum"
+
+# Single videos (indexer resolves title + channel via the API)
+videos:
+  - id: Q4C3ZRJLnac        # Anthony D. Mays: How to Solve ANY Coding Interview Question in 6 Steps
+    role: concept
+    maps_to: _general

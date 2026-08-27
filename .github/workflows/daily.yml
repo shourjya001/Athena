@@ -1,0 +1,22 @@
+name: daily
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "15 0 * * *"    # 05:45 IST
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --no-dev
+      - name: scout
+        env: { DB_URL: "${{ secrets.DB_URL }}", TZ: Asia/Kolkata }
+        run: uv run python -m trackboard.agents.scout
+      - name: heartbeat (keeps scheduled workflows enabled)
+        run: |
+          date > .heartbeat && git config user.name trackboard-bot
+          git config user.email bot@users.noreply.github.com
+          git add .heartbeat && git commit -m "heartbeat" || true
+          git push || true

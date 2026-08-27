@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: athena-trackboard
+    runtime: python
+    buildCommand: pip install uv && uv pip install --system -e .
+    startCommand: uvicorn trackboard.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: SCHEDULER_MODE
+        value: external
+      - key: TZ
+        value: Asia/Kolkata
+      - key: DB_URL
+        value: sqlite:///app.db
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ALLOWED_EMAILS
+        sync: false
+      - key: OWNER_EMAIL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false

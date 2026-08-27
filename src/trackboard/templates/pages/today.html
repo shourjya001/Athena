@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% set nav='today' %}
+{% block body %}
+<div class="page-head">
+  <div class="label">Today</div>
+  <h1>Good to go.</h1>
+  <p class="sub">Everything below is already decided. Open, scan, act.</p>
+</div>
+
+<div class="strip {% if health.resources == 0 %}warn{% endif %}">
+  <span>patterns <b>{{ health.patterns }}</b></span>
+  <span>problems <b>{{ health.problems }}</b></span>
+  <span>mapped <b>{{ health.mapped }}</b></span>
+  <span>videos <b>{{ health.resources }}</b></span>
+  <span>channels <b>{{ health.channels }}</b></span>
+  <span>sheets <b>{{ health.sheets }}</b></span>
+</div>
+
+{% if health.resources == 0 %}
+<div class="empty">
+  <b>No videos indexed yet.</b><br>
+  Add channels to <code>config/channels.yaml</code>, then run
+  <code>python scripts/index_youtube.py</code>.
+</div>
+{% endif %}
+
+<h2>Start here</h2>
+<div class="grid g3">
+  {% for p in patterns %}
+  <a class="card" href="/patterns/{{ p.slug }}">
+    <span class="t">{{ p.name }}</span>
+    <span class="s">{{ p.summary|truncate(96) }}</span>
+    <span class="n">
+      <span>{{ p.problem_count }} problems</span>
+      {% if p.solved_count %}<span class="done">{{ p.solved_count }} solved</span>{% endif %}
+    </span>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

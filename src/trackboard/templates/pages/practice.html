@@ -1,0 +1,50 @@
+{% extends "base.html" %}{% set nav='practice' %}
+{% block title %}Practice — Trackboard{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div class="label">Today's queue</div>
+  <h1>{{ (q.reviews|length) + (q.new|length) }} problems, already decided.</h1>
+  {% if q.cold_start %}
+    <p class="sub">Cold start — working through the taxonomy in order until there is enough history to find your weak spots.</p>
+  {% elif q.weak_pattern %}
+    <p class="sub">New problems drawn from your weakest pattern: <span style="color:var(--amber);font-weight:500;">{{ q.weak_pattern.name }}</span>.</p>
+  {% endif %}
+</div>
+
+{% macro card(pr, kind) %}
+<div class="card" style="margin-bottom:10px;">
+  <div class="t">
+    {{ pr.title }}
+    <span class="diff {{ pr.difficulty }}" style="font-size:12px;font-weight:600;">{{ pr.difficulty }}</span>
+    {% if kind == 'review' %}<span class="pill" style="color:var(--amber);background:var(--amber-dim);font-size:10px;">DUE</span>{% endif %}
+  </div>
+  <span class="s">
+    {{ pr.pattern_name }} ·
+    <a href="https://leetcode.com/problems/{{ pr.leetcode_slug }}/" target="_blank"
+       rel="noopener" style="color:var(--green);">solve on LeetCode ↗</a>
+  </span>
+  <form method="post" action="/a/attempt" class="conf-btns">
+    <input type="hidden" name="problem_id" value="{{ pr.id }}">
+    <input type="hidden" name="outcome" value="solved">
+    <button name="confidence" value="1" class="c-again">Again</button>
+    <button name="confidence" value="2" class="c-hard">Hard</button>
+    <button name="confidence" value="3" class="c-good">Good</button>
+    <button name="confidence" value="4" class="c-easy">Easy</button>
+  </form>
+</div>
+{% endmacro %}
+
+<h2>Reviews due</h2>
+{% if q.reviews %}
+  {% for pr in q.reviews %}{{ card(pr, 'review') }}{% endfor %}
+{% else %}
+  <div class="empty"><b>No reviews due.</b> The new ones below are the whole job today.</div>
+{% endif %}
+
+<h2>New — {{ q.new|length }}</h2>
+{% if q.new %}
+  {% for pr in q.new %}{{ card(pr, 'new') }}{% endfor %}
+{% else %}
+  <div class="empty"><b>Nothing new to add.</b> Import more problems or clear the reviews.</div>
+{% endif %}
+{% endblock %}

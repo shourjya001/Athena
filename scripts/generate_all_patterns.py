@@ -1,0 +1,2491 @@
+import json
+from pathlib import Path
+
+# Complete dataset for all 26 DSA patterns in Trackboard
+PATTERNS = {
+  "two-pointers": {
+    "func": "two_sum_sorted(arr, target)",
+    "code": [
+      "def two_sum_sorted(arr, target):",
+      "    left = 0",
+      "    right = len(arr) - 1",
+      "    while left < right:",
+      "        curr_sum = arr[left] + arr[right]",
+      "        if curr_sum == target:",
+      "            return [left, right]",
+      "        elif curr_sum > target:",
+      "            right -= 1",
+      "        else:",
+      "            left += 1",
+      "    return None"
+    ],
+    "type": "array",
+    "array": [1, 2, 4, 6, 8, 11, 15],
+    "steps": [
+      {
+        "line": 2,
+        "vars": {"left": 0, "right": 6, "target": 14, "curr_sum": "-"},
+        "l": 0, "r": 6, "dead": [],
+        "headline": "Initialize pointers at extremes",
+        "reason": "Place left at 0 (val 1) and right at 6 (val 15). In sorted array, min possible sum is left, max is right."
+      },
+      {
+        "line": 5,
+        "vars": {"left": 0, "right": 6, "target": 14, "curr_sum": 16},
+        "l": 0, "r": 6, "dead": [],
+        "headline": "Sum = 1 + 15 = 16 (Too Big!)",
+        "reason": "16 > 14. Because array is sorted, pairing 15 with ANY other item (2, 4, 6...) will be even bigger. 15 is impossible. Discard 15!"
+      },
+      {
+        "line": 9,
+        "vars": {"left": 0, "right": 5, "target": 14, "curr_sum": 16},
+        "l": 0, "r": 5, "dead": [6],
+        "headline": "Decrement right pointer: right = 5 (val 11)",
+        "reason": "Right moves inward to 11. Search space narrowed."
+      },
+      {
+        "line": 5,
+        "vars": {"left": 0, "right": 5, "target": 14, "curr_sum": 12},
+        "l": 0, "r": 5, "dead": [6],
+        "headline": "Sum = 1 + 11 = 12 (Too Small!)",
+        "reason": "12 < 14. 1 cannot pair with anything smaller than 11 to reach 14. Discard 1!"
+      },
+      {
+        "line": 11,
+        "vars": {"left": 1, "right": 5, "target": 14, "curr_sum": 12},
+        "l": 1, "r": 5, "dead": [0, 6],
+        "headline": "Increment left pointer: left = 1 (val 2)",
+        "reason": "Left moves inward to 2 to seek larger sums."
+      },
+      {
+        "line": 5,
+        "vars": {"left": 3, "right": 4, "target": 14, "curr_sum": 14},
+        "l": 3, "r": 4, "dead": [0, 1, 2, 5, 6], "isMatch": True,
+        "headline": "Sum = 6 + 8 = 14 == Target 14! 🎯",
+        "reason": "Exact match found! Return indices [3, 4] in O(N) single pass."
+      }
+    ]
+  },
+
+  "sliding-window": {
+    "func": "max_sub_array_of_size_k(k, arr)",
+    "code": [
+      "def max_sub_array_of_size_k(k, arr):",
+      "    max_sum, window_sum = 0, 0",
+      "    window_start = 0",
+      "    for window_end in range(len(arr)):",
+      "        window_sum += arr[window_end]",
+      "        if window_end >= k - 1:",
+      "            max_sum = max(max_sum, window_sum)",
+      "            window_sum -= arr[window_start]",
+      "            window_start += 1",
+      "    return max_sum"
+    ],
+    "type": "array",
+    "array": [2, 1, 5, 2, 8, 1, 5],
+    "steps": [
+      {
+        "line": 5,
+        "vars": {"k": 3, "window_start": 0, "window_end": 2, "window_sum": 8, "max_sum": 0},
+        "l": 0, "r": 2,
+        "headline": "First window of size 3 formed: [2, 1, 5]",
+        "reason": "Window sum = 2 + 1 + 5 = 8. Size reaches k=3. Set benchmark max_sum = 8."
+      },
+      {
+        "line": 8,
+        "vars": {"k": 3, "window_start": 1, "window_end": 3, "window_sum": 8, "max_sum": 8},
+        "l": 1, "r": 3,
+        "headline": "Slide window: Drop arr[0]=2, Add arr[3]=2",
+        "reason": "O(1) slide: 8 - 2 + 2 = 8. No redundant sum recalculation needed."
+      },
+      {
+        "line": 7,
+        "vars": {"k": 3, "window_start": 2, "window_end": 4, "window_sum": 15, "max_sum": 15},
+        "l": 2, "r": 4,
+        "headline": "⭐ New Maximum Window Sum = 15! [5, 2, 8]",
+        "reason": "15 > 8! Update max_sum = 15."
+      },
+      {
+        "line": 10,
+        "vars": {"k": 3, "max_sum": 15, "result": 15},
+        "l": 4, "r": 6, "isMatch": True,
+        "headline": "Array complete: Return max_sum = 15",
+        "reason": "🎯 Global maximum subarray sum found in single linear O(N) pass."
+      }
+    ]
+  },
+
+  "fast-slow-pointers": {
+    "func": "has_cycle(head)",
+    "code": [
+      "def has_cycle(head):",
+      "    slow = head",
+      "    fast = head",
+      "    while fast and fast.next:",
+      "        slow = slow.next",
+      "        fast = fast.next.next",
+      "        if slow == fast:",
+      "            return True",
+      "    return False"
+    ],
+    "type": "linked-list-cycle",
+    "steps": [
+      {
+        "line": 2,
+        "vars": {"slow": 1, "fast": 1, "cycle": False},
+        "slow": 1, "fast": 1,
+        "headline": "Slow (1x) and Fast (2x) start at Head (Node 1)",
+        "reason": "Fast moves at twice the speed of Slow. If a cycle exists, Fast enters it and loops back to catch Slow."
+      },
+      {
+        "line": 5,
+        "vars": {"slow": 2, "fast": 3, "gap": 1},
+        "slow": 2, "fast": 3,
+        "headline": "Step 1: Slow advances 1 step, Fast jumps 2 steps",
+        "reason": "Slow reaches Node 2; Fast reaches Node 3. Fast pulls ahead."
+      },
+      {
+        "line": 5,
+        "vars": {"slow": 3, "fast": 5, "gap": 2},
+        "slow": 3, "fast": 5,
+        "headline": "Step 2: Fast enters the cycle (Node 5)",
+        "reason": "Fast is now circulating inside the cycle loop."
+      },
+      {
+        "line": 5,
+        "vars": {"slow": 4, "fast": 3, "gap": 1},
+        "slow": 4, "fast": 3,
+        "headline": "Step 3: Fast loops back around! (Node 6 ➔ 3)",
+        "reason": "Fast wraps around behind Slow. Inside a cycle, the gap between Fast and Slow decreases by 1 in every step!"
+      },
+      {
+        "line": 7,
+        "vars": {"slow": 5, "fast": 5, "cycle_detected": True},
+        "slow": 5, "fast": 5, "isMatch": True,
+        "headline": "🎯 COLLISION! Slow and Fast meet at Node 5!",
+        "reason": "Because they met, a loop is 100% mathematically proven! Solved with 0 extra memory (O(1) space)."
+      }
+    ]
+  },
+
+  "linked-list-reversal": {
+    "func": "reverse_list(head)",
+    "code": [
+      "def reverse_list(head):",
+      "    prev = None",
+      "    curr = head",
+      "    while curr:",
+      "        nxt = curr.next",
+      "        curr.next = prev",
+      "        prev = curr",
+      "        curr = nxt",
+      "    return prev"
+    ],
+    "type": "linked-list",
+    "steps": [
+      {
+        "line": 2,
+        "vars": {"prev": "None", "curr": "Node(1)", "nxt": "None"},
+        "nodes": [1, 2, 3, 4], "prevIdx": -1, "currIdx": 0, "nxtIdx": -1, "reversedUpTo": -1,
+        "headline": "Initialize: prev = None, curr = head (Node 1)",
+        "reason": "Before reversing, save no previous node. We will turn pointers backwards one node at a time."
+      },
+      {
+        "line": 5,
+        "vars": {"prev": "None", "curr": "Node(1)", "nxt": "Node(2)"},
+        "nodes": [1, 2, 3, 4], "prevIdx": -1, "currIdx": 0, "nxtIdx": 1, "reversedUpTo": -1,
+        "headline": "Crucial Step: nxt = curr.next (Save Node 2)",
+        "reason": "If we overwrite curr.next first, we lose the rest of the list! Always save nxt ahead of time."
+      },
+      {
+        "line": 6,
+        "vars": {"prev": "None", "curr": "Node(1)", "curr.next": "None"},
+        "nodes": [1, 2, 3, 4], "prevIdx": -1, "currIdx": 0, "nxtIdx": 1, "reversedUpTo": 0,
+        "headline": "Flip pointer: curr.next = prev (Node 1 ➔ None)",
+        "reason": "The link is now reversed! Node 1 points backwards to None."
+      },
+      {
+        "line": 8,
+        "vars": {"prev": "Node(1)", "curr": "Node(2)", "nxt": "Node(2)"},
+        "nodes": [1, 2, 3, 4], "prevIdx": 0, "currIdx": 1, "nxtIdx": 2, "reversedUpTo": 0,
+        "headline": "Shift pointers forward: prev = curr, curr = nxt",
+        "reason": "prev advances to Node 1, curr advances to Node 2. Ready to reverse Node 2."
+      },
+      {
+        "line": 6,
+        "vars": {"prev": "Node(1)", "curr": "Node(2)", "curr.next": "Node(1)"},
+        "nodes": [1, 2, 3, 4], "prevIdx": 0, "currIdx": 1, "nxtIdx": 2, "reversedUpTo": 1,
+        "headline": "Flip pointer: Node 2 ➔ Node 1 ➔ None",
+        "reason": "Node 2 now points backwards to Node 1."
+      },
+      {
+        "line": 9,
+        "vars": {"prev": "Node(4)", "curr": "None", "new_head": "Node(4)"},
+        "nodes": [1, 2, 3, 4], "prevIdx": 3, "currIdx": -1, "nxtIdx": -1, "reversedUpTo": 3, "isMatch": True,
+        "headline": "🎯 Reversal complete! Return prev (Node 4 is new head)",
+        "reason": "All links reversed in-place in O(N) time with O(1) extra space."
+      }
+    ]
+  },
+
+  "backtracking": {
+    "func": "subsets(nums)",
+    "code": [
+      "def subsets(nums):",
+      "    res = []",
+      "    def backtrack(start, path):",
+      "        res.append(list(path))",
+      "        for i in range(start, len(nums)):",
+      "            path.append(nums[i])",
+      "            backtrack(i + 1, path)",
+      "            path.pop()",
+      "    backtrack(0, [])",
+      "    return res"
+    ],
+    "type": "backtracking",
+    "steps": [
+      {
+        "line": 4,
+        "vars": {"start": 0, "path": "[]", "res": "[[]]"},
+        "path": [], "action": "ADD_STATE", "val": None,
+        "headline": "Base: Append current empty path [] to res",
+        "reason": "The empty set is a valid subset of any array. res = [[]]."
+      },
+      {
+        "line": 6,
+        "vars": {"start": 0, "i": 0, "path": "[1]"},
+        "path": [1], "action": "CHOOSE", "val": 1,
+        "headline": "CHOOSE 1: path.append(1) ➔ Recurse",
+        "reason": "Explore all subsets containing element 1. res now records [1]."
+      },
+      {
+        "line": 6,
+        "vars": {"start": 1, "i": 1, "path": "[1, 2]"},
+        "path": [1, 2], "action": "CHOOSE", "val": 2,
+        "headline": "CHOOSE 2: path.append(2) ➔ Recurse",
+        "reason": "Explore all subsets containing both 1 and 2. res now records [1, 2]."
+      },
+      {
+        "line": 8,
+        "vars": {"start": 2, "action": "pop", "path": "[1]"},
+        "path": [1], "action": "UNDO", "val": 2,
+        "headline": "UNDO (BACKTRACK): path.pop() removes 2",
+        "reason": "Subtree for [1, 2] is done. Backtrack to state [1] so we can test [1, 3]!"
+      },
+      {
+        "line": 6,
+        "vars": {"start": 1, "i": 2, "path": "[1, 3]"},
+        "path": [1, 3], "action": "CHOOSE", "val": 3,
+        "headline": "CHOOSE 3: path.append(3) ➔ [1, 3]",
+        "reason": "Fresh exploration branch enabled by the previous undo step."
+      },
+      {
+        "line": 10,
+        "vars": {"len(res)": 8, "subsets": "[[], [1], [1,2], [1,2,3], [1,3], [2], [2,3], [3]]"},
+        "path": [], "action": "COMPLETE", "isMatch": True,
+        "headline": "🎯 All 2^N = 8 subsets enumerated!",
+        "reason": "Backtracking avoids allocating 2^N separate arrays by reusing a single path buffer!"
+      }
+    ]
+  },
+
+  "union-find": {
+    "func": "find_and_union(n, edges)",
+    "code": [
+      "def find(i, parent):",
+      "    if parent[i] == i:",
+      "        return i",
+      "    parent[i] = find(parent[i], parent)",
+      "    return parent[i]",
+      "def union(u, v, parent):",
+      "    root_u, root_v = find(u, parent), find(v, parent)",
+      "    if root_u != root_v:",
+      "        parent[root_v] = root_u"
+    ],
+    "type": "union-find",
+    "steps": [
+      {
+        "line": 2,
+        "vars": {"parent": "[0, 1, 2, 3]", "components": 4},
+        "parent": [0, 1, 2, 3], "edge": None,
+        "headline": "Initialize: Each node is its own isolated set",
+        "reason": "parent[i] = i for all nodes 0..3. Total 4 disjoint components."
+      },
+      {
+        "line": 8,
+        "vars": {"edge": "(0, 1)", "find(0)": 0, "find(1)": 1, "parent": "[0, 0, 2, 3]"},
+        "parent": [0, 0, 2, 3], "edge": [0, 1],
+        "headline": "Union(0, 1): Link root of 1 to root 0",
+        "reason": "parent[1] = 0. Set {0, 1} merged into single component."
+      },
+      {
+        "line": 8,
+        "vars": {"edge": "(1, 2)", "find(1)": 0, "find(2)": 2, "parent": "[0, 0, 0, 3]"},
+        "parent": [0, 0, 0, 3], "edge": [1, 2],
+        "headline": "Union(1, 2) with Path Compression: parent[2] = 0",
+        "reason": "find(1) compresses path directly to root 0! Then parent[2] = 0. Set is now {0, 1, 2}."
+      },
+      {
+        "line": 4,
+        "vars": {"edge": "(0, 2)", "find(0)": 0, "find(2)": 0, "cycle": True},
+        "parent": [0, 0, 0, 3], "edge": [0, 2], "isMatch": True,
+        "headline": "🎯 Cycle Check: find(0) == find(2) == 0 (Same Root!)",
+        "reason": "Both endpoints already belong to the same component. Adding edge (0, 2) creates a cycle! O(α(N)) near-instant query."
+      }
+    ]
+  },
+
+  "topological-sort": {
+    "func": "topological_sort(n, edges)",
+    "code": [
+      "def topological_sort(n, edges):",
+      "    in_degree = [0] * n",
+      "    for u, v in edges: in_degree[v] += 1",
+      "    queue = deque([i for i in range(n) if in_degree[i] == 0])",
+      "    order = []",
+      "    while queue:",
+      "        u = queue.popleft()",
+      "        order.append(u)",
+      "        for v in adj[u]:",
+      "            in_degree[v] -= 1",
+      "            if in_degree[v] == 0: queue.append(v)",
+      "    return order"
+    ],
+    "type": "topo-sort",
+    "steps": [
+      {
+        "line": 4,
+        "vars": {"in_degree": "[0, 1, 1, 2]", "queue": "[0]", "order": "[]"},
+        "inDegree": [0, 1, 1, 2], "queue": [0], "order": [],
+        "headline": "Step 1: Enqueue zero in-degree nodes (Node 0)",
+        "reason": "Node 0 has 0 prerequisites (in_degree = 0). It can be taken immediately."
+      },
+      {
+        "line": 7,
+        "vars": {"pop": 0, "order": "[0]", "in_degree": "[0, 0, 0, 2]", "queue": "[1, 2]"},
+        "inDegree": [0, 0, 0, 2], "queue": [1, 2], "order": [0],
+        "headline": "Step 2: Pop 0 ➔ Decrement neighbors 1 and 2",
+        "reason": "Prerequisite 0 is cleared! Nodes 1 and 2 now have in_degree = 0. Enqueue both."
+      },
+      {
+        "line": 10,
+        "vars": {"pop": 1, "order": "[0, 1, 2]", "in_degree": "[0, 0, 0, 0]", "queue": "[3]"},
+        "inDegree": [0, 0, 0, 0], "queue": [3], "order": [0, 1, 2],
+        "headline": "Step 3: Pop 1 & 2 ➔ Node 3 in-degree drops to 0",
+        "reason": "Both prerequisites for Node 3 are cleared. Enqueue 3."
+      },
+      {
+        "line": 12,
+        "vars": {"order": "[0, 1, 2, 3]", "valid": True},
+        "inDegree": [0, 0, 0, 0], "queue": [], "order": [0, 1, 2, 3], "isMatch": True,
+        "headline": "🎯 Valid Topological Order: [0, 1, 2, 3]",
+        "reason": "All tasks sequenced without circular dependencies in O(V + E) time."
+      }
+    ]
+  },
+
+  "shortest-path": {
+    "func": "dijkstra(graph, start)",
+    "code": [
+      "def dijkstra(graph, start):",
+      "    dist = {v: float('inf') for v in graph}",
+      "    dist[start] = 0",
+      "    pq = [(0, start)]",
+      "    while pq:",
+      "        d, u = heapq.heappop(pq)",
+      "        if d > dist[u]: continue",
+      "        for v, weight in graph[u]:",
+      "            if dist[u] + weight < dist[v]:",
+      "                dist[v] = dist[u] + weight",
+      "                heapq.heappush(pq, (dist[v], v))",
+      "    return dist"
+    ],
+    "type": "dijkstra",
+    "steps": [
+      {
+        "line": 3,
+        "vars": {"pq": "[(0, 'A')]", "dist": "{'A':0, 'B':inf, 'C':inf}"},
+        "pq": [["A", 0]], "dist": {"A": 0, "B": "∞", "C": "∞"},
+        "headline": "Initialize: dist['A'] = 0, all others = ∞",
+        "reason": "Greedy start: Min-Heap priority queue guarantees shortest tentative distance processed first."
+      },
+      {
+        "line": 9,
+        "vars": {"u": "'A'", "relaxing": "'B'(4), 'C'(2)", "dist": "{'A':0, 'B':4, 'C':2}"},
+        "pq": [["C", 2], ["B", 4]], "dist": {"A": 0, "B": 4, "C": 2},
+        "headline": "Pop A ➔ Relax edges: A-C (weight 2), A-B (weight 4)",
+        "reason": "dist['C'] updated to 2, dist['B'] updated to 4. Push both to PQ."
+      },
+      {
+        "line": 9,
+        "vars": {"u": "'C'", "edge_C_B": 1, "new_dist_B": 3, "dist": "{'A':0, 'B':3, 'C':2}"},
+        "pq": [["B", 3]], "dist": {"A": 0, "B": 3, "C": 2}, "isMatch": True,
+        "headline": "🎯 Pop C (d=2) ➔ Relax C-B (wt 1): dist['B'] drops 4 ➔ 3!",
+        "reason": "Going through C (2 + 1 = 3) is strictly faster than direct edge A-B (4)! Optimal path found."
+      }
+    ]
+  },
+
+  "dp-knapsack": {
+    "func": "knapsack(wt, val, W)",
+    "code": [
+      "def knapsack(weights, values, W):",
+      "    dp = [[0]*(W+1) for _ in range(N+1)]",
+      "    for i in range(1, N+1):",
+      "        wt, val = weights[i-1], values[i-1]",
+      "        for w in range(1, W+1):",
+      "            if wt <= w:",
+      "                dp[i][w] = max(dp[i-1][w], val + dp[i-1][w-wt])",
+      "            else:",
+      "                dp[i][w] = dp[i-1][w]",
+      "    return dp[N][W]"
+    ],
+    "type": "dp",
+    "steps": [
+      {
+        "line": 2,
+        "vars": {"W": 7, "formula": "dp[0][w] = 0 (Base case)"},
+        "row": 0, "col": 0, "formula": "Base Case: 0 items = 0 value",
+        "headline": "Base case: 0 items yields 0 value",
+        "reason": "First row initialized to 0. With no items available, bag value is always 0."
+      },
+      {
+        "line": 7,
+        "vars": {"item": "wt=2, val=3", "w": 3, "calc": "max(skip=0, take=3+0) = 3"},
+        "row": 1, "col": 3, "formula": "max(dp[0][3], 3 + dp[0][1]) = 3",
+        "headline": "Item 1 (wt=2, val=3) at capacity 3",
+        "reason": "Item fits! Compare skip (0) vs take (3 + remaining capacity 1 = 3). Record 3."
+      },
+      {
+        "line": 7,
+        "vars": {"item": "wt=2, val=5", "w": 7, "calc": "max(skip=7, take=5+dp[2][5]=5+7=12) = 12"},
+        "row": 3, "col": 7, "isMatch": True, "formula": "max(dp[2][7]=7, 5 + dp[2][5]=5+7) = 12 🏆",
+        "headline": "🎯 Optimal Answer: dp[3][7] = 12",
+        "reason": "Global maximum capacity 7 value is 12! Reused subproblem answers in O(N * W) polynomial time."
+      }
+    ]
+  },
+
+  "dp-1d": {
+    "func": "climb_stairs(n)",
+    "code": [
+      "def climb_stairs(n):",
+      "    if n <= 2: return n",
+      "    dp = [0] * (n + 1)",
+      "    dp[1], dp[2] = 1, 2",
+      "    for i in range(3, n + 1):",
+      "        dp[i] = dp[i-1] + dp[i-2]",
+      "    return dp[n]"
+    ],
+    "type": "dp",
+    "steps": [
+      {
+        "line": 4,
+        "vars": {"dp[1]": 1, "dp[2]": 2},
+        "row": 1, "col": 2, "formula": "dp[1]=1, dp[2]=2",
+        "headline": "Base cases: 1 step = 1 way, 2 steps = 2 ways",
+        "reason": "1 step: [1]. 2 steps: [1,1] or [2]."
+      },
+      {
+        "line": 6,
+        "vars": {"i": 3, "dp[3]": 3, "calc": "dp[2] + dp[1] = 2 + 1 = 3"},
+        "row": 1, "col": 3, "formula": "dp[3] = dp[2] + dp[1] = 3",
+        "headline": "Step 3: dp[3] = 2 + 1 = 3 ways",
+        "reason": "Can reach step 3 either from step 2 (+1 step) or step 1 (+2 steps)."
+      },
+      {
+        "line": 6,
+        "vars": {"i": 4, "dp[4]": 5, "calc": "dp[3] + dp[2] = 3 + 2 = 5"},
+        "row": 1, "col": 4, "isMatch": True, "formula": "dp[4] = 3 + 2 = 5 🏆",
+        "headline": "🎯 Step 4: dp[4] = 5 ways",
+        "reason": "O(N) time with no exponential Fibonacci recursion."
+      }
+    ]
+  },
+
+  "dp-2d": {
+    "func": "unique_paths(m, n)",
+    "code": [
+      "def unique_paths(m, n):",
+      "    dp = [[1]*n for _ in range(m)]",
+      "    for r in range(1, m):",
+      "        for c in range(1, n):",
+      "            dp[r][c] = dp[r-1][c] + dp[r][c-1]",
+      "    return dp[m-1][n-1]"
+    ],
+    "type": "dp",
+    "steps": [
+      {
+        "line": 2,
+        "vars": {"grid": "3x3", "edges": "all 1s"},
+        "row": 0, "col": 0, "formula": "First row and col = 1 way only (straight line)",
+        "headline": "Top row & Left col initialized to 1",
+        "reason": "Can only move right or down. Only 1 path exists along boundaries."
+      },
+      {
+        "line": 5,
+        "vars": {"r": 1, "c": 1, "dp[1][1]": 2, "calc": "Top(1) + Left(1) = 2"},
+        "row": 1, "col": 1, "formula": "dp[1][1] = dp[0][1] + dp[1][0] = 1 + 1 = 2",
+        "headline": "Cell (1, 1): Top(1) + Left(1) = 2 paths",
+        "reason": "Paths entering (1, 1) must arrive either from top or from left."
+      },
+      {
+        "line": 6,
+        "vars": {"r": 2, "c": 2, "dp[2][2]": 6, "total_paths": 6},
+        "row": 2, "col": 2, "isMatch": True, "formula": "dp[2][2] = Top(3) + Left(3) = 6 🏆",
+        "headline": "🎯 Bottom-right reached: 6 unique paths!",
+        "reason": "Solved in O(M * N) time with zero recursion stack."
+      }
+    ]
+  },
+
+  "dp-subsequence": {
+    "func": "lcs(text1, text2)",
+    "code": [
+      "def longest_common_subsequence(s1, s2):",
+      "    dp = [[0]*(len(s2)+1) for _ in range(len(s1)+1)]",
+      "    for i in range(1, len(s1)+1):",
+      "        for j in range(1, len(s2)+1):",
+      "            if s1[i-1] == s2[j-1]:",
+      "                dp[i][j] = 1 + dp[i-1][j-1]",
+      "            else:",
+      "                dp[i][j] = max(dp[i-1][j], dp[i][j-1])",
+      "    return dp[-1][-1]"
+    ],
+    "type": "dp",
+    "steps": [
+      {
+        "line": 5,
+        "vars": {"s1": "'abcde'", "s2": "'ace'", "match": "'a'=='a'"},
+        "row": 1, "col": 1, "formula": "Match! 1 + dp[0][0] = 1",
+        "headline": "Match 'a' == 'a': 1 + diagonal = 1",
+        "reason": "When characters match, extend the LCS length by 1 from diagonal predecessor."
+      },
+      {
+        "line": 8,
+        "vars": {"s1[1]": "'b'", "s2[1]": "'c'", "mismatch": True},
+        "row": 2, "col": 2, "formula": "Mismatch: max(Top=1, Left=1) = 1",
+        "headline": "Mismatch 'b' != 'c': take max(Top, Left)",
+        "reason": "Either drop 'b' or drop 'c' to preserve best alignment."
+      },
+      {
+        "line": 9,
+        "vars": {"LCS": "'ace'", "length": 3},
+        "row": 3, "col": 3, "isMatch": True, "formula": "Final LCS Length = 3 ('ace') 🏆",
+        "headline": "🎯 LCS Length = 3 ('ace')",
+        "reason": "Optimal subsequence alignment computed in O(M * N) time."
+      }
+    ]
+  },
+
+  "prefix-sum": {
+    "func": "subarray_sum_k(nums, k)",
+    "code": [
+      "def subarray_sum(nums, k):",
+      "    count, curr_sum = 0, 0",
+      "    seen = {0: 1}",
+      "    for x in nums:",
+      "        curr_sum += x",
+      "        if (curr_sum - k) in seen:",
+      "            count += seen[curr_sum - k]",
+      "        seen[curr_sum] = seen.get(curr_sum, 0) + 1",
+      "    return count"
+    ],
+    "type": "hashmap",
+    "steps": [
+      {
+        "line": 3,
+        "vars": {"k": 3, "curr_sum": 0, "seen": "{0: 1}", "count": 0},
+        "currSum": 0, "target": 3, "seen": {"0": 1},
+        "headline": "Seed hash map with {0: 1}",
+        "reason": "If curr_sum == k, then curr_sum - k == 0. Seeding {0: 1} ensures full prefixes are counted!"
+      },
+      {
+        "line": 5,
+        "vars": {"x": 1, "curr_sum": 1, "1 - 3": -2, "in_seen": False},
+        "currSum": 1, "target": 3, "seen": {"0": 1, "1": 1},
+        "headline": "Add 1: curr_sum = 1. (1 - 3 = -2 not seen)",
+        "reason": "No subarray ending here sums to 3. Record seen[1] = 1."
+      },
+      {
+        "line": 7,
+        "vars": {"x": 2, "curr_sum": 3, "3 - 3": 0, "count": 1},
+        "currSum": 3, "target": 3, "seen": {"0": 1, "1": 1, "3": 1}, "isMatch": True,
+        "headline": "🎯 MATCH! (3 - 3 = 0) in seen! count += 1",
+        "reason": "Subarray [1, 2] sums to 3! Found in O(1) hash map lookup instead of O(N^2) double loop."
+      }
+    ]
+  },
+
+  "sorting-greedy": {
+    "func": "min_meeting_rooms(intervals)",
+    "code": [
+      "def min_meeting_rooms(intervals):",
+      "    starts = sorted([i[0] for i in intervals])",
+      "    ends = sorted([i[1] for i in intervals])",
+      "    s = e = rooms = 0",
+      "    while s < len(intervals):",
+      "        if starts[s] < ends[e]:",
+      "            rooms += 1",
+      "        else:",
+      "            e += 1",
+      "        s += 1",
+      "    return rooms"
+    ],
+    "type": "intervals",
+    "steps": [
+      {
+        "line": 2,
+        "vars": {"starts": "[0, 5, 15]", "ends": "[10, 20, 30]"},
+        "intervals": ["[0, 30]", "[5, 10]", "[15, 20]"],
+        "headline": "Sort start times [0, 5, 15] & end times [10, 20, 30]",
+        "reason": "Greedy tracking: Whenever a meeting starts before the earliest room finishes, allocate a new room!"
+      },
+      {
+        "line": 6,
+        "vars": {"start": 5, "earliest_end": 10, "5 < 10": True, "rooms": 2},
+        "intervals": ["[0, 30] Room 1", "[5, 10] Room 2 (Overlap!)"],
+        "headline": "Meeting starts at 5 before Room 1 ends (10) ➔ rooms = 2",
+        "reason": "Both meetings require separate rooms simultaneously."
+      },
+      {
+        "line": 8,
+        "vars": {"start": 15, "earliest_end": 10, "15 >= 10": True, "rooms": 2},
+        "intervals": ["[5, 10] Ended!", "[15, 20] Reuses Room 2"], "isMatch": True,
+        "headline": "🎯 Meeting at 15 reuses freed room! Total rooms = 2",
+        "reason": "Room 2 was vacated at 10. Max concurrent rooms needed is 2."
+      }
+    ]
+  },
+
+  "merge-intervals": {
+    "func": "merge(intervals)",
+    "code": [
+      "def merge(intervals):",
+      "    intervals.sort(key=lambda x: x[0])",
+      "    merged = [intervals[0]]",
+      "    for curr in intervals[1:]:",
+      "        prev = merged[-1]",
+      "        if curr[0] <= prev[1]:",
+      "            prev[1] = max(prev[1], curr[1])",
+      "        else:",
+      "            merged.append(curr)",
+      "    return merged"
+    ],
+    "type": "intervals",
+    "steps": [
+      {
+        "line": 2,
+        "vars": {"sorted": "[[1, 4], [2, 6], [8, 10]]", "merged": "[[1, 4]]"},
+        "intervals": ["[1, 4]", "[2, 6]", "[8, 10]"],
+        "headline": "Sort intervals by start time: [1, 4], [2, 6], [8, 10]",
+        "reason": "Sorting guarantees all overlapping intervals must be adjacent."
+      },
+      {
+        "line": 7,
+        "vars": {"prev": "[1, 4]", "curr": "[2, 6]", "2 <= 4": True, "merged": "[[1, 6]]"},
+        "intervals": ["[1, 6] (MERGED)", "[8, 10]"],
+        "headline": "Overlap! 2 <= 4 ➔ Merge: [1, max(4, 6)] = [1, 6]",
+        "reason": "Because [2, 6] starts before [1, 4] ends, fuse into single continuous interval [1, 6]."
+      },
+      {
+        "line": 9,
+        "vars": {"prev": "[1, 6]", "curr": "[8, 10]", "8 > 6": True},
+        "intervals": ["[1, 6]", "[8, 10]"], "isMatch": True,
+        "headline": "🎯 8 > 6 ➔ Disjoint! Append [8, 10] separately",
+        "reason": "Final result: [[1, 6], [8, 10]]. Solved in O(N log N) sort + O(N) linear pass."
+      }
+    ]
+  },
+
+  "cyclic-sort": {
+    "func": "cyclic_sort(nums)",
+    "code": [
+      "def cyclic_sort(nums):",
+      "    i = 0",
+      "    while i < len(nums):",
+      "        correct_idx = nums[i] - 1",
+      "        if nums[i] != nums[correct_idx]:",
+      "            nums[i], nums[correct_idx] = nums[correct_idx], nums[i]",
+      "        else:",
+      "            i += 1",
+      "    return nums"
+    ],
+    "type": "cyclic",
+    "steps": [
+      {
+        "line": 4,
+        "vars": {"i": 0, "nums[0]": 3, "correct_idx": 2},
+        "arr": [3, 5, 2, 1, 4], "idx": 0, "val": 3,
+        "headline": "nums[0] is 3 ➔ Belongs at index 2 (val - 1)",
+        "reason": "Numbers 1..N belong at index val - 1. 3 belongs at index 2, swap with nums[2] (2)!"
+      },
+      {
+        "line": 6,
+        "vars": {"i": 0, "nums[0]": 2, "correct_idx": 1},
+        "arr": [2, 5, 3, 1, 4], "idx": 0, "val": 2,
+        "headline": "nums[0] is now 2 ➔ Swap with nums[1] (5)",
+        "reason": "Keep swapping at index 0 until index 0 gets 1! Now 3 is at home."
+      },
+      {
+        "line": 6,
+        "vars": {"i": 0, "nums[0]": 5, "correct_idx": 4},
+        "arr": [5, 2, 3, 1, 4], "idx": 0, "val": 5,
+        "headline": "nums[0] is 5 ➔ Swap with nums[4] (4)",
+        "reason": "Array becomes [4, 2, 3, 1, 5]. Now 5 is at home!"
+      },
+      {
+        "line": 9,
+        "vars": {"nums": "[1, 2, 3, 4, 5]"},
+        "arr": [1, 2, 3, 4, 5], "idx": 0, "val": 1, "isMatch": True,
+        "headline": "🎯 All numbers settled into home indices [1, 2, 3, 4, 5]!",
+        "reason": "Sorted in-place in O(N) time with O(1) extra space."
+      }
+    ]
+  },
+
+  "monotonic-stack": {
+    "func": "next_greater(nums)",
+    "code": [
+      "def next_greater(nums):",
+      "    stack, res = [], [-1] * len(nums)",
+      "    for i, x in enumerate(nums):",
+      "        while stack and nums[stack[-1]] < x:",
+      "            prev_idx = stack.pop()",
+      "            res[prev_idx] = x",
+      "        stack.append(i)",
+      "    return res"
+    ],
+    "type": "stack",
+    "steps": [
+      {
+        "line": 7,
+        "vars": {"i": 0, "x": 73, "stack": "[73]"},
+        "stackItems": [73],
+        "headline": "Push index 0 (val 73) onto stack",
+        "reason": "Stack maintains unresolved elements waiting for a greater number."
+      },
+      {
+        "line": 5,
+        "vars": {"i": 1, "x": 74, "74 > 73": True, "popped": 73},
+        "stackItems": [74], "popped": 73,
+        "headline": "74 > 73 ➔ POP 73! Next Greater for 73 is 74",
+        "reason": "When a larger element arrives, all smaller elements waiting on stack resolve immediately in O(1) amortized time."
+      },
+      {
+        "line": 5,
+        "vars": {"i": 2, "x": 75, "75 > 74": True, "popped": 74},
+        "stackItems": [75], "popped": 74,
+        "headline": "75 > 74 ➔ POP 74! Next Greater for 74 is 75",
+        "reason": "75 resolves 74. Push 75."
+      },
+      {
+        "line": 8,
+        "vars": {"stack": "[75, 71, 69]", "res": "[74, 75, -1, -1, -1]"},
+        "stackItems": [75, 71, 69], "isMatch": True,
+        "headline": "🎯 Monotonic Decreasing Stack maintained",
+        "reason": "Every item is pushed once and popped at most once: total O(N) linear time."
+      }
+    ]
+  },
+
+  "monotonic-deque": {
+    "func": "max_sliding_window(nums, k)",
+    "code": [
+      "def max_sliding_window(nums, k):",
+      "    q = deque() # store indices",
+      "    res = []",
+      "    for i, x in enumerate(nums):",
+      "        while q and nums[q[-1]] < x: q.pop()",
+      "        q.append(i)",
+      "        if q[0] <= i - k: q.popleft()",
+      "        if i >= k - 1: res.append(nums[q[0]])",
+      "    return res"
+    ],
+    "type": "stack",
+    "steps": [
+      {
+        "line": 5,
+        "vars": {"i": 2, "x": 5, "window": "[2, 1, 5]", "deque_max": 5},
+        "stackItems": [5],
+        "headline": "First window [2, 1, 5]: Deque front is 5",
+        "reason": "5 is greater than 2 and 1; 2 and 1 can never be maximum of any future window. Deque stores only [5]."
+      },
+      {
+        "line": 8,
+        "vars": {"window": "[1, 5, 2]", "deque": "[5, 2]", "max": 5},
+        "stackItems": [5, 2],
+        "headline": "Window [1, 5, 2]: Maximum is 5",
+        "reason": "2 is smaller than 5, but might become max after 5 leaves. Append 2 behind 5."
+      },
+      {
+        "line": 9,
+        "vars": {"res": "[5, 5, 8, 8, 5]"},
+        "stackItems": [8], "isMatch": True,
+        "headline": "🎯 Sliding window maximums in O(N) time",
+        "reason": "Deque front is always the true window maximum."
+      }
+    ]
+  },
+
+  "binary-search": {
+    "func": "binary_search(arr, target)",
+    "code": [
+      "def binary_search(arr, target):",
+      "    low, high = 0, len(arr) - 1",
+      "    while low <= high:",
+      "        mid = (low + high) // 2",
+      "        if arr[mid] == target:",
+      "            return mid",
+      "        elif arr[mid] < target:",
+      "            low = mid + 1",
+      "        else:",
+      "            high = mid - 1",
+      "    return -1"
+    ],
+    "type": "binary-search",
+    "array": [2, 5, 8, 12, 16, 23, 38, 56, 72, 91],
+    "steps": [
+      {
+        "line": 4,
+        "vars": {"low": 0, "high": 9, "mid": 4, "arr[4]": 16, "target": 23},
+        "low": 0, "high": 9, "mid": 4, "dead": [],
+        "headline": "Step 1: Check mid = index 4 (val 16) < target 23",
+        "reason": "16 is smaller than 23. Array is sorted, so indices 0..4 are all < 23! Discard entire left 50% instantly. low = 5."
+      },
+      {
+        "line": 4,
+        "vars": {"low": 5, "high": 9, "mid": 7, "arr[7]": 56, "target": 23},
+        "low": 5, "high": 9, "mid": 7, "dead": [0, 1, 2, 3, 4],
+        "headline": "Step 2: Check mid = index 7 (val 56) > target 23",
+        "reason": "56 > 23. Discard indices 7..9. high = 6."
+      },
+      {
+        "line": 6,
+        "vars": {"low": 5, "high": 6, "mid": 5, "arr[5]": 23, "target": 23},
+        "low": 5, "high": 6, "mid": 5, "dead": [0, 1, 2, 3, 4, 7, 8, 9], "isMatch": True,
+        "headline": "🎯 Target 23 found at index 5!",
+        "reason": "Located in only 3 comparisons out of 10 elements! O(log N) logarithmic efficiency."
+      }
+    ]
+  },
+
+  "binary-search-answer": {
+    "func": "min_eating_speed(piles, h)",
+    "code": [
+      "def min_eating_speed(piles, h):",
+      "    low, high = 1, max(piles)",
+      "    ans = high",
+      "    while low <= high:",
+      "        mid = (low + high) // 2",
+      "        if can_finish(piles, mid, h):",
+      "            ans = mid",
+      "            high = mid - 1",
+      "        else:",
+      "            low = mid + 1",
+      "    return ans"
+    ],
+    "type": "binary-search",
+    "array": [1, 5, 10, 15, 20, 25, 30],
+    "steps": [
+      {
+        "line": 5,
+        "vars": {"low": 1, "high": 30, "mid_speed": 15, "can_finish": True},
+        "low": 0, "high": 6, "mid": 3, "dead": [],
+        "headline": "Test mid speed = 15 bananas/hr ➔ Feasible!",
+        "reason": "Koko can finish within h hours at speed 15. We want the MINIMUM speed, so record ans=15 and search lower: high = 14."
+      },
+      {
+        "line": 9,
+        "vars": {"low": 1, "high": 14, "mid_speed": 7, "can_finish": False},
+        "low": 0, "high": 2, "mid": 1, "dead": [4, 5, 6],
+        "headline": "Test mid speed = 7 bananas/hr ➔ Too Slow!",
+        "reason": "Cannot finish within h hours. Speed must be strictly higher: low = 8."
+      },
+      {
+        "line": 10,
+        "vars": {"min_speed": 10},
+        "low": 2, "high": 2, "mid": 2, "dead": [0, 1, 4, 5, 6], "isMatch": True,
+        "headline": "🎯 Optimal minimum speed = 10",
+        "reason": "Binary search on monotonic answer space reduces time from O(max_val) to O(log(max_val))."
+      }
+    ]
+  },
+
+  "top-k-heap": {
+    "func": "find_kth_largest(nums, k)",
+    "code": [
+      "def find_kth_largest(nums, k):",
+      "    min_heap = []",
+      "    for x in nums:",
+      "        heapq.heappush(min_heap, x)",
+      "        if len(min_heap) > k:",
+      "            heapq.heappop(min_heap)",
+      "    return min_heap[0]"
+    ],
+    "type": "heap",
+    "steps": [
+      {
+        "line": 5,
+        "vars": {"k": 2, "x": 3, "heap": "[3]"},
+        "heap": [3],
+        "headline": "Push 3 into min-heap of size k=2",
+        "reason": "Heap keeps track of the largest numbers seen so far."
+      },
+      {
+        "line": 6,
+        "vars": {"x": 5, "heap": "[3, 5]", "len > k": False},
+        "heap": [3, 5],
+        "headline": "Push 5: heap = [3, 5] (size == 2)",
+        "reason": "Capacity 2 reached. The root 3 is the current 2nd largest."
+      },
+      {
+        "line": 6,
+        "vars": {"x": 6, "pushed": 6, "popped": 3, "heap": "[5, 6]"},
+        "heap": [5, 6], "popped": 3,
+        "headline": "Push 6 ➔ Size exceeds 2! Pop minimum (3)",
+        "reason": "Since 6 arrived, 3 is expelled. Heap holds top 2: [5, 6]."
+      },
+      {
+        "line": 7,
+        "vars": {"result": 5, "top_k": "[5, 6]"},
+        "heap": [5, 6], "isMatch": True,
+        "headline": "🎯 Return min_heap[0] = 5 (2nd largest)",
+        "reason": "In a Min-Heap of size K, the root is always the K-th largest element! O(N log K) time."
+      }
+    ]
+  },
+
+  "tree-dfs": {
+    "func": "inorder(node, res)",
+    "code": [
+      "def inorder(node, res):",
+      "    if not node:",
+      "        return",
+      "    inorder(node.left, res)",
+      "    res.append(node.val)",
+      "    inorder(node.right, res)"
+    ],
+    "type": "tree",
+    "steps": [
+      {
+        "line": 4,
+        "vars": {"node.val": 10, "res": "[]"},
+        "currNode": 10, "visitedTree": [],
+        "headline": "Root 10: Recurse left subtree",
+        "reason": "In-order explores Left child first."
+      },
+      {
+        "line": 4,
+        "vars": {"node.val": 5, "res": "[]"},
+        "currNode": 5, "visitedTree": [],
+        "headline": "Node 5: Recurse left to 3",
+        "reason": "Leftmost leaf holds the smallest value."
+      },
+      {
+        "line": 5,
+        "vars": {"node.val": 3, "res": "[3]"},
+        "currNode": 3, "visitedTree": [3],
+        "headline": "Node 3: Append 3 to result",
+        "reason": "3 has no left child. Emit 3."
+      },
+      {
+        "line": 5,
+        "vars": {"node.val": 5, "res": "[3, 5]"},
+        "currNode": 5, "visitedTree": [3, 5],
+        "headline": "Parent 5: Append 5, then visit right child 7",
+        "reason": "Left done ➔ Emit Root 5 ➔ Visit Right 7."
+      },
+      {
+        "line": 5,
+        "vars": {"res": "[3, 5, 7, 10, 15, 18]"},
+        "currNode": 10, "visitedTree": [3, 5, 7, 10, 15, 18], "isMatch": True,
+        "headline": "🎯 Complete: [3, 5, 7, 10, 15, 18] (Sorted!)",
+        "reason": "In-order traversal on a BST produces strictly sorted output in O(N) time."
+      }
+    ]
+  },
+
+  "tree-bfs": {
+    "func": "level_order(root)",
+    "code": [
+      "def level_order(root):",
+      "    if not root: return []",
+      "    queue = deque([root])",
+      "    res = []",
+      "    while queue:",
+      "        level = []",
+      "        for _ in range(len(queue)):",
+      "            node = queue.popleft()",
+      "            level.append(node.val)",
+      "            if node.left: queue.append(node.left)",
+      "            if node.right: queue.append(node.right)",
+      "        res.append(level)",
+      "    return res"
+    ],
+    "type": "tree",
+    "steps": [
+      {
+        "line": 3,
+        "vars": {"queue": "[Node(10)]", "level": "[]"},
+        "currNode": 10, "visitedTree": [],
+        "headline": "Level 0: Enqueue Root 10",
+        "reason": "BFS processes trees level-by-level using a FIFO queue."
+      },
+      {
+        "line": 9,
+        "vars": {"level": "[10]", "queue": "[Node(5), Node(15)]"},
+        "currNode": 10, "visitedTree": [10],
+        "headline": "Pop 10 ➔ Enqueue children 5 and 15 (Level 1)",
+        "reason": "Record Level 0: [10]. Next level contains [5, 15]."
+      },
+      {
+        "line": 12,
+        "vars": {"res": "[[10], [5, 15], [3, 7, 18]]"},
+        "currNode": 15, "visitedTree": [10, 5, 15, 3, 7, 18], "isMatch": True,
+        "headline": "🎯 Level-order result: [[10], [5, 15], [3, 7, 18]]",
+        "reason": "Tree scanned tier-by-tier in O(N) time."
+      }
+    ]
+  },
+
+  "trie": {
+    "func": "starts_with(root, prefix)",
+    "code": [
+      "def starts_with(root, prefix):",
+      "    curr = root",
+      "    for char in prefix:",
+      "        if char not in curr.children:",
+      "            return False",
+      "        curr = curr.children[char]",
+      "    return True"
+    ],
+    "type": "trie",
+    "steps": [
+      {
+        "line": 2,
+        "vars": {"prefix": "'ca'", "curr": "ROOT"},
+        "path": ["ROOT"],
+        "headline": "Search starts at Trie ROOT",
+        "reason": "Prefix tree branches by individual characters."
+      },
+      {
+        "line": 6,
+        "vars": {"char": "'c'", "curr": "Node('c')"},
+        "path": ["ROOT", "'c'"],
+        "headline": "Char 'c' found ➔ Step down to Node('c')",
+        "reason": "'c' exists in root.children. Advance down the path."
+      },
+      {
+        "line": 6,
+        "vars": {"char": "'a'", "curr": "Node('a')"},
+        "path": ["ROOT", "'c'", "'a'"],
+        "headline": "Char 'a' found ➔ Step down to Node('a')",
+        "reason": "'a' exists in 'c'.children. Both characters in 'ca' matched."
+      },
+      {
+        "line": 7,
+        "vars": {"result": True},
+        "path": ["ROOT", "'c'", "'a'"], "isMatch": True,
+        "headline": "🎯 Prefix confirmed! Return True",
+        "reason": "Prefix search completes in O(L) time where L is prefix length, independent of dictionary size!"
+      }
+    ]
+  },
+
+  "graph-traversal": {
+    "func": "bfs(graph, start)",
+    "code": [
+      "def bfs(graph, start):",
+      "    queue = deque([start])",
+      "    visited = {start}",
+      "    while queue:",
+      "        curr = queue.popleft()",
+      "        for neighbor in graph[curr]:",
+      "            if neighbor not in visited:",
+      "                visited.add(neighbor)",
+      "                queue.append(neighbor)"
+    ],
+    "type": "graph",
+    "steps": [
+      {
+        "line": 2,
+        "vars": {"queue": "['A']", "visited": "{'A'}"},
+        "activeNode": "A", "visited": ["A"], "queue": ["A"],
+        "headline": "Enqueue start node A and mark visited",
+        "reason": "Visited set prevents revisiting nodes in cyclic graphs."
+      },
+      {
+        "line": 5,
+        "vars": {"curr": "A", "neighbors": "['B', 'C']"},
+        "activeNode": "A", "visited": ["A", "B", "C"], "queue": ["B", "C"],
+        "headline": "Pop A ➔ Enqueue unvisited neighbors B and C",
+        "reason": "Nodes B and C added to queue in FIFO order."
+      },
+      {
+        "line": 5,
+        "vars": {"curr": "B", "queue": "['C', 'D']"},
+        "activeNode": "B", "visited": ["A", "B", "C", "D"], "queue": ["C", "D"],
+        "headline": "Pop B ➔ Enqueue neighbor D",
+        "reason": "B connects to D. Enqueue D."
+      },
+      {
+        "line": 4,
+        "vars": {"visited": "{'A', 'B', 'C', 'D', 'E'}", "queue": "[]"},
+        "activeNode": "D", "visited": ["A", "B", "C", "D", "E"], "queue": [], "isMatch": True,
+        "headline": "🎯 All 5 nodes visited in O(V + E) linear time",
+        "reason": "Queue empty. Every vertex and edge explored without duplicate visits."
+      }
+    ]
+  },
+
+  "bit-manipulation": {
+    "func": "is_power_of_two(n)",
+    "code": [
+      "def is_power_of_two(n):",
+      "    if n <= 0:",
+      "        return False",
+      "    # n & (n - 1) clears lowest 1-bit",
+      "    cleared = n & (n - 1)",
+      "    return cleared == 0"
+    ],
+    "type": "bits",
+    "steps": [
+      {
+        "line": 2,
+        "vars": {"n": 12},
+        "bits": {"n (12)": [0,0,0,0, 1,1,0,0], "Indices": [7,6,5,4, 3,2,1,0]},
+        "headline": "Inspect binary representation of n = 12",
+        "reason": "12 is 8 + 4 = (0000 1100)₂. Rightmost set bit is at index 2."
+      },
+      {
+        "line": 5,
+        "vars": {"n": 12, "n-1": 11, "cleared": 8},
+        "bits": {"n (12)": [0,0,0,0, 1,1,0,0], "n-1 (11)": [0,0,0,0, 1,0,1,1], "12 & 11": [0,0,0,0, 1,0,0,0]},
+        "clearedBit": 2,
+        "headline": "12 & 11 = 8 (Lowest set bit cleared!)",
+        "reason": "Subtracting 1 flips the rightmost 1. Bitwise AND strips it in O(1) single-cycle time."
+      },
+      {
+        "line": 6,
+        "vars": {"cleared": 8, "is_power_of_two": False},
+        "bits": {"Result (8)": [0,0,0,0, 1,0,0,0]},
+        "headline": "8 != 0 ➔ 12 is NOT a power of 2",
+        "reason": "A power of 2 has ONLY ONE set bit. Clearing it must leave 0. Since 8 != 0, 12 is not a power of 2."
+      },
+      {
+        "line": 6,
+        "vars": {"n": 8, "n-1": 7, "8 & 7": 0, "is_power_of_two": True},
+        "bits": {"n (8)": [0,0,0,0, 1,0,0,0], "n-1 (7)": [0,0,0,0, 0,1,1,1], "8 & 7": [0,0,0,0, 0,0,0,0]},
+        "isMatch": True,
+        "headline": "🎯 Test n = 8: 8 & 7 == 0 ➔ Power of 2: YES!",
+        "reason": "Guaranteed power of 2 test: n > 0 and (n & (n - 1)) == 0."
+      }
+    ]
+  }
+}
+
+print(f"Loaded {len(PATTERNS)} custom pattern models.")
+
+
+TEMPLATE = """{% extends "base.html" %}{% set nav='patterns' %}
+{% block title %}{{ p.name }} — Trackboard{% endblock %}
+{% block body %}
+<div style="margin-bottom:20px;">
+  <a href="/patterns" class="btn btn-ghost" style="font-size:12px;">← All patterns</a>
+</div>
+
+<div class="page-head" style="padding-top:0;">
+  <div class="label">{{ p.family }}</div>
+  <h1>{{ p.name }}</h1>
+  <p class="sub">{{ p.summary }}</p>
+</div>
+
+{% if p.invariant %}<div class="box inv"><b>Invariant.</b> {{ p.invariant }}</div>{% endif %}
+
+<h2>Recognise it by</h2>
+<ul class="cue">{% for c in p.cues %}<li>{{ c }}</li>{% endfor %}</ul>
+
+{% if p.traps %}<div class="box trap" style="margin-top:14px;"><b>Where people go wrong.</b> {{ p.traps }}</div>{% endif %}
+
+{# ── Compact PythonTutor-Style Interactive Execution Dry Run ── #}
+<style>
+.pt-workbench {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 20px 0 28px 0;
+  color: #c9d1d9;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.pt-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #21262d;
+}
+.pt-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pt-badge {
+  background: rgba(56, 139, 253, 0.15);
+  color: #58a6ff;
+  border: 1px solid rgba(56, 139, 253, 0.4);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.pt-pattern-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f0f6fc;
+}
+.pt-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pt-btn {
+  background: #21262d;
+  color: #c9d1d9;
+  border: 1px solid #363b42;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.12s ease;
+}
+.pt-btn:hover {
+  background: #30363d;
+  color: #fff;
+  border-color: #8b949e;
+}
+.pt-btn-primary {
+  background: #1f6feb;
+  color: #fff;
+  border-color: #388bfd;
+}
+.pt-btn-primary:hover {
+  background: #388bfd;
+}
+.pt-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.pt-btn-ghost {
+  background: transparent;
+  border-color: #30363d;
+}
+.pt-step-indicator {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8b949e;
+  font-family: ui-monospace, Menlo, monospace;
+  padding: 0 4px;
+  min-width: 80px;
+  text-align: center;
+}
+.pt-progress-bar {
+  width: 100%;
+  height: 3px;
+  background: #161b22;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+.pt-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1f6feb, #3fb950);
+  width: 0%;
+  transition: width 0.2s ease;
+}
+
+/* ── Split Pane Workbench ── */
+.pt-split {
+  display: grid;
+  grid-template-columns: 1fr 1.08fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+@media (max-width: 860px) {
+  .pt-split {
+    grid-template-columns: 1fr;
+  }
+}
+.pt-pane {
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pt-pane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #0d1117;
+  border-bottom: 1px solid #21262d;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b949e;
+  gap: 12px;
+}
+.pt-subtag {
+  color: #58a6ff;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+/* ── Left Pane: Code & Variables ── */
+.pt-code-box {
+  padding: 8px 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  max-height: 230px;
+  overflow-y: auto;
+  background: #0d1117;
+}
+.pt-code-line {
+  display: flex;
+  align-items: center;
+  padding: 1px 8px;
+  transition: background 0.15s ease;
+}
+.pt-code-line.active-line {
+  background: rgba(56, 139, 253, 0.2);
+  border-left: 3px solid #58a6ff;
+}
+.pt-line-num {
+  width: 24px;
+  color: #484f58;
+  text-align: right;
+  margin-right: 10px;
+  font-size: 11px;
+  user-select: none;
+}
+.pt-exec-marker {
+  width: 14px;
+  color: #58a6ff;
+  font-size: 11px;
+  font-weight: bold;
+  user-select: none;
+}
+.pt-code-content {
+  color: #c9d1d9;
+  white-space: pre;
+}
+.pt-kw { color: #ff7b72; font-weight: 600; }
+.pt-fn { color: #d2a8ff; font-weight: 600; }
+.pt-str { color: #a5d6ff; }
+.pt-num { color: #79c0ff; }
+.pt-cm { color: #8b949e; font-style: italic; }
+.pt-op { color: #ff7b72; }
+
+/* Variables Frame */
+.pt-vars-box {
+  padding: 10px 12px;
+  background: #161b22;
+  border-top: 1px solid #21262d;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+  min-height: 75px;
+  max-height: 115px;
+  overflow-y: auto;
+}
+.pt-var-chip {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pt-var-name {
+  color: #8b949e;
+}
+.pt-var-val {
+  color: #e3b341;
+  font-weight: 700;
+}
+
+/* ── Right Pane: DSA Visualizer & Mentor Card ── */
+.pt-visual-canvas {
+  padding: 14px;
+  min-height: 190px;
+  max-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #0d1117;
+}
+.pt-mentor-box {
+  padding: 12px 14px;
+  background: #161b22;
+  border-top: 1px solid #21262d;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 110px;
+}
+.pt-mentor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #58a6ff;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pt-mentor-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #f0f6fc;
+}
+
+/* ── Dedicated DSA Components ── */
+/* 1. Array Cells */
+.pt-array-cells {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+.pt-cell {
+  width: 44px;
+  height: 44px;
+  background: #161b22;
+  border: 1.5px solid #30363d;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 15px;
+  font-weight: 700;
+  position: relative;
+  transition: all 0.15s ease;
+}
+.pt-cell.selected {
+  border-color: #58a6ff;
+  background: rgba(56, 139, 253, 0.2);
+  color: #fff;
+  transform: translateY(-2px);
+}
+.pt-cell.match {
+  border-color: #3fb950;
+  background: rgba(63, 185, 80, 0.25);
+  color: #3fb950;
+}
+.pt-cell.dead {
+  opacity: 0.25;
+  text-decoration: line-through;
+  border-color: #21262d;
+}
+.pt-cell-ptr-top {
+  position: absolute;
+  top: -18px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #58a6ff;
+  white-space: nowrap;
+}
+.pt-cell-ptr-bot {
+  position: absolute;
+  bottom: -18px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #d29922;
+  white-space: nowrap;
+}
+
+/* 2. Linked List Nodes with Pointers */
+.pt-ll-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 18px 4px;
+}
+.pt-ll-node {
+  display: flex;
+  background: #161b22;
+  border: 1.5px solid #30363d;
+  border-radius: 6px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 13px;
+  position: relative;
+}
+.pt-ll-node.active-curr {
+  border-color: #58a6ff;
+  box-shadow: 0 0 10px rgba(56, 139, 253, 0.4);
+}
+.pt-ll-node.active-prev {
+  border-color: #3fb950;
+  background: rgba(63, 185, 80, 0.15);
+}
+.pt-ll-val {
+  padding: 6px 10px;
+  font-weight: 700;
+  color: #f0f6fc;
+}
+.pt-ll-next {
+  padding: 6px 8px;
+  background: #0d1117;
+  color: #8b949e;
+  border-left: 1px solid #30363d;
+  font-size: 11px;
+}
+.pt-ll-ptr {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.pt-ll-ptr.curr { color: #58a6ff; }
+.pt-ll-ptr.prev { color: #3fb950; }
+.pt-ll-ptr.nxt { color: #d29922; }
+.pt-ll-arrow {
+  color: #58a6ff;
+  font-size: 16px;
+  font-weight: bold;
+}
+.pt-ll-arrow.rev {
+  color: #f85149;
+}
+
+/* 3. Backtracking State Tree */
+.pt-bt-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.pt-bt-path-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #161b22;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+}
+.pt-bt-chip {
+  background: #0d1117;
+  border: 1px solid #58a6ff;
+  color: #58a6ff;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+.pt-bt-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.pt-bt-badge.choose { background: rgba(56, 139, 253, 0.2); color: #58a6ff; }
+.pt-bt-badge.undo { background: rgba(248, 81, 73, 0.25); color: #f85149; }
+
+/* 4. Union-Find Components */
+.pt-uf-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.pt-uf-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.pt-uf-tree {
+  background: #161b22;
+  border: 1.5px solid #30363d;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* 5. Shortest Path Dijkstra Table */
+.pt-dijkstra-box {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+}
+.pt-dist-table {
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+}
+.pt-dist-table td, .pt-dist-table th {
+  padding: 4px 8px;
+  border: 1px solid #30363d;
+  text-align: center;
+}
+
+/* 6. Topo Sort */
+.pt-topo-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* 7. Bit Table */
+.pt-bit-table {
+  border-collapse: separate;
+  border-spacing: 3px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+}
+.pt-bit-table td {
+  padding: 4px 6px;
+  text-align: center;
+  border-radius: 4px;
+}
+.pt-bit-label {
+  color: #8b949e;
+  text-align: right !important;
+  font-size: 11px !important;
+}
+.pt-bit-cell {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  min-width: 22px;
+  font-weight: 600;
+}
+.pt-bit-cell.set {
+  background: rgba(56, 139, 253, 0.2);
+  border-color: #58a6ff;
+  color: #fff;
+}
+.pt-bit-cell.cleared {
+  background: rgba(248, 81, 73, 0.25);
+  border-color: #f85149;
+  color: #f85149;
+  font-weight: 900;
+}
+
+/* 8. Graph & Tree */
+.pt-graph-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.pt-graph-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+}
+.pt-graph-node {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #161b22;
+  border: 2px solid #30363d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+.pt-graph-node.active-node {
+  border-color: #58a6ff;
+  background: rgba(56, 139, 253, 0.25);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(56, 139, 253, 0.4);
+}
+.pt-graph-node.visited-node {
+  border-color: #3fb950;
+  background: rgba(63, 185, 80, 0.2);
+  color: #3fb950;
+}
+
+/* 9. Trie */
+.pt-trie-path {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.pt-trie-node {
+  background: #161b22;
+  border: 1.5px solid #30363d;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 700;
+}
+.pt-trie-node.match {
+  border-color: #3fb950;
+  color: #3fb950;
+  background: rgba(63, 185, 80, 0.15);
+}
+.pt-trie-node.end {
+  border-color: #d29922;
+  color: #d29922;
+}
+
+/* 10. Stack */
+.pt-stack-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.pt-stack-items {
+  display: flex;
+  gap: 6px;
+  border-bottom: 2px solid #58a6ff;
+  padding-bottom: 6px;
+}
+
+/* 11. Intervals */
+.pt-intervals-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 90%;
+}
+.pt-interval-bar {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+}
+.pt-interval-bar.merged {
+  border-color: #3fb950;
+  background: rgba(63, 185, 80, 0.2);
+  color: #3fb950;
+}
+
+/* 12. DP Matrix with Formula */
+.pt-dp-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.pt-dp-formula {
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+  color: #e3b341;
+  background: #161b22;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid #30363d;
+}
+.pt-dp-table {
+  border-collapse: collapse;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  text-align: center;
+}
+.pt-dp-table th, .pt-dp-table td {
+  padding: 4px 7px;
+  border: 1px solid #30363d;
+}
+.pt-dp-table td.active-cell {
+  background: rgba(56, 139, 253, 0.35);
+  color: #fff;
+  font-weight: 700;
+  border-color: #58a6ff;
+}
+.pt-dp-table td.match-cell {
+  background: rgba(63, 185, 80, 0.35);
+  color: #3fb950;
+  font-weight: 700;
+  border-color: #3fb950;
+}
+
+/* Collapsible Trace Drawer */
+.pt-trace-drawer {
+  margin-top: 14px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.pt-trace-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.pt-trace-table th {
+  background: #0d1117;
+  color: #8b949e;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #30363d;
+}
+.pt-trace-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #21262d;
+}
+.pt-trace-row {
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+.pt-trace-row:hover {
+  background: rgba(56, 139, 253, 0.1);
+}
+.pt-trace-row.active {
+  background: rgba(56, 139, 253, 0.2);
+  border-left: 3px solid #58a6ff;
+}
+</style>
+
+<div class="pt-workbench" id="pt-workbench">
+  {# Top Toolbar #}
+  <div class="pt-toolbar">
+    <div class="pt-title-wrap">
+      <span class="pt-badge">⚡ Dry Run Execution</span>
+      <span class="pt-pattern-name">{{ p.name }}</span>
+    </div>
+
+    <div class="pt-stepper">
+      <button type="button" class="pt-btn" id="pt-btn-first" title="First step">⏮</button>
+      <button type="button" class="pt-btn" id="pt-btn-prev" title="Previous step">◀ Prev</button>
+      <span class="pt-step-indicator" id="pt-step-counter">Step 1 / 6</span>
+      <button type="button" class="pt-btn pt-btn-primary" id="pt-btn-next" title="Next step">Next ▶</button>
+      <button type="button" class="pt-btn" id="pt-btn-last" title="Last step">⏭</button>
+    </div>
+
+    <div style="display:flex;gap:6px;">
+      <button type="button" class="pt-btn pt-btn-ghost" id="pt-btn-reset" title="Restart execution">↺ Reset</button>
+      <button type="button" class="pt-btn pt-btn-ghost" id="pt-btn-trace-toggle" title="Show or hide all steps">📋 Trace</button>
+    </div>
+  </div>
+
+  {# Progress Fill #}
+  <div class="pt-progress-bar">
+    <div class="pt-progress-fill" id="pt-progress-fill"></div>
+  </div>
+
+  {# Split-Pane Workbench #}
+  <div class="pt-split">
+    {# Left Pane: Code & Variables #}
+    <div class="pt-pane">
+      <div class="pt-pane-header">
+        <span>Python Implementation</span>
+        <span class="pt-subtag" id="pt-active-func">main()</span>
+      </div>
+      <div class="pt-code-box" id="pt-code-box"></div>
+
+      <div class="pt-pane-header" style="border-top:1px solid #21262d;">
+        <span>Local Variables</span>
+        <span class="pt-subtag" id="pt-frame-status">Active Frame</span>
+      </div>
+      <div class="pt-vars-box" id="pt-vars-box"></div>
+    </div>
+
+    {# Right Pane: DSA Visualizer & Whiteboard Mentor #}
+    <div class="pt-pane">
+      <div class="pt-pane-header">
+        <span>Data Structure State</span>
+        <span class="pt-subtag">{{ p.family }}</span>
+      </div>
+      <div class="pt-visual-canvas" id="pt-visual-canvas"></div>
+
+      <div class="pt-mentor-box">
+        <div class="pt-mentor-header">
+          <span>💡 Whiteboard Mentor (Claude)</span>
+          <span id="pt-mentor-tag" style="color:#e3b341;font-weight:700;"></span>
+        </div>
+        <div class="pt-mentor-text" id="pt-mentor-body"></div>
+      </div>
+    </div>
+  </div>
+
+  {# Collapsible Full Trace Drawer #}
+  <div class="pt-trace-drawer" id="pt-trace-drawer" style="display:none;">
+    <table class="pt-trace-table">
+      <thead>
+        <tr>
+          <th style="width:40px;">#</th>
+          <th style="width:60px;">Line</th>
+          <th>State / Variables</th>
+          <th>Whiteboard Intuition</th>
+        </tr>
+      </thead>
+      <tbody id="pt-trace-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+(function() {
+  const slug = "{{ p.slug }}";
+  const DB = __PATTERNS_JSON__;
+
+  // Resolve matching pattern model
+  let model = DB[slug] || DB["two-pointers"];
+  let currentStep = 0;
+
+  // DOM Elements
+  const codeBox = document.getElementById("pt-code-box");
+  const varsBox = document.getElementById("pt-vars-box");
+  const canvas = document.getElementById("pt-visual-canvas");
+  const mentorBody = document.getElementById("pt-mentor-body");
+  const mentorTag = document.getElementById("pt-mentor-tag");
+  const stepCounter = document.getElementById("pt-step-counter");
+  const progressFill = document.getElementById("pt-progress-fill");
+  const activeFunc = document.getElementById("pt-active-func");
+  const traceBody = document.getElementById("pt-trace-body");
+  const traceDrawer = document.getElementById("pt-trace-drawer");
+
+  const btnPrev = document.getElementById("pt-btn-prev");
+  const btnNext = document.getElementById("pt-btn-next");
+  const btnFirst = document.getElementById("pt-btn-first");
+  const btnLast = document.getElementById("pt-btn-last");
+  const btnReset = document.getElementById("pt-btn-reset");
+  const btnTraceToggle = document.getElementById("pt-btn-trace-toggle");
+
+  if (activeFunc) activeFunc.textContent = model.func;
+
+  // Helper syntax highlighter
+  function highlightCode(raw) {
+    return raw
+      .replace(/\b(def|for|while|if|elif|else|return|in|not|and|or)\b/g, '<span class="pt-kw">$1</span>')
+      .replace(/\b(two_sum_sorted|max_sub_array_of_size_k|has_cycle|reverse_list|subsets|find_and_union|topological_sort|dijkstra|knapsack|climb_stairs|unique_paths|longest_common_subsequence|subarray_sum|min_meeting_rooms|merge|cyclic_sort|next_greater|max_sliding_window|binary_search|min_eating_speed|find_kth_largest|inorder|level_order|starts_with|bfs|is_power_of_two)\b/g, '<span class="pt-fn">$1</span>')
+      .replace(/\b(\d+)\b/g, '<span class="pt-num">$1</span>')
+      .replace(/(#.*$)/g, '<span class="pt-cm">$1</span>')
+      .replace(/('[^']*')/g, '<span class="pt-str">$1</span>');
+  }
+
+  // Render Full Code Block Once
+  function renderCodeBox(activeLine) {
+    let html = '';
+    model.code.forEach((lineText, idx) => {
+      const lineNum = idx + 1;
+      const isExec = lineNum === activeLine;
+      html += `
+        <div class="pt-code-line ${isExec ? 'active-line' : ''}" id="code-line-${lineNum}">
+          <span class="pt-line-num">${lineNum}</span>
+          <span class="pt-exec-marker">${isExec ? '▶' : ''}</span>
+          <span class="pt-code-content">${highlightCode(lineText)}</span>
+        </div>
+      `;
+    });
+    codeBox.innerHTML = html;
+  }
+
+  // Render Dynamic Visual Canvas per DSA
+  function renderCanvas(s) {
+    const type = model.type;
+    let html = '';
+
+    if (type === "linked-list") {
+      html = '<div class="pt-ll-box">';
+      s.nodes.forEach((val, idx) => {
+        const isCurr = idx === s.currIdx;
+        const isPrev = idx === s.prevIdx;
+        const isNxt = idx === s.nxtIdx;
+        const isRev = idx <= s.reversedUpTo;
+
+        let ptr = '';
+        if (isCurr) ptr += '<span class="pt-ll-ptr curr">curr</span>';
+        if (isPrev) ptr += '<span class="pt-ll-ptr prev">prev</span>';
+        if (isNxt) ptr += '<span class="pt-ll-ptr nxt">nxt</span>';
+
+        html += `
+          <div class="pt-ll-node ${isCurr ? 'active-curr' : (isPrev ? 'active-prev' : '')}">
+            ${ptr}
+            <div class="pt-ll-val">${val}</div>
+            <div class="pt-ll-next">•</div>
+          </div>
+        `;
+        if (idx < s.nodes.length - 1) {
+          html += `<span class="pt-ll-arrow ${isRev ? 'rev' : ''}">${isRev ? '🠔' : '➔'}</span>`;
+        }
+      });
+      html += '</div>';
+    } else if (type === "linked-list-cycle") {
+      html = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <div style="display:flex;gap:6px;align-items:center;">
+            ${[1, 2, 3, 4, 5, 6].map(val => `
+              <div class="pt-cell ${val===s.slow||val===s.fast?'selected':''} ${s.isMatch&&val===s.slow?'match':''}" style="width:40px;height:40px;font-size:13px;">
+                ${val===s.fast ? '<span class="pt-cell-ptr-top">🐇Fast</span>' : ''}
+                <span>${val}</span>
+                ${val===s.slow ? '<span class="pt-cell-ptr-bot">🐢Slow</span>' : ''}
+              </div>
+            `).join(" ➔ ")}
+          </div>
+          <div style="font-size:11px;color:#d29922;margin-top:10px;">Node 6 loops back to Node 3 ➔ 🔄 Cycle active</div>
+        </div>
+      `;
+    } else if (type === "backtracking") {
+      html = `
+        <div class="pt-bt-box">
+          <div class="pt-bt-path-row">
+            <span style="font-size:11px;color:#8b949e;">Current Path Buffer:</span>
+            ${s.path.length === 0 ? '<span style="color:#484f58;font-size:12px;">[]</span>' : s.path.map(x => `<span class="pt-bt-chip">${x}</span>`).join("")}
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            ${s.action === "CHOOSE" ? `<span class="pt-bt-badge choose">Choose: ${s.val}</span>` : ''}
+            ${s.action === "UNDO" ? `<span class="pt-bt-badge undo">Backtrack (Pop ${s.val})</span>` : ''}
+            ${s.action === "COMPLETE" ? '<span class="pt-bt-badge choose" style="background:rgba(63,185,80,0.3);color:#3fb950;">All Subsets Generated!</span>' : ''}
+          </div>
+        </div>
+      `;
+    } else if (type === "union-find") {
+      html = `
+        <div class="pt-uf-box">
+          <div style="font-size:11px;color:#8b949e;">Parent Array: [ ${s.parent.map((p, i) => `<b>${i}➔${p}</b>`).join(", ")} ]</div>
+          <div class="pt-uf-row" style="margin-top:6px;">
+            <div class="pt-uf-tree">Set A: (0) 🠔 (1) 🠔 (2)</div>
+            <div class="pt-uf-tree">Set B: (3)</div>
+          </div>
+          ${s.edge ? `<div style="font-size:11px;color:#58a6ff;font-weight:bold;">Inspecting Edge: (${s.edge.join(", ")})</div>` : ''}
+        </div>
+      `;
+    } else if (type === "topo-sort") {
+      html = `
+        <div class="pt-topo-box">
+          <div style="display:flex;gap:8px;font-size:11px;">
+            ${s.inDegree.map((d, i) => `<span class="pt-var-chip"><span class="pt-var-name">InDeg[${i}]:</span> <span class="pt-var-val">${d}</span></span>`).join("")}
+          </div>
+          <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;">
+            <span class="pt-var-chip" style="border-color:#58a6ff;"><span class="pt-var-name">Zero-In Queue:</span> <span class="pt-var-val">[ ${s.queue.join(", ")} ]</span></span>
+            <span class="pt-var-chip" style="border-color:#3fb950;"><span class="pt-var-name">Topological Order:</span> <span class="pt-var-val">[ ${s.order.join(", ")} ]</span></span>
+          </div>
+        </div>
+      `;
+    } else if (type === "dijkstra") {
+      html = `
+        <div class="pt-dijkstra-box">
+          <div>
+            <div style="font-size:10px;color:#8b949e;text-transform:uppercase;margin-bottom:4px;">Tentative Distances</div>
+            <table class="pt-dist-table">
+              <tr><th>Vertex</th><th>A</th><th>B</th><th>C</th></tr>
+              <tr><td>dist[u]</td><td>${s.dist.A}</td><td style="color:#e3b341;font-weight:bold;">${s.dist.B}</td><td>${s.dist.C}</td></tr>
+            </table>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#8b949e;text-transform:uppercase;margin-bottom:4px;">Min-Heap Priority Queue</div>
+            <div style="display:flex;gap:6px;">
+              ${s.pq.map(([u, d]) => `<span class="pt-var-chip" style="color:#58a6ff;">(${u}, dist=${d})</span>`).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (type === "dp") {
+      html = `
+        <div class="pt-dp-box">
+          ${s.formula ? `<div class="pt-dp-formula">${s.formula}</div>` : ''}
+          <table class="pt-dp-table">
+            <thead>
+              <tr><th>Item \\ W</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr>
+            </thead>
+            <tbody>
+              <tr><td style="font-weight:bold;">0: Base</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+              <tr><td style="font-weight:bold;">1: wt=2,val=3</td><td>0</td><td>0</td><td>3</td><td class="${s.row===1&&s.col===3?'active-cell':''}">3</td><td>3</td><td>3</td><td>3</td><td>3</td></tr>
+              <tr><td style="font-weight:bold;">2: wt=3,val=4</td><td>0</td><td>0</td><td>3</td><td>4</td><td>4</td><td>7</td><td>7</td><td>7</td></tr>
+              <tr><td style="font-weight:bold;">3: wt=2,val=5</td><td>0</td><td>0</td><td>5</td><td>5</td><td>8</td><td>8</td><td>9</td><td class="${s.isMatch?'match-cell':''}">12 🏆</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else if (type === "hashmap") {
+      html = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;">
+          <div style="display:flex;gap:10px;font-size:12px;">
+            <span class="pt-var-chip"><span class="pt-var-name">curr_sum:</span> <span class="pt-var-val">${s.currSum}</span></span>
+            <span class="pt-var-chip"><span class="pt-var-name">target k:</span> <span class="pt-var-val">${s.target}</span></span>
+            <span class="pt-var-chip"><span class="pt-var-name">curr_sum - k:</span> <span class="pt-var-val">${s.currSum - s.target}</span></span>
+          </div>
+          <div style="font-size:11px;color:#8b949e;margin-top:4px;">Prefix Hash Map: { ${Object.entries(s.seen).map(([k, v]) => `<b>${k}</b>: ${v}`).join(", ")} }</div>
+        </div>
+      `;
+    } else if (type === "bits") {
+      html = '<table class="pt-bit-table">';
+      for (const [rowLabel, bitArr] of Object.entries(s.bits || {})) {
+        const isHeader = rowLabel === "Indices";
+        html += `<tr><td class="pt-bit-label">${rowLabel}</td>`;
+        bitArr.forEach((b, idx) => {
+          let cls = 'pt-bit-cell';
+          if (isHeader) {
+            html += `<td style="color:#8b949e;font-size:10px;">[${b}]</td>`;
+          } else {
+            if (b === 1) cls += ' set';
+            if (s.clearedBit === (7 - idx)) cls += ' cleared';
+            html += `<td class="${cls}">${b}</td>`;
+          }
+        });
+        html += '</tr>';
+      }
+      html += '</table>';
+      if (s.clearedBit !== undefined) {
+        html += `<div style="margin-top:6px;font-size:11px;color:#f85149;font-weight:bold;text-align:center;">
+          Bit ${s.clearedBit} flipped from 1 to 0 (Rightmost set bit extinguished in O(1)!)
+        </div>`;
+      }
+    } else if (type === "graph") {
+      html = `
+        <div class="pt-graph-box">
+          <div class="pt-graph-row">
+            <div class="pt-graph-node ${s.activeNode==='A'?'active-node':s.visited.includes('A')?'visited-node':''}">A</div>
+          </div>
+          <div style="font-size:11px;color:#484f58;">↙ &nbsp; &nbsp; ↘</div>
+          <div class="pt-graph-row">
+            <div class="pt-graph-node ${s.activeNode==='B'?'active-node':s.visited.includes('B')?'visited-node':''}">B</div>
+            <div class="pt-graph-node ${s.activeNode==='C'?'active-node':s.visited.includes('C')?'visited-node':''}">C</div>
+          </div>
+          <div style="font-size:11px;color:#484f58;">↓ &nbsp; &nbsp; &nbsp; ↓</div>
+          <div class="pt-graph-row">
+            <div class="pt-graph-node ${s.activeNode==='D'?'active-node':s.visited.includes('D')?'visited-node':''}">D</div>
+            <div class="pt-graph-node ${s.activeNode==='E'?'active-node':s.visited.includes('E')?'visited-node':''}">E</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:6px;font-size:11px;">
+            <span class="pt-var-chip"><span class="pt-var-name">Queue:</span> <span class="pt-var-val">${s.queue.join(", ") || "EMPTY"}</span></span>
+            <span class="pt-var-chip"><span class="pt-var-name">Visited:</span> <span class="pt-var-val">${s.visited.join(", ")}</span></span>
+          </div>
+        </div>
+      `;
+    } else if (type === "tree") {
+      html = `
+        <div class="pt-graph-box">
+          <div class="pt-graph-row">
+            <div class="pt-graph-node ${s.currNode===10?'active-node':''}">10</div>
+          </div>
+          <div style="font-size:11px;color:#484f58;">↙ &nbsp; &nbsp; ↘</div>
+          <div class="pt-graph-row">
+            <div class="pt-graph-node ${s.currNode===5?'active-node':''}">5</div>
+            <div class="pt-graph-node ${s.currNode===15?'active-node':''}">15</div>
+          </div>
+          <div style="font-size:11px;color:#484f58;">↙ &nbsp; ↘ &nbsp; &nbsp; ↘</div>
+          <div class="pt-graph-row">
+            <div class="pt-graph-node ${s.currNode===3?'active-node':''}">3</div>
+            <div class="pt-graph-node ${s.currNode===7?'active-node':''}">7</div>
+            <div class="pt-graph-node ${s.currNode===18?'active-node':''}">18</div>
+          </div>
+          <div style="font-size:11px;margin-top:6px;">
+            <span class="pt-var-chip"><span class="pt-var-name">Emitted:</span> <span class="pt-var-val">[ ${(s.visitedTree || []).join(", ")} ]</span></span>
+          </div>
+        </div>
+      `;
+    } else if (type === "trie") {
+      html = `
+        <div class="pt-trie-path">
+          ${s.path.map((node, i) => `
+            <div class="pt-trie-node ${i === s.path.length-1 ? (s.isMatch ? 'match' : 'end') : 'match'}">${node}</div>
+            ${i < s.path.length - 1 ? '<span style="color:#58a6ff;font-weight:bold;">➔</span>' : ''}
+          `).join("")}
+        </div>
+      `;
+    } else if (type === "stack") {
+      html = `
+        <div class="pt-stack-box">
+          <div style="font-size:11px;color:#8b949e;text-transform:uppercase;">Stack (Top right)</div>
+          <div class="pt-stack-items">
+            ${s.stackItems.map(item => `<div class="pt-cell selected">${item}</div>`).join("")}
+          </div>
+          ${s.popped ? `<div style="color:#f85149;font-size:11px;font-weight:bold;">🔥 Popped ${s.popped}</div>` : ''}
+        </div>
+      `;
+    } else if (type === "intervals") {
+      html = `
+        <div class="pt-intervals-box">
+          ${s.intervals.map(iv => `
+            <div class="pt-interval-bar ${iv.includes('MERGED') || iv.includes('Reuses') ? 'merged' : ''}">
+              <span>${iv}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    } else if (type === "cyclic") {
+      html = `
+        <div class="pt-array-cells">
+          ${s.arr.map((val, idx) => `
+            <div class="pt-cell ${idx === s.idx ? 'selected' : (s.isMatch ? 'match' : '')}">
+              <span class="pt-cell-ptr-top">idx ${idx}</span>
+              <span>${val}</span>
+              ${idx === s.idx ? `<span class="pt-cell-ptr-bot">Home:${val-1}</span>` : ''}
+            </div>
+          `).join("")}
+        </div>
+      `;
+    } else if (type === "heap") {
+      html = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <div style="font-size:11px;color:#8b949e;">Min-Heap of Size K=2:</div>
+          <div style="display:flex;gap:8px;">
+            ${s.heap.map((h, i) => `<div class="pt-cell selected" style="border-color:${i===0?'#3fb950':'#58a6ff'};"><span>${h}</span>${i===0?'<span class="pt-cell-ptr-top" style="color:#3fb950;">Root(Min)</span>':''}</div>`).join("")}
+          </div>
+          ${s.popped ? `<div style="color:#f85149;font-size:11px;font-weight:bold;">Popped smaller item ${s.popped}</div>` : ''}
+        </div>
+      `;
+    } else {
+      // Standard Array / Binary Search
+      html = '<div class="pt-array-cells">';
+      (model.array || [1, 2, 3, 4, 5]).forEach((val, idx) => {
+        let isSelected = false;
+        let isDead = (s.dead || []).includes(idx);
+        let ptrTop = '';
+        let ptrBot = '';
+
+        if (type === "binary-search") {
+          if (idx === s.low) ptrTop = '<span class="pt-cell-ptr-top">Low</span>';
+          if (idx === s.high) ptrTop = '<span class="pt-cell-ptr-top" style="color:#d29922;">High</span>';
+          if (idx === s.mid) {
+            isSelected = true;
+            ptrBot = '<span class="pt-cell-ptr-bot">Mid</span>';
+          }
+        } else if (slug === "two-pointers" || slug.includes("pointer")) {
+          if (idx === s.l) { isSelected = true; ptrTop = '<span class="pt-cell-ptr-top">L</span>'; }
+          if (idx === s.r) { isSelected = true; ptrBot = '<span class="pt-cell-ptr-bot">R</span>'; }
+        } else if (slug === "sliding-window") {
+          if (idx >= s.l && idx <= s.r) isSelected = true;
+          if (idx === s.l) ptrTop = '<span class="pt-cell-ptr-top">Start</span>';
+          if (idx === s.r) ptrBot = '<span class="pt-cell-ptr-bot">End</span>';
+        }
+
+        let cls = 'pt-cell';
+        if (s.isMatch && isSelected) cls += ' match';
+        else if (isSelected) cls += ' selected';
+        else if (isDead) cls += ' dead';
+
+        html += `
+          <div class="${cls}">
+            ${ptrTop}
+            <span>${val}</span>
+            ${ptrBot}
+          </div>
+        `;
+      });
+      html += '</div>';
+    }
+
+    canvas.innerHTML = html;
+  }
+
+  // Render Variables Frame
+  function renderVariables(vars) {
+    let html = '';
+    for (const [k, v] of Object.entries(vars || {})) {
+      html += `
+        <div class="pt-var-chip">
+          <span class="pt-var-name">${k}:</span>
+          <span class="pt-var-val">${v}</span>
+        </div>
+      `;
+    }
+    varsBox.innerHTML = html || '<span style="color:#484f58;font-size:11px;">No active variables</span>';
+  }
+
+  // Render Full Trace Table (Drawer)
+  function renderTraceTable() {
+    let html = '';
+    model.steps.forEach((st, i) => {
+      const isCur = i === currentStep;
+      const varSummary = Object.entries(st.vars || {}).map(([k, v]) => `${k}=${v}`).join(", ");
+      html += `
+        <tr class="pt-trace-row ${isCur ? 'active' : ''}" onclick="window.goToPtStep(${i})">
+          <td style="font-weight:bold;color:${isCur ? '#58a6ff' : '#8b949e'};">${i + 1}</td>
+          <td style="font-family:ui-monospace,monospace;color:#58a6ff;">Line ${st.line}</td>
+          <td style="font-family:ui-monospace,monospace;color:#e3b341;">${varSummary}</td>
+          <td>
+            <strong style="color:#f0f6fc;">${st.headline}</strong>
+            <div style="font-size:11px;color:#8b949e;margin-top:2px;">${st.reason}</div>
+          </td>
+        </tr>
+      `;
+    });
+    traceBody.innerHTML = html;
+  }
+
+  // Main Render Function
+  function render() {
+    const s = model.steps[currentStep];
+
+    // 1. Code line highlight
+    renderCodeBox(s.line);
+
+    // 2. Variables Frame
+    renderVariables(s.vars);
+
+    // 3. DSA Visual Canvas
+    renderCanvas(s);
+
+    // 4. Mentor Dry Run Note
+    mentorTag.textContent = `Line ${s.line} — ${s.headline}`;
+    mentorBody.innerHTML = `
+      <div style="margin-bottom:4px;font-weight:600;color:#f0f6fc;">${s.headline}</div>
+      <div style="color:#c9d1d9;font-size:12px;">${s.reason}</div>
+    `;
+
+    // 5. Stepper state
+    stepCounter.textContent = `Step ${currentStep + 1} / ${model.steps.length}`;
+    const pct = ((currentStep) / (model.steps.length - 1)) * 100;
+    progressFill.style.width = `${pct}%`;
+
+    btnFirst.disabled = currentStep === 0;
+    btnPrev.disabled = currentStep === 0;
+    btnNext.disabled = currentStep === model.steps.length - 1;
+    btnLast.disabled = currentStep === model.steps.length - 1;
+
+    // 6. Trace Drawer rows
+    renderTraceTable();
+  }
+
+  // Control Handlers
+  window.goToPtStep = function(stepIdx) {
+    currentStep = stepIdx;
+    render();
+  };
+
+  btnNext.onclick = function() {
+    if (currentStep < model.steps.length - 1) {
+      currentStep++;
+      render();
+    }
+  };
+
+  btnPrev.onclick = function() {
+    if (currentStep > 0) {
+      currentStep--;
+      render();
+    }
+  };
+
+  btnFirst.onclick = function() {
+    currentStep = 0;
+    render();
+  };
+
+  btnLast.onclick = function() {
+    currentStep = model.steps.length - 1;
+    render();
+  };
+
+  btnReset.onclick = function() {
+    currentStep = 0;
+    render();
+  };
+
+  btnTraceToggle.onclick = function() {
+    if (traceDrawer.style.display === "none") {
+      traceDrawer.style.display = "block";
+      btnTraceToggle.classList.add("pt-btn-primary");
+    } else {
+      traceDrawer.style.display = "none";
+      btnTraceToggle.classList.remove("pt-btn-primary");
+    }
+  };
+
+  render();
+})();
+</script>
+
+<h2>Learn the idea</h2>
+{% if resources.concept %}
+<div class="grid g2">
+  {% for r in resources.concept[:4] %}
+  <div class="vid">
+    {% if r.embed %}<iframe src="{{ r.embed }}" loading="lazy" allowfullscreen
+      title="{{ r.title }}"></iframe>{% endif %}
+    <div class="meta"><span class="t"><a href="{{ r.watch }}" target="_blank" rel="noopener">{{ r.title }}</a></span><span class="c">{{ r.channel }}</span></div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <b>No concept videos mapped yet.</b><br>
+  Add the channel to <code>config/channels.yaml</code> with <code>role: concept</code>.
+</div>
+{% endif %}
+
+<h2>Practice</h2>
+{% if problems %}
+<table>
+  <tr><th></th><th>Problem</th><th>Difficulty</th><th>Sheets</th></tr>
+  {% for pr in problems %}
+  <tr>
+    <td>{% if pr.solved %}<span class="tick">✓</span>{% endif %}</td>
+    <td>
+      <a href="{{ pr.url }}" target="_blank" rel="noopener">{{ pr.title }}</a>
+      {% if pr.is_canonical %}<span class="pill" style="color:var(--amber);background:var(--amber-dim);font-size:10px;">canonical</span>{% endif %}
+    </td>
+    <td><span class="diff {{ pr.difficulty }}">{{ pr.difficulty }}</span></td>
+    <td>{% for t in pr.tags %}<span class="pill" style="font-size:10px;">{{ t }}</span> {% endfor %}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<div class="empty">
+  <b>No problems imported yet.</b><br>Run <code>python scripts/seed_problems.py</code>.
+</div>
+{% endif %}
+
+{% if resources.walkthrough %}
+<h2>Walkthroughs</h2>
+<div class="grid g2">
+  {% for r in resources.walkthrough[:6] %}
+  <div class="vid">
+    {% if r.embed %}<iframe src="{{ r.embed }}" loading="lazy" allowfullscreen
+      title="{{ r.title }}"></iframe>{% endif %}
+    <div class="meta"><span class="t"><a href="{{ r.watch }}" target="_blank" rel="noopener">{{ r.title }}</a></span><span class="c">{{ r.channel }}</span></div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+"""
+
+# Replace __PATTERNS_JSON__ with json dump
+patterns_json = json.dumps(PATTERNS, indent=2)
+full_html = TEMPLATE.replace("__PATTERNS_JSON__", patterns_json)
+
+target_path = Path("src/trackboard/templates/pages/pattern.html")
+target_path.write_text(full_html)
+print(f"Successfully generated pattern.html ({len(full_html)} bytes) with all 26 custom DSA models!")

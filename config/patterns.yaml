@@ -1,0 +1,525 @@
+# Trackboard — DSA pattern taxonomy
+#
+# This file is the spine of the learning half. Everything joins through it:
+# problems, videos, drills, and the weakest-pattern selector.
+#
+# Each pattern carries:
+#   summary   — when to reach for it, in plain language
+#   invariant — the thing that stays true while the algorithm runs. If you
+#               can state the invariant you can usually write the code.
+#   cues      — phrases in a problem statement that signal this pattern.
+#               These are what /drill shows as feedback, so they must be
+#               genuinely diagnostic, not generic.
+#   traps     — the mistake people actually make on this pattern
+#
+# Order matters: sort_order is the cold-start curriculum for a user with
+# fewer than 10 attempts (BUILD_SPEC §8.7.2).
+
+patterns:
+
+  # ---------- arrays & strings ----------
+
+  - slug: two-pointers
+    name: Two pointers
+    family: arrays
+    sort_order: 1
+    summary: >
+      Two indices walking a sorted or symmetric structure, moving toward or
+      away from each other. Turns an O(n^2) pair search into a single pass by
+      using order to rule out whole ranges at once.
+    invariant: >
+      Everything outside the two pointers has already been decided and will
+      never need revisiting.
+    cues:
+      - "array is sorted and you need a pair or triplet"
+      - "find two elements summing to a target"
+      - "palindrome check or reverse in place"
+      - "partition an array around a value"
+      - "remove duplicates in place, O(1) extra space"
+    traps: >
+      Moving the wrong pointer after a match. Decide before you code which
+      pointer moves in each of the three cases (too small, too big, equal).
+
+  - slug: sliding-window
+    name: Sliding window
+    family: arrays
+    sort_order: 2
+    summary: >
+      A contiguous range that grows at the right edge and shrinks at the left,
+      maintaining some property. The most reusable pattern in interviews.
+    invariant: >
+      The window always satisfies the constraint after the shrink step, so the
+      answer can be recorded at the end of every iteration.
+    cues:
+      - "longest or shortest subarray or substring"
+      - "contiguous"
+      - "at most K distinct / at most K replacements"
+      - "fixed size k window"
+      - "without repeating characters"
+    traps: >
+      Using an if instead of a while to shrink. Variable-size windows usually
+      need a while loop; only fixed-size windows shrink exactly once.
+
+  - slug: fast-slow-pointers
+    name: Fast and slow pointers
+    family: arrays
+    sort_order: 3
+    summary: >
+      Two pointers at different speeds over a sequence with implicit structure.
+      Detects cycles and finds midpoints without knowing the length.
+    invariant: >
+      If a cycle exists the fast pointer enters it first and must eventually
+      collide with the slow one.
+    cues:
+      - "detect a cycle"
+      - "find the middle of a linked list"
+      - "happy number / repeated squaring"
+      - "duplicate number, array as implicit linked list"
+      - "O(1) space and you cannot modify the input"
+    traps: >
+      Off-by-one on which node the middle is for even lengths. Fix the loop
+      condition once and reuse it.
+
+  - slug: prefix-sum
+    name: Prefix sums and difference arrays
+    family: arrays
+    sort_order: 4
+    summary: >
+      Precompute cumulative totals so any range query becomes one subtraction.
+      The difference array is the inverse — cheap range updates.
+    invariant: >
+      prefix[i] always equals the total of everything before index i.
+    cues:
+      - "sum of a subarray"
+      - "many range queries on a static array"
+      - "count subarrays summing to k"
+      - "range update, single final read"
+      - "equilibrium or pivot index"
+    traps: >
+      Forgetting the empty prefix. Seed the hash map with {0: 1} for
+      count-subarrays-equal-k or you miss every prefix that is itself the answer.
+
+  - slug: sorting-greedy
+    name: Sort then be greedy
+    family: arrays
+    sort_order: 5
+    summary: >
+      Sorting first often makes the locally optimal choice provably globally
+      optimal. Half of greedy problems are really sorting problems.
+    invariant: >
+      After sorting, the best choice at each step never has to be undone.
+    cues:
+      - "maximum number of non-overlapping things"
+      - "minimum number of X to cover Y"
+      - "schedule / assign / pair up to optimise"
+      - "you can process items in any order"
+    traps: >
+      Choosing the wrong sort key. For interval scheduling, sort by end time,
+      not start time — this single choice decides correctness.
+
+  - slug: merge-intervals
+    name: Merge intervals
+    family: arrays
+    sort_order: 6
+    summary: >
+      Sort by start, then sweep, merging or counting overlaps as you go.
+    invariant: >
+      The last interval in the output is the only one a new interval can
+      possibly overlap.
+    cues:
+      - "intervals, ranges, meeting rooms, bookings"
+      - "merge overlapping"
+      - "insert an interval into a sorted list"
+      - "minimum rooms or platforms needed"
+    traps: >
+      Treating touching intervals ([1,2] and [2,3]) inconsistently. Decide
+      whether adjacency counts as overlap before writing the comparison.
+
+  - slug: cyclic-sort
+    name: Cyclic sort
+    family: arrays
+    sort_order: 7
+    summary: >
+      When values are a permutation of 1..n, each value has a known home index.
+      Place them there and the anomalies reveal themselves.
+    invariant: >
+      After the pass, index i holds value i+1 unless a number is missing or
+      duplicated.
+    cues:
+      - "array contains numbers in the range 1 to n"
+      - "find the missing / duplicate / corrupt pair"
+      - "O(n) time and O(1) space required"
+    traps: >
+      Using an if instead of a while when swapping — one element may need
+      several hops before it lands.
+
+  # ---------- stacks & queues ----------
+
+  - slug: monotonic-stack
+    name: Monotonic stack
+    family: stacks
+    sort_order: 8
+    summary: >
+      A stack kept sorted, so the moment order breaks you have found the
+      answer for everything you pop. The go-to for "next greater" questions.
+    invariant: >
+      The stack is always increasing (or decreasing), so its top is the nearest
+      unresolved candidate.
+    cues:
+      - "next greater or next smaller element"
+      - "largest rectangle in a histogram"
+      - "daily temperatures / stock span"
+      - "trapping rain water"
+      - "remove k digits to make the smallest number"
+    traps: >
+      Storing values when you needed indices. Store indices by default — you
+      can always look up the value, but not the position.
+
+  - slug: monotonic-deque
+    name: Monotonic deque
+    family: stacks
+    sort_order: 9
+    summary: >
+      A sliding window that needs its max or min in O(1). A deque holds only
+      the candidates that could still win.
+    invariant: >
+      The deque front is the current window's answer, and everything behind it
+      is a smaller-but-later candidate.
+    cues:
+      - "maximum in every window of size k"
+      - "sliding window minimum"
+      - "shortest subarray with sum at least k"
+    traps: >
+      Forgetting to evict the front when it falls outside the window. Two
+      evictions per iteration: stale index, then dominated values.
+
+  # ---------- searching ----------
+
+  - slug: binary-search
+    name: Binary search on index
+    family: searching
+    sort_order: 10
+    summary: >
+      Halve a sorted range each step. Simple in principle; almost all the
+      difficulty is boundary conditions.
+    invariant: >
+      The answer, if it exists, is always inside [lo, hi].
+    cues:
+      - "sorted array"
+      - "find first or last occurrence"
+      - "rotated sorted array"
+      - "search in O(log n)"
+    traps: >
+      Writing a different loop shape every time. Pick one template
+      (lo < hi, mid = lo + (hi-lo)//2) and never deviate.
+
+  - slug: binary-search-answer
+    name: Binary search on the answer
+    family: searching
+    sort_order: 11
+    summary: >
+      When the answer is a number and "is X achievable?" gets monotonically
+      easier as X grows, binary search the answer space instead of the array.
+      The highest-leverage pattern most people discover late.
+    invariant: >
+      feasible(x) is false for all x below the answer and true for all x above.
+    cues:
+      - "minimise the maximum / maximise the minimum"
+      - "smallest capacity, speed, or size such that..."
+      - "ship packages within D days"
+      - "split array into m subarrays minimising the largest sum"
+      - "answer is a value, not a position"
+    traps: >
+      Not verifying monotonicity. If feasible() is not monotonic the whole
+      approach is invalid — check it before you write the predicate.
+
+  - slug: top-k-heap
+    name: Heaps and top-K
+    family: searching
+    sort_order: 12
+    summary: >
+      A heap of bounded size gives you the k best without sorting everything.
+      Two heaps facing each other give you a running median.
+    invariant: >
+      The heap contains exactly the k best seen so far, and its root is the
+      one to evict.
+    cues:
+      - "k largest / k smallest / k most frequent"
+      - "kth element"
+      - "merge k sorted lists"
+      - "median of a data stream"
+      - "schedule tasks by priority"
+    traps: >
+      Using a max-heap for k-largest. It is a min-heap of size k — the root is
+      the weakest survivor, and that is what makes eviction O(1).
+
+  # ---------- linked lists ----------
+
+  - slug: linked-list-reversal
+    name: In-place linked list reversal
+    family: linked-lists
+    sort_order: 13
+    summary: >
+      Rewire pointers as you walk, using three references. The base skill
+      underneath most linked list questions.
+    invariant: >
+      Everything before curr is already reversed; everything after is untouched.
+    cues:
+      - "reverse a linked list or a sublist"
+      - "reverse in groups of k"
+      - "reorder or rotate a list"
+      - "O(1) extra space"
+    traps: >
+      Losing the next pointer. Save next before you overwrite curr.next —
+      every single time.
+
+  # ---------- trees ----------
+
+  - slug: tree-dfs
+    name: Tree DFS
+    family: trees
+    sort_order: 14
+    summary: >
+      Recurse to the leaves and combine on the way back up. Most tree problems
+      are "what does each child return to its parent?"
+    invariant: >
+      A call on a node returns a correct answer for the entire subtree below it.
+    cues:
+      - "root-to-leaf path"
+      - "depth, height, or diameter"
+      - "validate a BST"
+      - "lowest common ancestor"
+      - "path sum"
+    traps: >
+      Confusing the value returned upward with the answer being tracked
+      globally. Diameter is the classic — you return depth but record diameter.
+
+  - slug: tree-bfs
+    name: Tree BFS
+    family: trees
+    sort_order: 15
+    summary: >
+      Process level by level with a queue. Whenever the question mentions
+      levels or shortest, this is it.
+    invariant: >
+      The queue holds exactly one complete level at the top of each iteration.
+    cues:
+      - "level order traversal"
+      - "right side view / level averages"
+      - "minimum depth"
+      - "connect nodes at the same level"
+    traps: >
+      Not capturing the level size before the inner loop. Read len(queue) once,
+      then loop that many times.
+
+  - slug: trie
+    name: Trie
+    family: trees
+    sort_order: 16
+    summary: >
+      A tree keyed by character, so shared prefixes are stored once. Turns
+      prefix questions into pointer walks.
+    invariant: >
+      The path from root to any node spells exactly one prefix.
+    cues:
+      - "prefix, autocomplete, dictionary"
+      - "search words with wildcards"
+      - "longest common prefix across many strings"
+      - "word search on a grid with many words"
+    traps: >
+      Forgetting the end-of-word flag. Without it you cannot distinguish a
+      stored word from a prefix of one.
+
+  # ---------- graphs ----------
+
+  - slug: graph-traversal
+    name: Graph BFS and DFS
+    family: graphs
+    sort_order: 17
+    summary: >
+      Same as trees but with cycles, so you need a visited set. BFS gives
+      shortest path on unweighted graphs; DFS gives connectivity.
+    invariant: >
+      A node is enqueued at most once, so its first discovery is its best one.
+    cues:
+      - "grid of islands, regions, or rooms"
+      - "connected components"
+      - "shortest path with all edges equal"
+      - "flood fill"
+      - "can you reach X from Y"
+    traps: >
+      Marking visited on dequeue instead of enqueue. That duplicates nodes in
+      the queue and can blow up on dense graphs.
+
+  - slug: topological-sort
+    name: Topological sort
+    family: graphs
+    sort_order: 18
+    summary: >
+      Order a DAG so every edge points forward. Kahn's algorithm peels off
+      zero-indegree nodes; leftovers mean a cycle.
+    invariant: >
+      Every node in the queue has all of its prerequisites already output.
+    cues:
+      - "course schedule / prerequisites"
+      - "build order, dependencies, compilation"
+      - "is the ordering possible"
+      - "alien dictionary"
+    traps: >
+      Not checking the output length at the end. If it is shorter than n there
+      was a cycle, and that is usually the actual question.
+
+  - slug: union-find
+    name: Union-Find (DSU)
+    family: graphs
+    sort_order: 19
+    summary: >
+      Track connectivity under merges in near-constant time. Ideal when edges
+      arrive incrementally and you only care about "same group?"
+    invariant: >
+      Two nodes share a root if and only if they are connected.
+    cues:
+      - "number of connected components after adding edges"
+      - "redundant connection / detect a cycle in an undirected graph"
+      - "accounts merge, friend circles"
+      - "Kruskal's minimum spanning tree"
+    traps: >
+      Skipping path compression or union by rank. Without both, worst case
+      degrades to O(n) per operation.
+
+  - slug: shortest-path
+    name: Weighted shortest path
+    family: graphs
+    sort_order: 20
+    summary: >
+      Dijkstra with a heap when weights are non-negative; Bellman-Ford when
+      they can be negative or hop count is capped.
+    invariant: >
+      Once a node is popped from the heap its distance is final.
+    cues:
+      - "minimum cost or time to reach"
+      - "edges have different weights"
+      - "cheapest flight within k stops"
+      - "network delay time"
+      - "path with maximum probability"
+    traps: >
+      Using Dijkstra where a hop limit exists. The finality invariant breaks —
+      use Bellman-Ford with k relaxation rounds instead.
+
+  # ---------- recursion & DP ----------
+
+  - slug: backtracking
+    name: Backtracking
+    family: dp
+    sort_order: 21
+    summary: >
+      Build a candidate incrementally, abandon it the moment it cannot work,
+      undo, and try the next. Constraints are usually tiny for a reason.
+    invariant: >
+      The partial candidate is always valid; the recursion only ever extends
+      valid states.
+    cues:
+      - "generate all permutations, subsets, or combinations"
+      - "n <= 20 or the answer is a list of all solutions"
+      - "n-queens, sudoku, word search"
+      - "partition a string into valid pieces"
+    traps: >
+      Forgetting to undo the choice after recursing, or mishandling duplicates.
+      Sort first and skip equal siblings at the same depth.
+
+  - slug: dp-1d
+    name: One-dimensional DP
+    family: dp
+    sort_order: 22
+    summary: >
+      Each state depends on a small number of earlier states along one axis.
+      Start from the recursion, add memoisation, then flatten to a loop.
+    invariant: >
+      dp[i] is the final answer for the prefix ending at i.
+    cues:
+      - "count the ways to reach step n"
+      - "maximum sum with no two adjacent"
+      - "can the string be segmented"
+      - "minimum coins to make an amount"
+      - "longest increasing subsequence"
+    traps: >
+      Guessing the recurrence. Write the brute-force recursion first and let
+      the memo table fall out of it — do not reverse-engineer the loop.
+
+  - slug: dp-2d
+    name: Two-dimensional and grid DP
+    family: dp
+    sort_order: 23
+    summary: >
+      Two indices, usually two sequences being compared or a grid being
+      crossed. The table is the algorithm.
+    invariant: >
+      dp[i][j] is the answer for the first i of one input and the first j of
+      the other.
+    cues:
+      - "edit distance, longest common subsequence"
+      - "unique paths in a grid with obstacles"
+      - "two strings being compared"
+      - "matching with wildcards"
+    traps: >
+      Getting the base row and column wrong. Fill them deliberately before
+      the main loops; most bugs live there.
+
+  - slug: dp-knapsack
+    name: Knapsack family
+    family: dp
+    sort_order: 24
+    summary: >
+      Choose a subset under a capacity limit. 0/1 when each item is used once,
+      unbounded when reusable — the loop direction is the only difference.
+    invariant: >
+      dp[c] is the best achievable value at exactly capacity c using the items
+      considered so far.
+    cues:
+      - "subset sum / partition into equal halves"
+      - "target sum with plus and minus signs"
+      - "coin change with unlimited coins"
+      - "maximum value under a weight limit"
+    traps: >
+      Iterating capacity ascending for 0/1. Descending for 0/1, ascending for
+      unbounded — that one line decides which problem you solved.
+
+  - slug: dp-subsequence
+    name: DP on subsequences and intervals
+    family: dp
+    sort_order: 25
+    summary: >
+      States over a range rather than a prefix, solved by expanding outward or
+      by length. Includes LIS, palindromic ranges, and matrix chain.
+    invariant: >
+      dp[i][j] is the answer for the closed interval i..j, built from strictly
+      smaller intervals.
+    cues:
+      - "longest palindromic substring or subsequence"
+      - "burst balloons, matrix chain multiplication"
+      - "minimum cuts to partition"
+      - "n <= 500 with an interval flavour"
+    traps: >
+      Iterating i and j in the wrong order. Loop by interval length, not by
+      raw indices, so sub-intervals are always ready.
+
+  # ---------- misc ----------
+
+  - slug: bit-manipulation
+    name: Bit manipulation
+    family: misc
+    sort_order: 26
+    summary: >
+      Treat numbers as sets of bits. XOR cancels pairs, AND masks, and n & (n-1)
+      clears the lowest set bit.
+    invariant: >
+      XOR of a value with itself is zero, so anything appearing twice vanishes.
+    cues:
+      - "single number among pairs"
+      - "count set bits"
+      - "subsets via bitmask, n <= 20"
+      - "swap or toggle without extra space"
+      - "power of two check"
+    traps: >
+      Forgetting Python's integers are unbounded and signed. Mask with
+      0xFFFFFFFF when a problem assumes 32-bit wraparound.

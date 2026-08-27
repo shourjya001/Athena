@@ -1,0 +1,250 @@
+{% extends "base.html" %}{% set nav='jobs' %}
+{% block title %}Tailor — {{ job.title }} @ {{ job.company_name }}{% endblock %}
+{% block body %}
+
+<div style="margin-bottom:20px;">
+  <a href="/jobs" class="btn btn-ghost" style="font-size:12px;">← Back to queue</a>
+</div>
+
+{# ── Banners ── #}
+{% if saved %}
+<div class="banner banner-green">
+  <span class="bi">✓</span>
+  <div class="bt">
+    <strong>Tailored resume saved.</strong>
+    <small>ATS-parseable PDF rendered for {{ job.company_name }}. Use auto-fill to attach it.</small>
+  </div>
+</div>
+{% endif %}
+
+{% if applied %}
+<div class="banner banner-amber">
+  <span class="bi">⚡</span>
+  <div class="bt">
+    <strong>Playwright auto-fill launched.</strong>
+    <small>Fields pre-filled and tailored resume attached. Review in Chromium and submit.</small>
+  </div>
+</div>
+{% endif %}
+
+{# ── Job header ── #}
+<div class="card" style="margin-bottom:24px;border-color:rgba(88,166,255,0.2);">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;">
+    <div>
+      <div class="eyebrow" style="margin-top:0;">Resume tailoring</div>
+      <h1 style="font-size:22px;margin-bottom:2px;">{{ job.title }}</h1>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+        <span class="pill" style="color:var(--amber);background:var(--amber-dim);">{{ job.company_name }}</span>
+        {% if job.location %}<span class="pill">📍 {{ job.location }}</span>{% endif %}
+        <span class="pill">{{ job.source }}</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <form method="post" action="/a/jobs/{{ job.id }}/apply" style="margin:0;">
+        <button type="submit" class="btn btn-fill">⚡ Auto-fill</button>
+      </form>
+      <a href="{{ job.apply_url }}" target="_blank" rel="noopener" class="btn">Open posting ↗</a>
+    </div>
+  </div>
+
+  {# JD analysis #}
+  {% if data.analysis %}
+  <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-dim);">
+    {% if data.analysis.target_focus %}
+    <div style="font-size:13px;color:var(--text-2);margin-bottom:6px;">
+      <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--blue);">JD Focus: </span>
+      {{ data.analysis.target_focus }}
+    </div>
+    {% endif %}
+    {% if data.analysis.jd_keywords %}
+    <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:6px;">
+      {% for kw in data.analysis.jd_keywords %}
+        <span class="kw">{{ kw }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{# ── 5-Pillar Recruiter Audit ── #}
+{% if data.recruiter_review %}
+{% set rev = data.recruiter_review %}
+<div class="recruiter-audit">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="recruiter-badge">👔 Lead Recruiter Audit</span>
+      <span style="font-size:12px;color:var(--text-3);">Master Review &amp; Positioning for {{ job.company_name }}</span>
+    </div>
+    {% if rev.attention_test and rev.attention_test.interview_verdict %}
+    <span class="pill" style="color:var(--green);background:rgba(63,185,80,0.1);font-weight:600;">
+      Verdict: {{ rev.attention_test.interview_verdict }}
+    </span>
+    {% endif %}
+  </div>
+
+  <div class="pillar-grid">
+    {# Pillar 1: Attention Test #}
+    {% if rev.attention_test %}
+    <div class="pillar-card">
+      <div class="pillar-header">
+        <span class="pillar-title">⏱️ 1. The 10-Second Attention Test</span>
+      </div>
+      <div class="pillar-text"><strong>Recruiter Eye Path:</strong> {{ rev.attention_test.scan_impression }}</div>
+      {% if rev.attention_test.standout_elements %}
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--green);margin-bottom:4px;">Immediate Standouts</div>
+        <div class="pill-list">
+          {% for st in rev.attention_test.standout_elements %}
+            <span class="pill-pos">✓ {{ st }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      {% if rev.attention_test.forgettable_elements %}
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--red);margin-bottom:4px;">Forgettable / Fluff</div>
+        <div class="pill-list">
+          {% for fg in rev.attention_test.forgettable_elements %}
+            <span class="pill-neg">✗ {{ fg }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# Pillar 2: Mindset Breakdown #}
+    {% if rev.mindset_breakdown %}
+    <div class="pillar-card">
+      <div class="pillar-header">
+        <span class="pillar-title">🎯 2. The Recruiter Mindset Breakdown</span>
+      </div>
+      <div class="pillar-text"><strong>Positioning Clarity:</strong> {{ rev.mindset_breakdown.positioning_clarity }}</div>
+      {% if rev.mindset_breakdown.credibility_signals %}
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--blue);margin-bottom:4px;">Credibility Signals</div>
+        <div class="pill-list">
+          {% for cs in rev.mindset_breakdown.credibility_signals %}
+            <span class="pill-pos" style="color:var(--blue);border-color:rgba(88,166,255,0.3);background:rgba(88,166,255,0.08);">⚡ {{ cs }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      {% if rev.mindset_breakdown.competitive_edge %}
+      <div class="pillar-text" style="color:var(--text-1);font-size:12px;">
+        <span style="color:var(--amber);font-weight:600;">Competitive Edge:</span> {{ rev.mindset_breakdown.competitive_edge }}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# Pillar 3: ATS Visibility Engine #}
+    {% if rev.ats_visibility %}
+    <div class="pillar-card">
+      <div class="pillar-header">
+        <span class="pillar-title">🤖 3. ATS Visibility Engine</span>
+      </div>
+      {% if rev.ats_visibility.missing_keywords %}
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--amber);margin-bottom:6px;">High-Priority Missing Keywords</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          {% for kw in rev.ats_visibility.missing_keywords %}
+          <div style="font-size:12px;background:var(--bg-3);padding:6px 10px;border-radius:4px;border-left:2px solid var(--amber);">
+            <strong style="color:var(--text-0);">{{ kw.term }}</strong>
+            {% if kw.injection_hint %}<span style="color:var(--text-2);margin-left:6px;">→ {{ kw.injection_hint }}</span>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# Pillar 5: Market Positioning Rewrite #}
+    {% if rev.market_positioning %}
+    <div class="pillar-card">
+      <div class="pillar-header">
+        <span class="pillar-title">🏛️ 5. Market Positioning Rewrite</span>
+      </div>
+      {% if rev.market_positioning.recommended_headline %}
+      <div style="font-size:12px;">
+        <span style="color:var(--text-3);text-transform:uppercase;font-weight:600;">Recommended Headline:</span>
+        <div style="color:var(--blue);font-weight:600;margin-top:2px;">{{ rev.market_positioning.recommended_headline }}</div>
+      </div>
+      {% endif %}
+      {% if rev.market_positioning.strategic_summary %}
+      <div class="pillar-text" style="font-size:12px;">
+        <strong>Strategic Summary:</strong> {{ rev.market_positioning.strategic_summary }}
+      </div>
+      {% endif %}
+      {% if rev.market_positioning.company_alignment %}
+      <div class="pillar-text" style="font-size:12px;color:var(--text-3);">
+        <em>{{ rev.market_positioning.company_alignment }}</em>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{# ── Bullet comparison ── #}
+<form method="post" action="/jobs/{{ job.id }}/tailor/approve">
+  <h2>Side-by-side comparison</h2>
+  <p class="lede" style="margin-bottom:16px;">
+    Your verified bullets from <code>config/resume.yaml</code>, re-aligned with this JD's vocabulary.
+    Edit the right column directly.
+  </p>
+
+  {% for r in data.roles %}
+  <div style="margin-bottom:28px;">
+    <div style="font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:10px;">
+      {{ r.title }} · <span style="color:var(--amber);">{{ r.company }}</span>
+    </div>
+
+    {% for b in r.bullets %}
+    <div class="card" style="margin-bottom:10px;padding:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+        <span class="tag">{{ b.id }}</span>
+        {% if b.rationale %}
+          <span class="rationale-tag">💡 {{ b.rationale }}</span>
+        {% endif %}
+      </div>
+
+      <div class="diff-grid">
+        <div>
+          <div class="diff-label">Original</div>
+          <div class="diff-orig">{{ b.original }}</div>
+        </div>
+        <div>
+          <div class="diff-label tail">Tailored (editable)</div>
+          <textarea name="bullet_{{ b.id }}" rows="3" class="diff-edit">{{ b.tailored }}</textarea>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  {# Skills #}
+  <div class="card" style="margin-bottom:24px;">
+    <div style="font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:8px;">JD-prioritised skills</div>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:10px;">
+      Sorted so technologies matching this JD lead your resume's skills section.
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+      {% for s in data.skills %}
+        <span class="sk">{{ s }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# Approve #}
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button type="submit" class="btn btn-green">✓ Approve &amp; save PDF</button>
+    <a href="/jobs" class="btn">Cancel</a>
+  </div>
+</form>
+
+{% endblock %}

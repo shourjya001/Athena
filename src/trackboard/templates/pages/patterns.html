@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% set nav='patterns' %}
+{% block title %}Patterns — Trackboard{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div class="label">{{ total }} patterns</div>
+  <h1>The taxonomy</h1>
+  <p class="sub">Ordered as a curriculum. Problems, videos, and drills all join through these.</p>
+</div>
+
+{% for family, pats in families.items() %}
+<h2>{{ family }}</h2>
+<div class="grid g2">
+  {% for p in pats %}
+  <a class="card" href="/patterns/{{ p.slug }}">
+    <span class="t">{{ p.name }}</span>
+    <span class="s">{{ p.summary|truncate(120) }}</span>
+    <span class="n">
+      <span>{{ p.problem_count }} problems</span>
+      <span>{{ p.resource_count }} videos</span>
+      {% if p.solved_count %}<span class="done">{{ p.solved_count }} solved</span>{% endif %}
+    </span>
+  </a>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,22 @@
+# Runs the frequent agents against the hosted database (BUILD_SPEC §14.0).
+# Add repo secrets: DB_URL (libsql://...), and later GEMINI_API_KEY etc.
+# LeetCode sync every 2h stays inside the 20-item recent-submissions cap.
+name: frequent
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "30 1-17/2 * * *"   # every 2h, 07:00-23:00 IST (UTC+5:30)
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --no-dev
+      - name: leetcode sync
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          TZ: Asia/Kolkata
+        run: uv run python -m trackboard.agents.leetcode_sync
+      # M6 adds here: uv run python -m trackboard.agents.inbox

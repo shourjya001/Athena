@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Sign in — Trackboard{% endblock %}
+{% block body %}
+<div style="max-width:440px;margin:40px auto 60px auto;">
+  <div class="page-head" style="text-align:center;padding-top:0;">
+    <div class="label">MULTI-USER ACCESS (§12)</div>
+    <h1 style="font-size:24px;">Sign in to Trackboard</h1>
+    <p class="sub">Personalized job pipeline, practice queue & recruiter tailor.</p>
+  </div>
+
+  {% if error %}
+  <div class="box halt" style="margin-bottom:16px;">
+    <b>Access Denied:</b> {{ error }}
+  </div>
+  {% endif %}
+
+  {% if allowlist %}
+  <div class="card" style="margin-bottom:20px;padding:18px;">
+    <div class="label" style="margin-bottom:10px;">Select Authorized Account</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {% for em in allowlist %}
+      <form action="/login" method="post" style="margin:0;">
+        <input type="hidden" name="email" value="{{ em }}">
+        <button type="submit" class="btn {% if user and user.email == em %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;">
+          <span>👤 <b>{{ em.split('@')[0] }}</b> <span style="font-size:11px;color:var(--muted);font-family:var(--mono);">({{ em }})</span></span>
+          {% if user and user.email == em %}<span class="tick">Active ✓</span>{% else %}<span>➔</span>{% endif %}
+        </button>
+      </form>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card" style="padding:18px;">
+    <div class="label" style="margin-bottom:10px;">Or Enter Email</div>
+    <form action="/login" method="post" style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Email Address</label>
+        <input type="email" name="email" required placeholder="name@example.com" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+        Continue ➔
+      </button>
+    </form>
+  </div>
+
+  <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--muted);">
+    Restricted to allowlisted addresses in <code>.env</code>.
+  </div>
+</div>
+{% endblock %}

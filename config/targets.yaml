@@ -1,0 +1,64 @@
+# Owner's target roles. Used by the Matcher (BM25 query alongside the resume)
+# and by aggregator queries. Specifically targeted for SDE / Backend / Payments / AI Engineer in India.
+target_titles:
+  - Software Development Engineer
+  - SDE
+  - SDE I
+  - Software Developer
+  - Software Engineer
+  - Backend Engineer
+  - Backend Developer
+  - Payments Backend Engineer
+  - AI Backend Engineer
+  - Applied AI Engineer
+  - AI Engineer
+  - GenAI Developer
+  - Full Stack Builder
+  - Forward Deployed Engineer
+  - Member of Technical Staff
+
+# Vocabulary that pulls relevant JDs up the BM25 ranking.
+# Aligned with background at NPCI working on UPI and digital payments infrastructure:
+keywords:
+  # Digital Payments & Fintech domain
+  - payments
+  - upi
+  - npci
+  - imps
+  - payment gateway
+  - fintech
+  - transactions
+  - settlement
+  - reconciliation
+  - banking
+  - switch
+  # Backend & Distributed Systems
+  - backend
+  - distributed systems
+  - microservices
+  - api
+  - high throughput
+  - low latency
+  - concurrency
+  - idempotency
+  - kafka
+  - redis
+  - postgresql
+  - python
+  - java
+  - fastapi
+  - aws
+  # AI & Machine Learning integration
+  - llm
+  - rag
+  - agents
+  - ai engineering
+  - vector database
+
+# Strictly targeted locations in India (BUILD_SPEC and owner mandate):
+locations:
+  - Bengaluru
+  - Bangalore
+  - Mumbai
+  - Remote (India)
+  - India

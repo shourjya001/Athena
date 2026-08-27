@@ -1,0 +1,16 @@
+name: digest
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "30 15 * * *"   # 21:00 IST
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --no-dev
+      - name: digest
+        env: { DB_URL: "${{ secrets.DB_URL }}", TZ: Asia/Kolkata }
+        run: uv run python -m trackboard.agents.digest

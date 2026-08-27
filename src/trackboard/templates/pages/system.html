@@ -1,0 +1,43 @@
+{% extends "base.html" %}{% set nav='system' %}
+{% block title %}System — Trackboard{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div class="label">System</div>
+  <h1>Health</h1>
+</div>
+
+<div class="strip">
+  <span>db <b>{{ db_path }}</b></span>
+  <span>size <b>{{ db_kb }} KB</b></span>
+  <span>patterns <b>{{ health.patterns }}</b></span>
+  <span>problems <b>{{ health.problems }}</b></span>
+  <span>videos <b>{{ health.resources }}</b></span>
+</div>
+
+<h2>Recent agent runs</h2>
+{% if runs %}
+<table>
+  <tr><th>Agent</th><th>Started</th><th>Status</th><th>In</th><th>Out</th><th>Error</th></tr>
+  {% for r in runs %}
+  <tr>
+    <td><span class="mono" style="font-weight:500;">{{ r.agent }}</span></td>
+    <td><span class="mono" style="font-size:11px;color:var(--text-3);">{{ r.started_at }}</span></td>
+    <td>
+      {% if r.status == 'ok' %}
+        <span class="flap flap-offer flip">ok</span>
+      {% elif r.status == 'partial' %}
+        <span class="flap flap-submitted flip">partial</span>
+      {% else %}
+        <span class="flap flap-rejected flip">{{ r.status }}</span>
+      {% endif %}
+    </td>
+    <td><span class="mono">{{ r.items_in }}</span></td>
+    <td><span class="mono">{{ r.items_out }}</span></td>
+    <td style="color:var(--red);font-size:13px;">{{ r.error or '' }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<div class="empty"><b>No agent runs yet.</b><br>Scheduled agents arrive at M2.</div>
+{% endif %}
+{% endblock %}

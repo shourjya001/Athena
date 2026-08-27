@@ -1,0 +1,58 @@
+{% extends "base.html" %}{% set nav='pipeline' %}
+{% block title %}Pipeline — Trackboard{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div class="label">Applications</div>
+  <h1>The board</h1>
+  <p class="sub">Every application, grouped by stage. Moves on its own once Gmail is connected.</p>
+</div>
+
+{% set order = ['prepared','submitted','acknowledged','screening','assessment','interview','offer','rejected','ghosted','withdrawn'] %}
+{% set any = cols|length > 0 %}
+{% if any %}
+{% for st in order %}{% if cols.get(st) %}
+<h2>
+  <span class="flap flap-{{ st }} flip">{{ st }}</span>
+  <span class="mono" style="color:var(--text-3);margin-left:4px;font-size:12px;">{{ cols[st]|length }}</span>
+</h2>
+{% for a in cols[st] %}
+<div class="card" style="margin-bottom:10px;padding:16px;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+    <div>
+      <span class="t" style="font-size:15px;">
+        {{ a.title }}
+        <span style="color:var(--text-3);font-weight:400;">·</span>
+        <span style="color:var(--amber);">{{ a.company_name }}</span>
+      </span>
+      <div class="s" style="margin-top:4px;">
+        <span class="mono" style="font-size:11px;color:var(--text-3);">
+          Applied {{ a.applied_at or a.last_event_at or 'recently' }}
+        </span>
+        {% if a.status_source == 'inbox_agent' %}
+          <span class="pill" style="color:var(--green);background:var(--green-dim);margin-left:6px;font-size:10px;">auto-tracked via Gmail</span>
+        {% else %}
+          <span class="pill" style="margin-left:6px;font-size:10px;">user-tracked</span>
+        {% endif %}
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <form method="post" action="/a/applications/{{ a.id }}/status" style="margin:0;">
+        <select name="status" onchange="this.form.submit()" style="background:var(--bg-2);color:var(--text-1);border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;padding:4px 8px;cursor:pointer;">
+          {% for opt in order %}
+            <option value="{{ opt }}" {% if opt == st %}selected{% endif %}>Move to: {{ opt|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </form>
+      <a href="/jobs/{{ a.job_id }}/tailor" class="btn btn-ghost" style="font-size:12px;" title="View tailored resume">Resume ↗</a>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endif %}{% endfor %}
+{% else %}
+<div class="empty">
+  <b>Nothing in the pipeline yet.</b><br>
+  Applications appear here once you apply — and move on their own once Gmail is connected.
+</div>
+{% endif %}
+{% endblock %}

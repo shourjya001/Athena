@@ -1,0 +1,67 @@
+{% extends "base.html" %}{% set nav='drill' %}
+{% block title %}Drill — Trackboard{% endblock %}
+{% block body %}
+
+{% if result %}
+  <div class="page-head">
+    <div class="label">Pattern recognition</div>
+    {% if result.correct %}
+      <h1><span style="color:var(--green);">✓</span> Right — {{ result.pattern_name }}.</h1>
+    {% else %}
+      <h1>Not this time.</h1>
+      <p class="sub"><b>{{ result.problem_title }}</b> is <span style="color:var(--amber);font-weight:500;">{{ result.pattern_name }}</span>.</p>
+    {% endif %}
+  </div>
+
+  <h2>The cue that gives it away</h2>
+  <ul class="cue">{% for c in result.cues[:3] %}<li>{{ c }}</li>{% endfor %}</ul>
+  <p style="margin-top:20px;">
+    <a href="/drill" class="btn btn-blue">Next rep →</a>
+  </p>
+
+{% elif item %}
+  <div class="page-head">
+    <div class="label">Pattern recognition</div>
+    <h1>Which pattern is this?</h1>
+    <p class="sub">Open the problem, read only the statement and constraints — <b style="color:var(--text-0);">ignore the tags</b> — then answer here. Target: 30 seconds.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <span class="t"><a href="{{ item.url }}" target="_blank" rel="noopener" style="color:var(--green);">Open the problem ↗</a></span>
+    <span class="s">Title hidden here on purpose. Read it there, decide, come back.</span>
+  </div>
+
+  <form method="post" action="/drill">
+    <input type="hidden" name="problem_id" value="{{ item.id }}">
+    <div class="grid g3">
+      {% for c in choices %}
+      <button name="chosen_pattern_id" value="{{ c.id }}" class="card" style="cursor:pointer;text-align:left;">
+        <span class="t">{{ c.name }}</span>
+        <span class="s">{{ c.family }}</span>
+      </button>
+      {% endfor %}
+    </div>
+  </form>
+
+{% else %}
+  <div class="page-head">
+    <div class="label">Pattern recognition</div>
+    <h1>All caught up.</h1>
+  </div>
+  <div class="empty"><b>Every problem has been drilled in the last two weeks.</b><br>Import more problems, or come back tomorrow.</div>
+{% endif %}
+
+{% if general_resources %}
+  <h2 style="margin-top:36px;">How to solve any coding problem</h2>
+  <p class="lede" style="margin-bottom:14px;">Frameworks and interview mindset from industry veterans.</p>
+  <div class="grid g2">
+    {% for r in general_resources[:4] %}
+    <div class="vid">
+      {% if r.embed %}<iframe src="{{ r.embed }}" loading="lazy" allowfullscreen
+        title="{{ r.title }}"></iframe>{% endif %}
+      <div class="meta"><span class="t"><a href="{{ r.watch }}" target="_blank" rel="noopener">{{ r.title }}</a></span><span class="c">{{ r.channel }}</span></div>
+    </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

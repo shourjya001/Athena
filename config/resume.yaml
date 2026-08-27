@@ -1,0 +1,141 @@
+# resume.yaml — Shourjya Hazra's bullet bank (DRAFT — review before any use)
+#
+# Drafted from the sample resume. Rules of this file (BUILD_SPEC §8.4):
+#   - every bullet is written once, honestly, and reworded per JD, never invented
+#   - lines marked "# QUESTION:" need YOUR real numbers or facts — answer or
+#     delete the claim; do not leave guesses in
+#   - the Tailor selects from this bank per JD; nothing outside it can appear
+#     on a generated resume
+# The owner marked the source resume as reference-only: correct this file
+# before it feeds any real application.
+
+identity:
+  name: Shourjya Hazra
+  email: shourjya001@gmail.com
+  phone: "+91-7679530903"
+  linkedin: linkedin.com/in/shourjya-hazra-683128200   # show the URL, not the word
+  github: ""            # QUESTION: your github path — the PDF link didn't survive extraction
+  location: Mumbai, India
+
+headline: >   # optional one-liner; helps the 10-second classification
+  Software Developer at NPCI — Python/FastAPI backend on UPI-scale systems;
+  building internal automation agents.
+  # QUESTION: if the agent work uses LLMs, say it here — it changes which
+  # roles this resume can honestly target.
+
+roles:
+  - company: National Payments Corporation of India (NPCI)
+    title: Software Developer
+    start: 2024-10
+    end: present
+    bullets:
+      - id: npci-01
+        text: >
+          Developed a consumer engagement portal to grow RuPay credit card
+          adoption on UPI, serving merchant and customer flows — Java, Spring
+          Boot, React, PostgreSQL.
+        skills: [java, spring-boot, react, postgresql, payments, upi]
+        theme: product
+        metric: false
+        # QUESTION: adoption/traffic numbers? users, merchants, or txn volume?
+      - id: npci-02
+        text: >
+          Built RuPay Scan and Score, a transaction-analysis and loyalty
+          platform integrated with WhatsApp (Meta) — FastAPI, Python, Redis,
+          PostgreSQL, Kubernetes, Docker, ELK for log management.
+        skills: [python, fastapi, redis, postgresql, kubernetes, docker, elk,
+                 whatsapp-api, platform-integration]
+        theme: platform
+        metric: false
+        # QUESTION: scale? messages/day, users, or transactions analysed?
+      - id: npci-03
+        text: >
+          Building an internal automated monitoring and compliance agent for UPI Number
+          features (470Mn Active Users in India) generates insights and priority-ranked alerts across
+          departments, reducing manual triage for the product team.
+        skills: [python, RAG, AutoResearch, compliance Flag, agentic AI, LLM Automation,
+                 React Based Frontend, SQL, Redis, Docker, FastAPI, Streamlit, Rate Limiter, LangChain,]
+        theme: ai-automation
+        metric: false
+        # QUESTION 1 (most important on the page): does this use an LLM?
+        #   Which model/stack? This bullet is the entire "AI Engineer" case.
+        # QUESTION 2: replace "10X" with something defensible — alerts
+        #   auto-triaged per day, hours saved weekly, or incidents caught.
+
+  - company: Tech Mahindra
+    title: Associate Software Developer
+    start: 2023-03
+    end: 2023-09
+    bullets:
+      - id: tm-01
+        text: >
+          Built and maintained enterprise services on Java Spring; worked with
+          SAP ABAP on S/4HANA.
+        skills: [java, spring, sap-abap, s4hana]
+        theme: enterprise
+        metric: false
+        # QUESTION: one concrete thing you shipped or fixed here? Even a small
+        # specific beats a stack list.
+
+  - company: AMTDC, IIT Madras (Ministry of Heavy Industries, Govt. of India)
+    title: Developer (Research Project)
+    start: 2021-12
+    end: 2022-07
+    bullets:
+      - id: iitm-01
+        text: >
+          Developed a generic API layer in Django integrated with a Neo4j
+          graph database, using NLP to generate Cypher queries from natural
+          language input.
+        skills: [python, django, neo4j, nlp, graph-database]
+        theme: applied-ml
+        metric: false
+
+projects:
+  - name: Farmer's Elf        # QUESTION: verify spelling — source says "Fermer's"
+    text: >
+      ML/DL web application assisting farmers with agricultural decisions;
+      Naive Bayes, SVM, XGBoost, decision-tree regressor, TensorFlow.
+      Published (IEEE).
+    skills: [python, tensorflow, ml, xgboost]
+  - name: Modish Energy Datum
+    text: >
+      Smart energy meter transmitting readings without internet connectivity
+      via LoRa to a central office — Embedded C, Firebase. Published (IEEE).
+    skills: [embedded-c, lora, iot, firebase]
+  - name: Hand Detection for Transport Window Safety
+    text: >
+      Deep-CNN hand-detection model to make automated window closing safe in
+      public transport — TensorFlow, AWS S3.
+    skills: [python, tensorflow, cnn, aws]
+
+skills:                       # regrouped correctly; duplicates removed
+  languages: [Java, Python, SQL, JavaScript]
+  frameworks: [Spring Boot, FastAPI, React, Node.js, Django, TensorFlow, JUnit]
+  data: [PostgreSQL, Redis, Neo4j, ELK]
+  infra: [Docker, Kubernetes, AWS, Microsoft Azure, Git]
+  libraries: [pandas, NumPy, Matplotlib, Pydantic]
+  # QUESTION: any LLM/GenAI stack to add truthfully? (OpenAI/Gemini APIs,
+  # LangChain, RAG, vector DBs). Currently zero GenAI keywords exist —
+  # decisive for the AI Engineer target.
+
+education:
+  - degree: B.Tech, Computer Science — CGPA 8.59
+    school: Vel Tech Rangarajan Dr. Sagunthala R&D Institute of Science and Technology, Chennai
+    year: 2019–2023
+  - degree: Higher Secondary (Physics, Chemistry, Math) — 7.60
+    school: Sri Ramakrishna Sarada Pith, Burdwan, WB   # QUESTION: verify institution spelling
+    year: 2017–2019
+
+certifications:               # split correctly; PCAP and CCNA are different certs
+  - Microsoft Azure AI-900
+  - Microsoft DP-900 (Data Fundamentals)
+  - Oracle Certified Java SE 8 Programmer (OCJA)
+  - AWS Academy Cloud Foundations
+  - AWS Academy Machine Learning Foundations
+  - PCAP (Python)             # QUESTION: confirm — source mashed "PCAP -Cisco – CCNA"
+  - Cisco CCNA                # QUESTION: completed, or coursework?
+
+publications:
+  - Springer publication (from header)   # QUESTION: title + year, so the claim is specific
+  - Two IEEE publications (projects)     # QUESTION: titles + years

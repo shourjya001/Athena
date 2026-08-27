@@ -1,0 +1,11 @@
+# Aggregator query config (BUILD_SPEC §7.2), aligned to the owner's targets.
+adzuna:
+  country: in
+  queries:
+    - { what: "AI engineer", where: "india", max_pages: 2 }
+    - { what: "backend engineer python", where: "bangalore", max_pages: 2 }
+    - { what: "machine learning engineer", where: "india", max_pages: 2 }
+    - { what: "forward deployed engineer", where: "india", max_pages: 1 }
+    - { what: "software development engineer", where: "mumbai", max_pages: 1 }
+remotive:
+  searches: ["backend", "ai", "machine learning"]

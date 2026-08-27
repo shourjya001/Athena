@@ -1,0 +1,154 @@
+{% extends "base.html" %}{% set nav='jobs' %}
+{% block title %}Jobs — Trackboard{% endblock %}
+{% block body %}
+
+<div class="page-head">
+  <div class="label">{{ total_open }} open roles tracked</div>
+  <h1>Match queue</h1>
+</div>
+
+{# ── Agent control bar ── #}
+<div class="agent-bar">
+  <div class="agent-status">
+    {% if agent_running %}
+      <div class="dot-live"></div>
+      <span style="color:var(--green);font-weight:500;">{{ agent_name }} running</span>
+    {% else %}
+      <div class="dot-idle"></div>
+      <span>Idle</span>
+    {% endif %}
+  </div>
+
+  {% if agent_running %}
+    <form method="post" action="/a/agent/stop" style="margin:0;">
+      <button type="submit" class="btn btn-red">⏹ Stop</button>
+    </form>
+  {% else %}
+    <form method="post" action="/a/agent/run" style="margin:0;">
+      <input type="hidden" name="agent" value="matcher">
+      <button type="submit" class="btn btn-blue">↻ Sync &amp; match</button>
+    </form>
+    <form method="post" action="/a/agent/run" style="margin:0;">
+      <input type="hidden" name="agent" value="scout">
+      <button type="submit" class="btn">🔍 Scout</button>
+    </form>
+    <form method="post" action="/a/digest/send" style="margin:0;">
+      <button type="submit" class="btn">📨 Email Digest</button>
+    </form>
+  {% endif %}
+</div>
+
+{# ── Banners ── #}
+{% if digest_sent %}
+<div class="banner banner-green">
+  <span class="bi">✓</span>
+  <div class="bt">
+    <strong>Daily Digest Dispatched.</strong>
+    <small>Top high-fit job recommendations and pipeline summary delivered to {{ user.email }}.</small>
+  </div>
+</div>
+{% endif %}
+
+{% if applied %}
+<div class="banner banner-amber">
+  <span class="bi">⚡</span>
+  <div class="bt">
+    <strong>Playwright auto-fill launched.</strong>
+    <small>Chromium opened on your desktop. Fields pre-filled, tailored resume attached. Review and submit.</small>
+  </div>
+</div>
+{% endif %}
+
+{% if agent_started %}
+<div class="banner banner-blue">
+  <span class="bi">↻</span>
+  <div class="bt">
+    <strong>{{ agent_started|capitalize }} agent started.</strong>
+    <small>Running in background. Stop anytime with the button above.</small>
+  </div>
+</div>
+{% endif %}
+
+{% if agent_stopped %}
+<div class="banner banner-amber">
+  <span class="bi">⏹</span>
+  <div class="bt"><strong>Agent stopped.</strong></div>
+</div>
+{% endif %}
+
+{# ── Filters ── #}
+<div class="filters">
+  <span class="fpill on">IC roles only</span>
+  <span class="fpill on">SDE · Backend · AI · Full-stack</span>
+  <span class="fpill">Senior &amp; Platform excluded</span>
+  <span class="fpill">India + Remote</span>
+</div>
+
+{# ── Job cards ── #}
+{% if items %}
+{% for j in items %}
+<div class="jcard">
+  {# Score ring #}
+  {% if j.fit_score is not none %}
+    {% if j.verdict == 'strong' %}
+      <div class="score-ring score-strong">{{ j.fit_score }}</div>
+    {% elif j.verdict == 'worth_a_shot' %}
+      <div class="score-ring score-worth">{{ j.fit_score }}</div>
+    {% else %}
+      <div class="score-ring score-stretch">{{ j.fit_score }}</div>
+    {% endif %}
+  {% else %}
+    <div class="score-ring score-none">—</div>
+  {% endif %}
+
+  <div class="jbody">
+    <div class="title">
+      {{ j.title }}
+      <span style="color:var(--text-3);font-weight:400;"> · </span>
+      <span class="company">{{ j.company_name }}</span>
+    </div>
+
+    <div class="meta">
+      {% if j.location %}<span class="pill">📍 {{ j.location }}</span>{% endif %}
+      <span class="pill">{{ j.source }}</span>
+      {% if j.fit_score is not none %}
+        {% if j.verdict == 'strong' %}
+          <span class="verdict verdict-strong">Strong fit</span>
+        {% elif j.verdict == 'worth_a_shot' %}
+          <span class="verdict verdict-worth">Worth a shot</span>
+        {% else %}
+          <span class="verdict verdict-stretch">Stretch</span>
+        {% endif %}
+      {% else %}
+        <span class="tag">bm25 {{ '%.1f'|format(j.bm25_score) }}</span>
+      {% endif %}
+    </div>
+
+    {% if j.reasoning %}
+    <div class="reasoning">{{ j.reasoning }}</div>
+    {% endif %}
+
+    <div class="actions">
+      <form method="post" action="/a/jobs/{{ j.id }}/apply" style="margin:0;">
+        <button type="submit" class="btn btn-fill">⚡ Auto-fill</button>
+      </form>
+      <a href="/jobs/{{ j.id }}/tailor" class="btn btn-blue">✏️ Tailor resume</a>
+      <form method="post" action="/a/jobs/{{ j.id }}/mark-applied" style="margin:0;">
+        <button type="submit" class="btn" title="Track this job directly in your Pipeline">✓ Mark Applied</button>
+      </form>
+      <a href="{{ j.apply_url }}" target="_blank" rel="noopener" class="btn">Open posting ↗</a>
+      <form method="post" action="/a/match/{{ j.match_id }}/dismiss" style="margin:0;margin-left:auto;">
+        <button type="submit" class="btn btn-ghost">✕ Dismiss</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty">
+  <b>No matches yet.</b><br>
+  Click <b>Sync &amp; match</b> above to score jobs against your <code>config/resume.yaml</code>.
+</div>
+{% endif %}
+
+{% endblock %}
