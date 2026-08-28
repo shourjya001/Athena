@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: str = ""
-    email_from: str = ""
+    email_from: str = "shourjya.h@gmail.com"
 
     @property
     def db_path(self) -> Path:

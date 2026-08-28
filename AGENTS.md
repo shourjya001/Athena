@@ -14,15 +14,17 @@ and `README.md` (current repo state) before doing anything.
   transitions, ghost pass), Applier field matching, Digest, /jobs and
   /pipeline pages, three GitHub Actions workflows.
 - DONE (Live integrations):
-  1. YouTube index: 347 mapped videos across takeUforward and TheAdityaVerma (50 videos indexed covering 0/1 Knapsack, Unbounded Knapsack, LCS, MCM, and DP on Trees).
-  2. Interactive Pattern Visualizers: Dedicated domain-specific visual models across all 26 DSA patterns on /patterns/{slug} (Linked List with pointer reversal & cycles, DP 2D/1D matrices with formula evaluation, Backtracking state trees with choose/undo, Union-Find with path compression, Topological Sort with Kahn in-degrees, Dijkstra Shortest Path with Min-Heap, Trie prefix tree char paths, Binary Tree DFS/BFS traversal, Monotonic Stack/Deque push/pop, Merge Intervals timeline, Cyclic Sort swap-to-home, Prefix Sum hash map lookups, Bit Manipulation 8-bit registers, and Two Pointers/Sliding Window arrays). Zero generic fallbacks remaining.
-  3. Master Recruiter Skill: skills/recruiter-analyst/SKILL.md created capturing 5 pillars (Attention Test, Mindset Breakdown, ATS Visibility Engine, Impact Statement Rebuilder, Market Positioning Rewrite) wired into /jobs/{id}/tailor with LLM audit.
-  4. Applier Greenhouse/Razorpay Fix: precise India (+91) country code selection, clean 10-digit phone number, custom question mapping, 73 fields filled with 0 retries.
-  5. Daily Digest Email Service: trackboard.email + agents.digest with rich HTML templates, top job recommendations, /a/digest/send trigger button and local archive fallback.
+  1. YouTube index: 347 mapped videos across takeUforward and TheAdityaVerma.
+  2. Interactive Pattern Visualizers: Dedicated domain-specific visual models across all 26 DSA patterns on /patterns/{slug}.
+  3. Master Recruiter Skill: skills/recruiter-analyst/SKILL.md created capturing 5 pillars wired into /jobs/{id}/tailor with LLM audit.
+  4. Applier Greenhouse/Razorpay Fix: precise India (+91) country code selection, clean 10-digit phone number, custom question mapping.
+  5. Daily Digest Email Service: trackboard.email + agents.digest with rich HTML templates from shourjya.h@gmail.com.
+  6. 100% Free Serverless Cloud Deployment: Live on Vercel at https://athena-phi-one.vercel.app with zero local system load.
+  7. Multi-User & Multi-Track Overhaul: /profile Web UI for uploading master PDF/text resumes, setting target roles & keywords, dual career tracks (Engineering/AI vs Business/Operations) with auto-filtered navigation and IST timezone localization across all views. All 32 test suite cases pass.
 - NOT DONE — next steps:
   1. Google OAuth login (spec §12) replacing users.current_user(); then the gmail --auth flow per user and a live inbox run over 90 days.
   2. Real alert emails: save 1-2 per portal to a folder, run scout --alerts-dir.
-  3. Mode B deploy (spec §20): hosted libSQL, free-host web app, enable crons.
+  3. Hosted libSQL / Turso sync if multi-region persistent writes are required.
 - Follow LIVE_RUNBOOK.md strictly in order; it defines pass criteria per step.
   32 mocked tests pass; live runs are the acceptance tests now.
 

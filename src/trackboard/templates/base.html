@@ -17,9 +17,11 @@
       <a href="/" class="{% if nav=='today' %}on{% endif %}">Today</a>
       <a href="/jobs" class="{% if nav=='jobs' %}on{% endif %}">Jobs</a>
       <a href="/pipeline" class="{% if nav=='pipeline' %}on{% endif %}">Pipeline</a>
+      {% if not user or user.get('track', 'tech') != 'business' %}
       <a href="/patterns" class="{% if nav=='patterns' %}on{% endif %}">Patterns</a>
       <a href="/practice" class="{% if nav=='practice' %}on{% endif %}">Practice</a>
       <a href="/drill" class="{% if nav=='drill' %}on{% endif %}">Drill</a>
+      {% endif %}
       <a href="/profile" class="{% if nav=='profile' %}on{% endif %}">Profile</a>
       {% if user and (user.email == 'shourjya001@gmail.com' or user.email == 'you@example.com') %}
       <a href="/system" class="{% if nav=='system' %}on{% endif %}">System</a>

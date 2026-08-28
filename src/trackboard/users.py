@@ -28,10 +28,17 @@ def current_user(request: any = None) -> dict:
         cookie_email = request.cookies.get("trackboard_user")
         if cookie_email:
             clean = cookie_email.strip().strip('"').strip("'").lower()
-            if not s.allowlist or clean in s.allowlist or clean == s.dev_user_email.lower():
+            if clean:
                 email = clean
     if not email:
         email = s.dev_user_email
     uid = ensure_user(email)
     row = db.query_one("SELECT * FROM users WHERE id = ?", (uid,))
-    return dict(row) if row else {"id": uid, "email": email}
+    user_dict = dict(row) if row else {"id": uid, "email": email}
+    answers = {
+        r["key"]: r["value"]
+        for r in db.query("SELECT key, value FROM profile_answers WHERE user_id = ?", (uid,))
+    }
+    user_dict["answers"] = answers
+    user_dict["track"] = answers.get("track", "tech")
+    return user_dict

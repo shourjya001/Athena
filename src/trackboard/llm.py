@@ -87,43 +87,49 @@ def default_providers() -> list[Provider]:
     return [p for p in [
         Provider("gemini", "gemini", s.gemini_api_key,
                  "https://generativelanguage.googleapis.com/v1beta",
-                 "gemini-flash-lite-latest", "gemini-3.6-flash"),
+                 "gemini-2.0-flash", "gemini-1.5-flash"),
         Provider("groq", "openai", s.groq_api_key,
                  "https://api.groq.com/openai/v1",
                  "llama-3.1-8b-instant", "llama-3.3-70b-versatile"),
         Provider("openrouter", "openai", s.openrouter_api_key,
                  "https://openrouter.ai/api/v1",
-                 "z-ai/glm-5.2:free",
-                 "z-ai/glm-5.2:free"),
+                 "google/gemini-2.0-flash-exp:free",
+                 "meta-llama/llama-3.3-70b-instruct:free"),
     ] if p.key]
 
 
 def _call_gemini(p: Provider, model: str, system: str, user: str) -> str:
     import time
     last_err = None
-    for attempt in range(3):
-        try:
-            r = httpx.post(
-                f"{p.base_url}/models/{model}:generateContent",
-                params={"key": p.key},
-                json={
-                    "system_instruction": {"parts": [{"text": system}]},
-                    "contents": [{"role": "user", "parts": [{"text": user}]}],
-                    "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"},
-                },
-                timeout=120,
-            )
-            if r.status_code in (500, 502, 503, 504, 429) and attempt < 2:
-                time.sleep(2.0 * (attempt + 1))
+    # Try alternate model if primary throws 404 or 429
+    models_to_try = [model, "gemini-2.0-flash", "gemini-1.5-flash"]
+    seen_models = set()
+    for m in models_to_try:
+        if m in seen_models:
+            continue
+        seen_models.add(m)
+        for attempt in range(3):
+            try:
+                r = httpx.post(
+                    f"{p.base_url}/models/{m}:generateContent",
+                    params={"key": p.key},
+                    json={
+                        "system_instruction": {"parts": [{"text": system}]},
+                        "contents": [{"role": "user", "parts": [{"text": user}]}],
+                        "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"},
+                    },
+                    timeout=60,
+                )
+                if r.status_code in (429, 500, 502, 503, 504):
+                    last_err = httpx.HTTPStatusError(f"HTTP {r.status_code}", request=r.request, response=r)
+                    time.sleep(2.0 * (attempt + 1))
+                    continue
+                r.raise_for_status()
+                return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+            except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
+                last_err = e
+                time.sleep(1.5 * (attempt + 1))
                 continue
-            r.raise_for_status()
-            return r.json()["candidates"][0]["content"]["parts"][0]["text"]
-        except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
-            last_err = e
-            if attempt < 2:
-                time.sleep(2.0 * (attempt + 1))
-                continue
-            raise
     if last_err:
         raise last_err
     raise RuntimeError("unreachable")
@@ -144,9 +150,9 @@ def _call_openai(p: Provider, model: str, system: str, user: str) -> str:
                                  {"role": "user", "content": user}],
                     "include_reasoning": False,
                 },
-                timeout=120,
+                timeout=60,
             )
-            if r.status_code in (500, 502, 503, 504, 429) and attempt < 2:
+            if r.status_code in (429, 500, 502, 503, 504) and attempt < 2:
                 time.sleep(2.0 * (attempt + 1))
                 continue
             r.raise_for_status()
@@ -154,7 +160,7 @@ def _call_openai(p: Provider, model: str, system: str, user: str) -> str:
         except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
             last_err = e
             if attempt < 2:
-                time.sleep(2.0 * (attempt + 1))
+                time.sleep(1.5 * (attempt + 1))
                 continue
             raise
     if last_err:

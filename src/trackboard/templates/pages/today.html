@@ -1,29 +1,39 @@
 {% extends "base.html" %}{% set nav='today' %}
+{% block title %}Today — Trackboard{% endblock %}
 {% block body %}
 <div class="page-head">
-  <div class="label">Today</div>
-  <h1>Good to go.</h1>
-  <p class="sub">Everything below is already decided. Open, scan, act.</p>
+  <div class="label">WELCOME {{ (user.display_name or user.email.split('@')[0])|upper }}</div>
+  <h1>Departure Board</h1>
+  <p class="sub">Your personalized career briefing &amp; active recommendations.</p>
 </div>
 
+{% if user.track == 'business' %}
+<div class="grid g3" style="gap:16px;margin-top:12px;">
+  <a class="card" href="/jobs" style="text-decoration:none;padding:20px;">
+    <div style="font-size:24px;margin-bottom:8px;">💼</div>
+    <span class="t" style="font-size:16px;">Target Jobs Queue</span>
+    <span class="s" style="margin-top:6px;line-height:1.4;">View business analyst, operations, and product roles scored for your profile.</span>
+  </a>
+  <a class="card" href="/profile" style="text-decoration:none;padding:20px;">
+    <div style="font-size:24px;margin-bottom:8px;">📄</div>
+    <span class="t" style="font-size:16px;">Resume &amp; Target Keywords</span>
+    <span class="s" style="margin-top:6px;line-height:1.4;">Update your target roles, skills (SQL, Excel, Jira), and master resume.</span>
+  </a>
+  <a class="card" href="/pipeline" style="text-decoration:none;padding:20px;">
+    <div style="font-size:24px;margin-bottom:8px;">📊</div>
+    <span class="t" style="font-size:16px;">Application Pipeline</span>
+    <span class="s" style="margin-top:6px;line-height:1.4;">Track your submitted applications and interview stages.</span>
+  </a>
+</div>
+{% else %}
 <div class="strip {% if health.resources == 0 %}warn{% endif %}">
   <span>patterns <b>{{ health.patterns }}</b></span>
   <span>problems <b>{{ health.problems }}</b></span>
   <span>mapped <b>{{ health.mapped }}</b></span>
   <span>videos <b>{{ health.resources }}</b></span>
-  <span>channels <b>{{ health.channels }}</b></span>
-  <span>sheets <b>{{ health.sheets }}</b></span>
 </div>
 
-{% if health.resources == 0 %}
-<div class="empty">
-  <b>No videos indexed yet.</b><br>
-  Add channels to <code>config/channels.yaml</code>, then run
-  <code>python scripts/index_youtube.py</code>.
-</div>
-{% endif %}
-
-<h2>Start here</h2>
+<h2>Core DSA Patterns &amp; Practice</h2>
 <div class="grid g3">
   {% for p in patterns %}
   <a class="card" href="/patterns/{{ p.slug }}">
@@ -36,4 +46,5 @@
   </a>
   {% endfor %}
 </div>
+{% endif %}
 {% endblock %}

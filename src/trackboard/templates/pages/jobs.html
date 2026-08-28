@@ -3,8 +3,9 @@
 {% block body %}
 
 <div class="page-head">
-  <div class="label">{{ total_open }} open roles tracked</div>
-  <h1>Match queue</h1>
+  <div class="label">{% if matched_count > 0 %}{{ matched_count }} MATCHED ROLES FOR {{ (user.display_name or user.email.split('@')[0])|upper }}{% else %}MATCH QUEUE{% endif %}</div>
+  <h1>Target Match Queue</h1>
+  <p class="sub">Filtered specifically for {{ user.display_name or user.email.split('@')[0] }} ({% if answers.get('titles') %}{{ answers.get('titles') }}{% else %}Set roles on Profile{% endif %}).</p>
 </div>
 
 {# ── Agent control bar ── #}
@@ -15,28 +16,17 @@
       <span style="color:var(--green);font-weight:500;">{{ agent_name }} running</span>
     {% else %}
       <div class="dot-idle"></div>
-      <span>Idle</span>
+      <span>{{ matched_count }} Active Matches</span>
     {% endif %}
   </div>
 
-  {% if agent_running %}
-    <form method="post" action="/a/agent/stop" style="margin:0;">
-      <button type="submit" class="btn btn-red">⏹ Stop</button>
-    </form>
-  {% else %}
-    <form method="post" action="/a/agent/run" style="margin:0;">
-      <input type="hidden" name="agent" value="matcher">
-      <button type="submit" class="btn btn-blue">↻ Sync &amp; match</button>
-    </form>
-    <a href="/profile" class="btn" style="text-decoration:none;">👤 Edit Resume &amp; Keywords</a>
-    <form method="post" action="/a/agent/run" style="margin:0;">
-      <input type="hidden" name="agent" value="scout">
-      <button type="submit" class="btn">🔍 Scout</button>
-    </form>
-    <form method="post" action="/a/digest/send" style="margin:0;">
-      <button type="submit" class="btn">📨 Email Digest</button>
-    </form>
-  {% endif %}
+  <form method="post" action="/a/matcher/run" style="margin:0;">
+    <button type="submit" class="btn btn-blue">⚡ Sync &amp; match</button>
+  </form>
+  <a href="/profile" class="btn" style="text-decoration:none;">👤 Edit Resume &amp; Keywords</a>
+  <form method="post" action="/a/digest/send" style="margin:0;">
+    <button type="submit" class="btn">📨 Email Digest</button>
+  </form>
 </div>
 
 {# ── Banners ── #}
@@ -45,7 +35,7 @@
   <span class="bi">✓</span>
   <div class="bt">
     <strong>Daily Digest Dispatched.</strong>
-    <small>Top high-fit job recommendations and pipeline summary delivered to {{ user.email }}.</small>
+    <small>Top high-fit job recommendations delivered to {{ user.email }} from shourjya.h@gmail.com.</small>
   </div>
 </div>
 {% endif %}
@@ -64,8 +54,28 @@
 <div class="banner banner-blue">
   <span class="bi">↻</span>
   <div class="bt">
-    <strong>{{ agent_started|capitalize }} agent started.</strong>
-    <small>Running in background. Stop anytime with the button above.</small>
+    <strong>Matcher agent finished.</strong>
+    <small>Matches updated for your profile.</small>
+  </div>
+</div>
+{% endif %}
+
+{% if items|length == 0 %}
+<div class="card" style="padding:36px;text-align:center;margin-top:20px;border:1px dashed var(--rule);background:var(--slate);">
+  <div style="font-size:32px;margin-bottom:12px;">🎯</div>
+  <h3 style="margin-bottom:8px;font-family:var(--sans);font-weight:600;">No Matched Jobs Yet for Your Profile</h3>
+  <p style="color:var(--muted);font-size:13px;max-width:540px;margin:0 auto 22px auto;line-height:1.5;">
+    We haven't scored active jobs against your specific resume and target roles yet. Set your preferred roles (e.g. <i>Business Analyst</i>, <i>SDE</i>, <i>Operations</i>, <i>AI Engineer</i>) on your profile.
+  </p>
+  <div style="display:flex;justify-content:center;gap:12px;">
+    <a href="/profile" class="btn btn-primary" style="text-decoration:none;padding:10px 20px;">
+      👤 Set Target Roles &amp; Upload Resume
+    </a>
+    <form action="/a/matcher/run" method="post" style="margin:0;">
+      <button type="submit" class="btn" style="padding:10px 20px;">
+        ⚡ Run Matcher Now
+      </button>
+    </form>
   </div>
 </div>
 {% endif %}

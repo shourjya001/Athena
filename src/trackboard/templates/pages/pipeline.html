@@ -26,7 +26,7 @@
       </span>
       <div class="s" style="margin-top:4px;">
         <span class="mono" style="font-size:11px;color:var(--text-3);">
-          Applied {{ a.applied_at or a.last_event_at or 'recently' }}
+          Applied {{ (a.applied_at or a.last_event_at)|ist if (a.applied_at or a.last_event_at) else 'recently' }}
         </span>
         {% if a.status_source == 'inbox_agent' %}
           <span class="pill" style="color:var(--green);background:var(--green-dim);margin-left:6px;font-size:10px;">auto-tracked via Gmail</span>
