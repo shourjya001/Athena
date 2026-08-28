@@ -575,9 +575,9 @@ def create_app() -> FastAPI:
     def do_login(email: str = Form(...)):
         s = get_settings()
         clean = email.strip().lower()
-        if s.allowlist and clean not in s.allowlist and clean != s.dev_user_email.lower():
+        if "@" not in clean:
             return RedirectResponse(
-                url="/login?error=" + f"{clean}+is+not+in+the+allowlist.+Contact+the+owner.",
+                url="/login?error=Please+enter+a+valid+email+address.",
                 status_code=303,
             )
         resp = RedirectResponse(url="/", status_code=303)
