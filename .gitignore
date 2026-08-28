@@ -19,7 +19,7 @@ venv/
 tokens/
 *.token
 token.json
-bin/tailwindcss
+bin/
 dist/
 build/
 *.egg-info/

@@ -1,0 +1,16 @@
+name: athena-trackboard
+type: web
+env:
+  - key: PORT
+    value: "8000"
+  - key: SCHEDULER_MODE
+    value: external
+  - key: TZ
+    value: Asia/Kolkata
+  - key: DB_URL
+    value: sqlite:///app.db
+build:
+  type: buildpack
+  build_command: pip install -r requirements.txt && pip install -e .
+run:
+  command: uvicorn trackboard.main:app --host 0.0.0.0 --port 8000
