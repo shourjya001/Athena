@@ -102,14 +102,14 @@
   {# Score ring #}
   {% if j.fit_score is not none %}
     {% if j.verdict == 'strong' %}
-      <div class="score-ring score-strong" title="Strong Fit ({{ j.fit_score }}/100)">{{ j.fit_score }}</div>
+      <div class="score-ring score-strong" title="AI Recruiter Score: {{ j.fit_score }}/100">{{ j.fit_score }}</div>
     {% elif j.verdict == 'worth_a_shot' %}
-      <div class="score-ring score-worth" title="Worth a Shot ({{ j.fit_score }}/100)">{{ j.fit_score }}</div>
+      <div class="score-ring score-worth" title="AI Recruiter Score: {{ j.fit_score }}/100">{{ j.fit_score }}</div>
     {% else %}
-      <div class="score-ring score-stretch" title="Stretch Role ({{ j.fit_score }}/100)">{{ j.fit_score }}</div>
+      <div class="score-ring score-stretch" title="AI Recruiter Score: {{ j.fit_score }}/100">{{ j.fit_score }}</div>
     {% endif %}
   {% else %}
-    <div class="score-ring score-none" title="BM25 Rank">{{ '%.0f'|format(j.bm25_score) }}</div>
+    <div class="score-ring score-none" title="BM25 Semantic Rank: {{ '%.1f'|format(j.bm25_score) }}">{{ '%.0f'|format(j.bm25_score) }}</div>
   {% endif %}
 
   <div class="jbody">
@@ -124,14 +124,15 @@
       <span class="pill" style="text-transform:capitalize;">🏢 {{ j.source }}</span>
       {% if j.fit_score is not none %}
         {% if j.verdict == 'strong' %}
-          <span class="verdict verdict-strong">★ Strong Fit</span>
+          <span class="verdict verdict-strong">★ Strong Fit ({{ j.fit_score }}/100)</span>
         {% elif j.verdict == 'worth_a_shot' %}
-          <span class="verdict verdict-worth">⚡ Worth a Shot</span>
+          <span class="verdict verdict-worth">⚡ Worth a Shot ({{ j.fit_score }}/100)</span>
         {% else %}
-          <span class="verdict verdict-stretch">Stretch</span>
+          <span class="verdict verdict-stretch">Stretch ({{ j.fit_score }}/100)</span>
         {% endif %}
+        <span class="tag" style="font-family:var(--mono);font-size:11px;" title="BM25 Keyword Alignment Score">BM25: {{ '%.1f'|format(j.bm25_score) }}</span>
       {% else %}
-        <span class="tag">BM25 {{ '%.1f'|format(j.bm25_score) }}</span>
+        <span class="tag" style="font-family:var(--mono);font-size:11px;">BM25 Score: {{ '%.1f'|format(j.bm25_score) }}</span>
       {% endif %}
     </div>
 

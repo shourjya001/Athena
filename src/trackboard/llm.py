@@ -85,25 +85,25 @@ class Provider:
 def default_providers() -> list[Provider]:
     s = get_settings()
     return [p for p in [
-        # Primary: Gemini free tier (3.5-flash is most reliable)
-        Provider("gemini", "gemini", s.gemini_api_key,
-                 "https://generativelanguage.googleapis.com/v1beta",
-                 "gemini-3.5-flash", "gemini-3.5-flash"),
-        # Fallback 1: Nvidia Nemotron on OpenRouter (free, high quality)
+        # Primary: Nvidia Nemotron 550B Ultra on OpenRouter (flagship reasoning)
         Provider("openrouter-nemotron", "openai", s.openrouter_api_key,
                  "https://openrouter.ai/api/v1",
                  "nvidia/nemotron-3-ultra-550b-a55b:free",
                  "nvidia/nemotron-3-ultra-550b-a55b:free"),
-        # Fallback 2: MiniMax M3 on OpenRouter (free, fast)
+        # Fallback 1: MiniMax M3 on OpenRouter (ultra fast, high context)
         Provider("openrouter-minimax", "openai", s.openrouter_api_key,
                  "https://openrouter.ai/api/v1",
                  "minimax/minimax-m3:free",
                  "minimax/minimax-m3:free"),
-        # Fallback 3: Poolside Laguna on OpenRouter (free)
+        # Fallback 2: Poolside Laguna on OpenRouter
         Provider("openrouter-laguna", "openai", s.openrouter_api_key,
                  "https://openrouter.ai/api/v1",
                  "poolside/laguna-s-2.1:free",
                  "poolside/laguna-s-2.1:free"),
+        # Fallback 3: Gemini free tier
+        Provider("gemini", "gemini", s.gemini_api_key,
+                 "https://generativelanguage.googleapis.com/v1beta",
+                 "gemini-3.5-flash", "gemini-3.5-flash"),
     ] if p.key]
 
 

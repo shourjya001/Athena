@@ -104,20 +104,21 @@ def create_app() -> FastAPI:
             (user["id"],),
         )["n"] > 0
 
-        # Query matches — strictly exclude jobs already applied to (they belong in /pipeline)
-        rows = db.query(
-            "SELECT m.bm25_score, m.fit_score, m.verdict, m.reasoning, m.gaps_json, "
-            "j.* , m.id AS match_id FROM matches m JOIN jobs j ON j.id = m.job_id "
-            "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
-            "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
-            "ORDER BY m.fit_score IS NULL, m.fit_score DESC, m.bm25_score DESC LIMIT 20",
-            (user["id"], user["id"]))
-        import json as _json
         items = []
-        for r in rows:
-            d = dict(r)
-            d["gaps"] = _json.loads(d.get("gaps_json") or "[]")
-            items.append(d)
+        if has_resume:
+            # Query matches — strictly exclude jobs already applied to (they belong in /pipeline)
+            rows = db.query(
+                "SELECT m.bm25_score, m.fit_score, m.verdict, m.reasoning, m.gaps_json, "
+                "j.* , m.id AS match_id FROM matches m JOIN jobs j ON j.id = m.job_id "
+                "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
+                "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
+                "ORDER BY m.fit_score IS NULL, m.fit_score DESC, m.bm25_score DESC LIMIT 20",
+                (user["id"], user["id"]))
+            import json as _json
+            for r in rows:
+                d = dict(r)
+                d["gaps"] = _json.loads(d.get("gaps_json") or "[]")
+                items.append(d)
 
         total_open = db.query_one("SELECT COUNT(*) n FROM jobs WHERE closed_at IS NULL")["n"]
         applied = request.query_params.get("applied") == "1"
