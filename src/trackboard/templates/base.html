@@ -21,7 +21,9 @@
       <a href="/practice" class="{% if nav=='practice' %}on{% endif %}">Practice</a>
       <a href="/drill" class="{% if nav=='drill' %}on{% endif %}">Drill</a>
       <a href="/profile" class="{% if nav=='profile' %}on{% endif %}">Profile</a>
+      {% if user and (user.email == 'shourjya001@gmail.com' or user.email == 'you@example.com') %}
       <a href="/system" class="{% if nav=='system' %}on{% endif %}">System</a>
+      {% endif %}
     </nav>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
