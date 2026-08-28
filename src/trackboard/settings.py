@@ -12,6 +12,7 @@ class Settings(BaseSettings):
 
     db_url: str = "sqlite:///~/.trackboard/app.db"
     tz: str = "Asia/Kolkata"
+    app_tz: str = ""
     scheduler_mode: str = "local"
 
     session_secret: str = "change-me"
