@@ -14,13 +14,22 @@ Welcome to **Athena** (Trackboard)! This platform is your personal, private care
 
 ---
 
-## 2. Setting Up Your Profile (First 5 Minutes)
+## 2. Feeding Your Resume & Setting Target Job Keywords (Web UI)
 
-To get targeted job recommendations matched against your experience:
-- **Target Titles**: e.g., `Backend Engineer`, `Software Engineer`, `Senior Software Engineer`, `Full Stack Developer`.
-- **Target Locations**: e.g., `Bengaluru`, `Mumbai`, `Remote`, `India`.
-- **Minimum CTC / Experience Level**: Set your target compensation and years of experience.
-- **Skills & Frameworks**: Add your primary languages (Python, Go, Java, TypeScript, etc.) and systems (FastAPI, Docker, Kafka, AWS, Postgres, Redis).
+You can manage your entire career profile directly from the browser at **`/profile`** without touching any code:
+
+1. **Go to `/profile`** (click **Profile** in the top navigation bar or click your name chip).
+2. **Upload your Master Resume**:
+   - **Upload PDF**: Pick your master PDF resume. Athena uses `pdfminer` to extract and parse your text and experience bullets into your private bullet bank.
+   - *Or* paste your resume text directly into the editor.
+3. **Configure Your Target Roles & Keywords**:
+   - **Target Titles**: e.g., `Backend Engineer, Software Engineer, SDE 2, Distributed Systems Engineer`.
+   - **Target Skills & Keywords**: e.g., `Python, FastAPI, Kafka, Go, PostgreSQL, Docker, Kubernetes, Redis, AWS`. *(BM25 matching scores all job descriptions heavily against these keywords).*
+   - **Preferred Locations**: e.g., `Bengaluru, Mumbai, Remote, India`.
+   - **Min CTC / Salary & Experience**: e.g., `25 LPA`, `3 years`.
+   - **LeetCode Username**: e.g., `your_leetcode_handle` (for automatic daily practice sync).
+4. **Click `⚡ Match All Jobs for My Profile`**:
+   - Athena instantly scans all **813+ live jobs** in the database against your resume and keywords, generates personalized fit scores, and populates your `/jobs` queue!
 
 ---
 

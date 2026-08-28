@@ -20,13 +20,17 @@
       <a href="/patterns" class="{% if nav=='patterns' %}on{% endif %}">Patterns</a>
       <a href="/practice" class="{% if nav=='practice' %}on{% endif %}">Practice</a>
       <a href="/drill" class="{% if nav=='drill' %}on{% endif %}">Drill</a>
+      <a href="/profile" class="{% if nav=='profile' %}on{% endif %}">Profile</a>
       <a href="/system" class="{% if nav=='system' %}on{% endif %}">System</a>
     </nav>
   </div>
-  <div>
+  <div style="display:flex;align-items:center;gap:10px;">
     {% if user and user.email %}
-    <a href="/login" style="font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none;padding:4px 8px;border-radius:4px;border:1px solid var(--rule);background:var(--slate);" title="Switch user profile">
-      👤 {{ user.email.split('@')[0] }}
+    <a href="/profile" style="font-family:var(--mono);font-size:11px;color:var(--chalk);text-decoration:none;padding:4px 10px;border-radius:4px;border:1px solid var(--rule);background:var(--slate);" title="My Profile & Resume">
+      👤 {{ user.display_name or user.email.split('@')[0] }}
+    </a>
+    <a href="/login" style="font-family:var(--mono);font-size:10px;color:var(--muted);text-decoration:none;" title="Switch Account">
+      (switch)
     </a>
     {% endif %}
   </div>

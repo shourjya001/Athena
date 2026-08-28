@@ -1,0 +1,134 @@
+{% extends "base.html" %}{% set nav='profile' %}
+{% block title %}My Profile & Resume — Trackboard{% endblock %}
+{% block body %}
+<div class="page-head" style="padding-top:0;">
+  <div class="label">PERSONAL SETTINGS</div>
+  <h1>Career Profile & Resume</h1>
+  <p class="sub">Set your target roles, keywords, and upload your master resume for automated matching & tailoring.</p>
+</div>
+
+{% if saved %}
+<div class="box live" style="margin-bottom:18px;">
+  <b>✓ Preferences Saved:</b> Your target career preferences have been updated.
+</div>
+{% endif %}
+
+{% if resume_saved %}
+<div class="box live" style="margin-bottom:18px;">
+  <b>✓ Resume Uploaded:</b> Master resume text extracted and saved successfully ({{ resume_words }} words).
+</div>
+{% endif %}
+
+{% if matched %}
+<div class="box live" style="margin-bottom:18px;">
+  <b>🎯 Matcher Complete:</b> Scored all active jobs against your profile. <a href="/jobs" style="color:var(--signal);text-decoration:underline;">View your tailored jobs queue ➔</a>
+</div>
+{% endif %}
+
+<div class="grid g2" style="gap:20px;align-items:start;">
+
+  {# Left Column: Target Roles & Keywords #}
+  <div style="display:flex;flex-direction:column;gap:20px;">
+    <div class="card" style="padding:20px;">
+      <div class="label" style="margin-bottom:12px;">1. Target Career Preferences & Keywords</div>
+      <form action="/profile/targets" method="post" style="display:flex;flex-direction:column;gap:14px;">
+        
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Display Name</label>
+          <input type="text" name="display_name" value="{{ user.display_name or '' }}" placeholder="Your Name" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-size:13px;">
+        </div>
+
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Target Job Titles (comma-separated)</label>
+          <input type="text" name="titles" value="{{ answers.get('titles', '') }}" placeholder="Backend Engineer, Software Engineer, SDE 2" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;">
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Used to filter and rank job titles in Scout & Matcher.</div>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Target Skills & Keywords (comma-separated)</label>
+          <textarea name="keywords" rows="3" placeholder="Python, FastAPI, Distributed Systems, Go, Kafka, PostgreSQL, Docker, Redis, AWS" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;line-height:1.5;">{{ answers.get('keywords', '') }}</textarea>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">BM25 matching weighs these keywords heavily against job descriptions.</div>
+        </div>
+
+        <div class="grid g2" style="gap:12px;">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Preferred Locations</label>
+            <input type="text" name="locations" value="{{ answers.get('locations', 'Bengaluru, Mumbai, Remote') }}" placeholder="Bengaluru, Remote" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-size:13px;">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Min Target CTC / Salary</label>
+            <input type="text" name="min_ctc" value="{{ answers.get('min_ctc', '20 LPA') }}" placeholder="20 LPA" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-size:13px;">
+          </div>
+        </div>
+
+        <div class="grid g2" style="gap:12px;">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Years of Experience</label>
+            <input type="number" name="experience_years" value="{{ answers.get('experience_years', '3') }}" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-size:13px;">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">LeetCode Username</label>
+            <input type="text" name="leetcode_user" value="{{ user.leetcode_user or '' }}" placeholder="e.g. shourjya001" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;">
+          </div>
+        </div>
+
+        <div style="margin-top:6px;">
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+            💾 Save Career Preferences
+          </button>
+        </div>
+      </form>
+    </div>
+
+    {# On-Demand Matcher Card #}
+    <div class="card" style="padding:20px;border-color:var(--signal);">
+      <div class="label" style="color:var(--signal);margin-bottom:8px;">⚡ ON-DEMAND JOB MATCHER</div>
+      <p style="font-size:13px;color:var(--chalk);margin-bottom:12px;line-height:1.5;">
+        Evaluate all <b>{{ total_jobs }} active jobs</b> in the database against your resume and target keywords using BM25 semantic scoring.
+      </p>
+      <form action="/a/matcher/run" method="post">
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;background:var(--signal);color:var(--ink);font-weight:600;border:none;">
+          ⚡ Match All {{ total_jobs }} Jobs for My Profile
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {# Right Column: Master Resume Uploader & Preview #}
+  <div style="display:flex;flex-direction:column;gap:20px;">
+    <div class="card" style="padding:20px;">
+      <div class="label" style="margin-bottom:12px;">2. Master Resume (PDF or Text)</div>
+      
+      <form action="/profile/resume" method="post" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:14px;">
+        
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;">Upload PDF Resume</label>
+          <input type="file" name="resume_file" accept=".pdf,.txt,.md" style="width:100%;background:var(--ink);border:1px dashed var(--rule);color:var(--chalk);padding:10px;border-radius:4px;font-size:12px;">
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Text is extracted automatically via <code>pdfminer</code>.</div>
+        </div>
+
+        <div style="text-align:center;font-size:11px;color:var(--muted);font-weight:bold;">— OR PASTE RESUME TEXT DIRECTLY —</div>
+
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Resume Content</label>
+          <textarea name="resume_text" rows="12" placeholder="Paste your full resume text or bullet points here..." style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:10px;border-radius:4px;font-family:var(--mono);font-size:11.5px;line-height:1.5;">{{ master_resume.parsed_text if master_resume else '' }}</textarea>
+        </div>
+
+        <div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+            📄 Upload & Save Master Resume
+          </button>
+        </div>
+      </form>
+
+      {% if master_resume %}
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);font-family:var(--mono);">
+        <span>Status: <b style="color:var(--live);">Active Master Resume ✓</b></span>
+        <span>Updated: {{ master_resume.created_at[:16] }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

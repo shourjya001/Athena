@@ -14,28 +14,49 @@ from .base import AgentRun
 
 
 def resume_text_for_user(user_id: int) -> str:
-    """Retrieve master resume text from config/resume.yaml or resumes table."""
-    from pathlib import Path
-    import yaml
-    from .. import tailor
-
-    p = Path("config/resume.yaml")
-    if p.exists():
-        try:
-            bank = yaml.safe_load(p.read_text()) or {}
-            txt = tailor.bank_to_text(bank)
-            if txt:
-                return txt
-        except Exception:
-            pass
-
+    """Retrieve master resume text from resumes table, profile answers, or fallback."""
     row = db.query_one(
         "SELECT parsed_text FROM resumes WHERE user_id=? ORDER BY is_master DESC, id DESC LIMIT 1",
         (user_id,),
     )
+    base_text = ""
     if row and row["parsed_text"]:
-        return row["parsed_text"]
-    return matcher.targets_text()
+        base_text = row["parsed_text"]
+    else:
+        from pathlib import Path
+        import yaml
+        from .. import tailor
+
+        p = Path("config/resume.yaml")
+        if p.exists():
+            try:
+                bank = yaml.safe_load(p.read_text()) or {}
+                txt = tailor.bank_to_text(bank)
+                if txt:
+                    base_text = txt
+            except Exception:
+                pass
+
+    if not base_text:
+        base_text = matcher.targets_text()
+
+    # Append custom user target keywords & titles from profile_answers if present
+    answers = {
+        r["key"]: r["value"]
+        for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user_id,))
+    }
+    extra_parts = []
+    if answers.get("titles"):
+        extra_parts.append(f"Target Roles: {answers['titles']}")
+    if answers.get("keywords"):
+        extra_parts.append(f"Key Skills & Technologies: {answers['keywords']}")
+    if answers.get("locations"):
+        extra_parts.append(f"Preferred Locations: {answers['locations']}")
+
+    if extra_parts:
+        base_text = base_text + "\n\n" + "\n".join(extra_parts)
+
+    return base_text
 
 
 def run_matcher_for_user(user: dict, dry_run: bool = False, force_bm25: bool = False) -> dict:

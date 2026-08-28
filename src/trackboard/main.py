@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from fastapi import Form
+from fastapi import Form, File, UploadFile
 from fastapi.responses import RedirectResponse
 
 from . import content, db, drill, practice, users
@@ -406,6 +406,113 @@ def create_app() -> FastAPI:
         resp = RedirectResponse(url="/", status_code=303)
         resp.set_cookie("trackboard_user", clean, max_age=30 * 86400, httponly=True, samesite="lax")
         return resp
+
+    @app.get("/profile", response_class=HTMLResponse)
+    def profile_page(request: Request, saved: int = 0, resume_saved: int = 0, matched: int = 0):
+        user = users.current_user(request)
+        answers = {
+            r["key"]: r["value"]
+            for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
+        }
+        master_resume = db.query_one(
+            "SELECT * FROM resumes WHERE user_id=? ORDER BY is_master DESC, id DESC LIMIT 1",
+            (user["id"],)
+        )
+        resume_words = len((master_resume["parsed_text"] or "").split()) if master_resume else 0
+        total_jobs = db.query_one("SELECT COUNT(*) as c FROM jobs")["c"]
+        return templates.TemplateResponse(
+            request,
+            "pages/profile.html",
+            {
+                "user": user,
+                "answers": answers,
+                "master_resume": dict(master_resume) if master_resume else None,
+                "resume_words": resume_words,
+                "total_jobs": total_jobs,
+                "saved": bool(saved),
+                "resume_saved": bool(resume_saved),
+                "matched": bool(matched),
+            },
+        )
+
+    @app.post("/profile/targets")
+    def save_targets(
+        request: Request,
+        display_name: str = Form(""),
+        titles: str = Form(""),
+        keywords: str = Form(""),
+        locations: str = Form(""),
+        min_ctc: str = Form(""),
+        experience_years: str = Form(""),
+        leetcode_user: str = Form(""),
+    ):
+        user = users.current_user(request)
+        uid = user["id"]
+        if display_name or leetcode_user:
+            db.execute(
+                "UPDATE users SET display_name=coalesce(nullif(?, ''), display_name), "
+                "leetcode_user=coalesce(nullif(?, ''), leetcode_user) WHERE id=?",
+                (display_name.strip() or None, leetcode_user.strip() or None, uid),
+            )
+        fields = {
+            "titles": titles.strip(),
+            "keywords": keywords.strip(),
+            "locations": locations.strip(),
+            "min_ctc": min_ctc.strip(),
+            "experience_years": experience_years.strip(),
+        }
+        with db.transaction() as conn:
+            for k, v in fields.items():
+                conn.execute(
+                    "INSERT INTO profile_answers (user_id, key, value) VALUES (?, ?, ?) "
+                    "ON CONFLICT(user_id, key) DO UPDATE SET value=excluded.value",
+                    (uid, k, v),
+                )
+        return RedirectResponse("/profile?saved=1", status_code=303)
+
+    @app.post("/profile/resume")
+    async def upload_resume(
+        request: Request,
+        resume_file: UploadFile = File(None),
+        resume_text: str = Form(""),
+    ):
+        user = users.current_user(request)
+        uid = user["id"]
+        extracted_text = resume_text.strip()
+        label = "Uploaded Master Resume"
+
+        if resume_file and resume_file.filename:
+            content_bytes = await resume_file.read()
+            label = resume_file.filename
+            if resume_file.filename.lower().endswith(".pdf"):
+                try:
+                    import io
+                    from pdfminer.high_level import extract_text as pdf_extract
+                    extracted_text = pdf_extract(io.BytesIO(content_bytes)).strip()
+                except Exception as e:
+                    extracted_text = f"Error extracting PDF: {e}\n\n" + extracted_text
+            else:
+                try:
+                    extracted_text = content_bytes.decode("utf-8", errors="ignore").strip()
+                except Exception:
+                    pass
+
+        if extracted_text:
+            db.execute("UPDATE resumes SET is_master=0 WHERE user_id=?", (uid,))
+            db.execute(
+                "INSERT INTO resumes (user_id, label, file_path, parsed_text, is_master, created_at) "
+                "VALUES (?, ?, ?, ?, 1, datetime('now'))",
+                (uid, label, f"upload/{label}", extracted_text),
+            )
+
+        return RedirectResponse("/profile?resume_saved=1", status_code=303)
+
+    @app.post("/a/matcher/run")
+    def run_matcher_on_demand(request: Request):
+        user = users.current_user(request)
+        from .agents.matcher import run_matcher_for_user
+        run_matcher_for_user(user, force_bm25=False)
+        return RedirectResponse("/profile?matched=1", status_code=303)
 
     @app.get("/logout")
     def do_logout():
