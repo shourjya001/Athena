@@ -31,9 +31,11 @@ Manage your entire career profile directly from the browser at **`/profile`**:
    - **Target Skills & Keywords**:
      - *Tech Track*: `Python, FastAPI, PyTorch, Docker, PostgreSQL, LangChain, React, LLM, Redis`
      - *Business Track*: `SQL, Excel, Operations, Tableau, Agile, Jira, Stakeholder Management, Process Optimization`
+   - **Excluded Roles & Seniority (Avoid List)**:
+     - Set roles you strictly want to exclude (e.g. `SDE-2, Senior, Staff, Lead, Manager, Director`).
    - **Preferred Locations & CTC**: e.g., `Bengaluru, Mumbai, Remote, India` / `18 LPA` / `2 years experience`.
 4. **Upload Your Master Resume**:
-   - Upload your PDF resume or paste your experience text. Athena extracts your bullets and skills directly into your private profile.
+   - Upload your PDF resume or paste your experience text. Athena automatically parses all text and extracts clickable hyperlinks (LinkedIn, GitHub, portfolio URLs).
 5. **Click `⚡ Match Jobs for My Profile`**:
    - Athena scans the live job catalog against your target keywords, generates personalized match scores (0-100%), and populates your private **`/jobs`** queue!
 
