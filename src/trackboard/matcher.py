@@ -75,6 +75,7 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
     user_titles = [t.strip().lower() for t in answers.get("titles", "").split(",") if t.strip()]
     user_exp = int(answers.get("experience_years", "2") or "2")
     user_locs = [l.strip().lower() for l in answers.get("locations", "india,remote").split(",") if l.strip()]
+    user_track = answers.get("track", "tech")
 
     # Query only active open jobs
     rows = [
@@ -102,10 +103,21 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
         desc_lower = (r.get("description_md") or "").lower()
         loc_lower = (r.get("location") or "").lower()
 
-        # If candidate has <= 3 years experience, filter extreme senior/executive titles
+        # Filter extreme executive/director titles if candidate has <= 3 years experience
         if user_exp <= 3:
-            extreme_senior = ["director", "vice president", "vp of", "head of", "principal engineer", "staff engineer"]
+            extreme_senior = ["director", "vice president", "vp of", "head of", "principal", "avp ", "avp -"]
             if any(ex in title_lower for ex in extreme_senior):
+                continue
+
+        # Track-based filtering
+        if user_track == "business":
+            # For business/operations track, exclude pure software dev & engineering manager roles
+            tech_dev_exclusions = [
+                "engineering manager", "sde", "backend engineer", "frontend engineer",
+                "full stack developer", "software engineer", "devops", "cloud network",
+                "embedded infrastructure", "architect", "lead engineer"
+            ]
+            if any(tk in title_lower for tk in tech_dev_exclusions):
                 continue
 
         # Location filtering
@@ -117,7 +129,10 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
 
         # Boost matching if title contains one of user target titles
         if user_titles:
-            has_title_match = any(ut in title_lower or any(word in title_lower for word in ut.split()) for ut in user_titles)
+            has_title_match = any(
+                ut in title_lower or any(word in title_lower for word in ut.split() if len(word) > 3)
+                for ut in user_titles
+            )
             r["title_matched"] = has_title_match
 
         filtered_rows.append(r)
@@ -131,11 +146,11 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
     ]
     tokenized_query = _tok(profile_text)
     if not tokenized_query:
-        tokenized_query = ["engineer", "developer", "analyst"]
+        tokenized_query = ["operations", "analyst"] if user_track == "business" else ["engineer", "developer"]
 
     scores = BM25Okapi(corpus).get_scores(tokenized_query)
     for r, s in zip(candidate_pool, scores):
-        bonus = 5.0 if r.get("title_matched") else 0.0
+        bonus = 10.0 if r.get("title_matched") else 0.0
         r["bm25_score"] = float(s) + bonus
 
     return sorted(candidate_pool, key=lambda r: r["bm25_score"], reverse=True)[:limit]
@@ -236,5 +251,7 @@ def run_for_user(user_id: int, profile_text: str, chain: Chain | None = None) ->
                 import logging
                 logging.getLogger("trackboard.matcher").warning("Batch scoring error: %s", e)
                 failed += len(batch)
+            import time
+            time.sleep(0.5)
 
     return {"shortlisted": len(cands), "scored": scored, "unscored": failed, "llm_calls": llm_calls}

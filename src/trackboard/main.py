@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -164,57 +165,57 @@ def create_app() -> FastAPI:
         job = db.query_one("SELECT * FROM jobs WHERE id=?", (job_id,))
         if not job:
             return RedirectResponse("/jobs", status_code=303)
-        
-        match = db.query_one("SELECT * FROM matches WHERE user_id=? AND job_id=?", (user["id"], job_id))
-        
+        job = dict(job)
+
         from . import tailor
         import yaml
         bank_path = Path("config/resume.yaml")
         bank = yaml.safe_load(bank_path.read_text()) if bank_path.exists() else {}
-        sections = tailor.build_proposal(bank, dict(job))
 
-        audit = None
-        s = get_settings()
-        if s.gemini_api_key or s.groq_api_key or s.openrouter_api_key:
-            try:
-                from .prompts.analyst import run_recruiter_audit
-                audit = run_recruiter_audit(user, dict(job))
-            except Exception as e:
-                audit = {
-                    "headline_verdict": "Candidate matches primary job requirements. Target keywords aligned.",
-                    "ten_second_scan": {
-                        "score": 85,
-                        "instant_impression": "Strong fit for the target position.",
-                        "eye_stops": ["Relevant background", "Aligned core skills"],
-                        "red_flags": ["Ensure latest achievements are quantified"],
-                    },
-                    "recruiter_mindset": {
-                        "why_say_no": "Competition from similar backgrounds.",
-                        "must_prove": "Clear ownership of metrics.",
-                        "winning_differentiator": "Proven track record.",
-                    },
-                    "ats_visibility": {
-                        "missing_keywords": ["Core tools mentioned in JD"],
-                        "placement_advice": "Incorporate key verbs in experience bullets.",
-                    },
-                    "impact_rebuilder": [],
-                    "market_positioning": {
-                        "recommended_headline": f"{job['title']} Specialist",
-                        "tailored_summary": f"Professional aligned with {job['company_name']}'s mission.",
-                    },
-                }
+        # If user has uploaded a custom resume, construct user bank
+        master_resume = db.query_one(
+            "SELECT * FROM resumes WHERE user_id=? ORDER BY is_master DESC, id DESC LIMIT 1",
+            (user["id"],),
+        )
+        if master_resume and master_resume["parsed_text"] and user.get("email") != "shourjya001@gmail.com":
+            lines = [l.strip().lstrip("-•* ") for l in master_resume["parsed_text"].splitlines() if len(l.strip()) > 15]
+            bullets = [
+                {"id": f"b{i+1}", "text": line, "skills": [], "theme": "Core Responsibility"}
+                for i, line in enumerate(lines[:12])
+            ]
+            bank = {
+                "name": user.get("display_name") or "Candidate",
+                "roles": [{"company": "Professional Experience", "title": user.get("answers", {}).get("titles", "Specialist"), "bullets": bullets}],
+                "skills": {"core": [k.strip() for k in user.get("answers", {}).get("keywords", "").split(",") if k.strip()]}
+            }
+
+        tailored_resume = db.query_one(
+            "SELECT * FROM resumes WHERE user_id=? AND label LIKE ? ORDER BY id DESC LIMIT 1",
+            (user["id"], f"%Job {job_id}%"),
+        )
+
+        chain = None
+        try:
+            chain = llm.Chain()
+        except Exception:
+            pass
+
+        data = tailor.suggest_tailoring(bank, job.get("description_md") or "", chain=chain)
+        saved = request.query_params.get("saved") == "1"
+        applied = request.query_params.get("applied") == "1"
 
         return templates.TemplateResponse(
             request,
             "pages/tailor.html",
             {
                 "user": user,
-                "job": dict(job),
-                "match": dict(match) if match else None,
-                "sections": sections,
-                "audit": audit,
-                "saved": request.query_params.get("saved") == "1",
-            }
+                "job": job,
+                "data": data,
+                "bank": bank,
+                "tailored_resume": tailored_resume,
+                "saved": saved,
+                "applied": applied,
+            },
         )
 
     @app.post("/jobs/{job_id}/tailor/approve")
@@ -223,40 +224,57 @@ def create_app() -> FastAPI:
         job = db.query_one("SELECT * FROM jobs WHERE id=?", (job_id,))
         if not job:
             return RedirectResponse("/jobs", status_code=303)
-
-        form = await request.form()
-        approved_bullets: list[str] = []
-        for key, val in form.items():
-            if key.startswith("bullet_") and val == "1":
-                b_text = form.get(f"text_{key}")
-                if b_text:
-                    approved_bullets.append(str(b_text))
+        job = dict(job)
 
         from . import tailor
         import yaml
         bank_path = Path("config/resume.yaml")
         bank = yaml.safe_load(bank_path.read_text()) if bank_path.exists() else {}
 
-        pdf_bytes = tailor.generate_pdf(bank, approved_bullets, dict(job))
-        out_dir = BASE / "static" / "resumes"
+        form_data = await request.form()
+        chosen_bullets: dict[str, list[dict]] = {}
+        for role in bank.get("roles", []):
+            role_comp = role["company"]
+            role_list = []
+            for b in role.get("bullets", []):
+                bid = b["id"]
+                val = form_data.get(f"bullet_{bid}")
+                if val:
+                    b_copy = dict(b)
+                    b_copy["text"] = str(val).strip()
+                    role_list.append(b_copy)
+            if role_list:
+                chosen_bullets[role_comp] = role_list
+
+        skills = tailor.reorder_skills(bank, job.get("description_md") or "")
+        out_dir = Path("/tmp/resumes") if os.getenv("VERCEL") else (BASE / "static" / "resumes")
         out_dir.mkdir(parents=True, exist_ok=True)
-        pdf_name = f"resume_job_{job_id}_user_{user['id']}.pdf"
-        (out_dir / pdf_name).write_bytes(pdf_bytes)
+        pdf_name = f"tailored_{user['id']}_{job_id}.pdf"
+        out_pdf = out_dir / pdf_name
 
-        db.execute(
-            "INSERT INTO resumes (user_id, label, file_path, parsed_text, is_master, created_at) "
-            "VALUES (?, ?, ?, ?, 0, datetime('now'))",
-            (user["id"], f"Tailored for {job['company_name']} - {job['title']}", f"/static/resumes/{pdf_name}", "\n".join(approved_bullets))
+        tailor.render_pdf(
+            bank,
+            chosen_bullets or tailor.select_bullets(bank, job.get("description_md") or ""),
+            skills,
+            out_pdf,
         )
-        res_id = db.query_one("SELECT last_insert_rowid() AS id")["id"]
 
-        db.execute(
-            "INSERT INTO applications (user_id, job_id, resume_id, status, status_source, last_event_at) "
-            "VALUES (?, ?, ?, 'prepared', 'user', datetime('now')) "
-            "ON CONFLICT(user_id, job_id) DO UPDATE SET "
-            "resume_id=excluded.resume_id, last_event_at=datetime('now')",
-            (user["id"], job_id, res_id)
-        )
+        label = f"Tailored: {job['title']} @ {job['company_name']} (Job {job_id})"
+        with db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO resumes (user_id, label, file_path, parsed_text, is_master, created_at) "
+                "VALUES (?, ?, ?, ?, 0, datetime('now'))",
+                (user["id"], label, f"/static/resumes/{pdf_name}", str(chosen_bullets)),
+            )
+            res_id = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
+
+            conn.execute(
+                "INSERT INTO applications (user_id, job_id, resume_id, status, status_source, last_event_at) "
+                "VALUES (?, ?, ?, 'prepared', 'user', datetime('now')) "
+                "ON CONFLICT(user_id, job_id) DO UPDATE SET "
+                "resume_id=excluded.resume_id, last_event_at=datetime('now')",
+                (user["id"], job_id, res_id),
+            )
         return RedirectResponse(f"/jobs/{job_id}/tailor?saved=1", status_code=303)
 
     @app.post("/a/jobs/{job_id}/apply")

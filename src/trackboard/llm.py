@@ -87,22 +87,18 @@ def default_providers() -> list[Provider]:
     return [p for p in [
         Provider("gemini", "gemini", s.gemini_api_key,
                  "https://generativelanguage.googleapis.com/v1beta",
-                 "gemini-2.0-flash", "gemini-1.5-flash"),
-        Provider("groq", "openai", s.groq_api_key,
-                 "https://api.groq.com/openai/v1",
-                 "llama-3.1-8b-instant", "llama-3.3-70b-versatile"),
+                 "gemini-3.7-flash", "gemini-3.5-flash"),
         Provider("openrouter", "openai", s.openrouter_api_key,
                  "https://openrouter.ai/api/v1",
-                 "google/gemini-2.0-flash-exp:free",
-                 "meta-llama/llama-3.3-70b-instruct:free"),
+                 "z-ai/glm-5.2:free",
+                 "google/gemma-4-26b-a4b-it:free"),
     ] if p.key]
 
 
 def _call_gemini(p: Provider, model: str, system: str, user: str) -> str:
     import time
     last_err = None
-    # Try alternate model if primary throws 404 or 429
-    models_to_try = [model, "gemini-2.0-flash", "gemini-1.5-flash"]
+    models_to_try = [model, "gemini-3.7-flash", "gemini-3.5-flash"]
     seen_models = set()
     for m in models_to_try:
         if m in seen_models:
@@ -125,7 +121,11 @@ def _call_gemini(p: Provider, model: str, system: str, user: str) -> str:
                     time.sleep(2.0 * (attempt + 1))
                     continue
                 r.raise_for_status()
-                return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+                text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
+                # Strip any accidental markdown formatting if present
+                clean_text = re.sub(r"^```json\s*", "", text.strip(), flags=re.IGNORECASE)
+                clean_text = re.sub(r"```$", "", clean_text.strip())
+                return clean_text.strip()
             except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
                 last_err = e
                 time.sleep(1.5 * (attempt + 1))
