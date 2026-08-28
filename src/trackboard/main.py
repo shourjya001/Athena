@@ -161,62 +161,93 @@ def create_app() -> FastAPI:
 
     @app.get("/jobs/{job_id}/tailor", response_class=HTMLResponse)
     def tailor_page(request: Request, job_id: int):
-        user = users.current_user(request)
-        job = db.query_one("SELECT * FROM jobs WHERE id=?", (job_id,))
-        if not job:
-            return RedirectResponse("/jobs", status_code=303)
-        job = dict(job)
-
-        from . import tailor
-        import yaml
-        bank_path = Path("config/resume.yaml")
-        bank = yaml.safe_load(bank_path.read_text()) if bank_path.exists() else {}
-
-        # If user has uploaded a custom resume, construct user bank
-        master_resume = db.query_one(
-            "SELECT * FROM resumes WHERE user_id=? ORDER BY is_master DESC, id DESC LIMIT 1",
-            (user["id"],),
-        )
-        if master_resume and master_resume["parsed_text"] and user.get("email") != "shourjya001@gmail.com":
-            lines = [l.strip().lstrip("-•* ") for l in master_resume["parsed_text"].splitlines() if len(l.strip()) > 15]
-            bullets = [
-                {"id": f"b{i+1}", "text": line, "skills": [], "theme": "Core Responsibility"}
-                for i, line in enumerate(lines[:12])
-            ]
-            bank = {
-                "name": user.get("display_name") or "Candidate",
-                "roles": [{"company": "Professional Experience", "title": user.get("answers", {}).get("titles", "Specialist"), "bullets": bullets}],
-                "skills": {"core": [k.strip() for k in user.get("answers", {}).get("keywords", "").split(",") if k.strip()]}
-            }
-
-        tailored_resume = db.query_one(
-            "SELECT * FROM resumes WHERE user_id=? AND label LIKE ? ORDER BY id DESC LIMIT 1",
-            (user["id"], f"%Job {job_id}%"),
-        )
-
-        chain = None
         try:
-            chain = llm.Chain()
-        except Exception:
-            pass
+            user = users.current_user(request)
+            job = db.query_one("SELECT * FROM jobs WHERE id=?", (job_id,))
+            if not job:
+                return RedirectResponse("/jobs", status_code=303)
+            job = dict(job)
 
-        data = tailor.suggest_tailoring(bank, job.get("description_md") or "", chain=chain)
-        saved = request.query_params.get("saved") == "1"
-        applied = request.query_params.get("applied") == "1"
+            from . import tailor
+            import yaml
+            
+            # Locate resume.yaml in project root or current working dir
+            candidate_paths = [
+                BASE.parents[1] / "config" / "resume.yaml",
+                Path("config/resume.yaml"),
+                BASE.parent / "config" / "resume.yaml",
+            ]
+            bank = {}
+            for cp in candidate_paths:
+                if cp.exists():
+                    try:
+                        bank = yaml.safe_load(cp.read_text()) or {}
+                        if bank.get("roles"):
+                            break
+                    except Exception:
+                        pass
 
-        return templates.TemplateResponse(
-            request,
-            "pages/tailor.html",
-            {
-                "user": user,
-                "job": job,
-                "data": data,
-                "bank": bank,
-                "tailored_resume": tailored_resume,
-                "saved": saved,
-                "applied": applied,
-            },
-        )
+            # If user has uploaded a custom resume, construct user bank
+            master_resume = db.query_one(
+                "SELECT * FROM resumes WHERE user_id=? ORDER BY is_master DESC, id DESC LIMIT 1",
+                (user["id"],),
+            )
+            if master_resume and master_resume["parsed_text"] and user.get("email") != "shourjya001@gmail.com":
+                lines = [l.strip().lstrip("-•* ") for l in master_resume["parsed_text"].splitlines() if len(l.strip()) > 15]
+                bullets = [
+                    {"id": f"b{i+1}", "text": line, "skills": [], "theme": "Core Responsibility"}
+                    for i, line in enumerate(lines[:12])
+                ]
+                bank = {
+                    "name": user.get("display_name") or "Candidate",
+                    "roles": [{"company": "Professional Experience", "title": user.get("answers", {}).get("titles", "Specialist"), "bullets": bullets}],
+                    "skills": {"core": [k.strip() for k in user.get("answers", {}).get("keywords", "").split(",") if k.strip()]}
+                }
+
+            if not bank.get("roles"):
+                # Safe default bank if none exists
+                bank = {
+                    "name": user.get("display_name") or "Candidate",
+                    "roles": [{
+                        "company": "Current Experience",
+                        "title": user.get("answers", {}).get("titles", "Specialist"),
+                        "bullets": [{"id": "b1", "text": "Delivered high-impact solutions aligning with organizational goals and operational standards.", "skills": [], "theme": "General"}]
+                    }],
+                    "skills": {"core": ["Problem Solving", "Execution", "Communication"]}
+                }
+
+            tailored_resume = db.query_one(
+                "SELECT * FROM resumes WHERE user_id=? AND label LIKE ? ORDER BY id DESC LIMIT 1",
+                (user["id"], f"%Job {job_id}%"),
+            )
+
+            chain = None
+            try:
+                chain = llm.Chain()
+            except Exception:
+                pass
+
+            data = tailor.suggest_tailoring(bank, job.get("description_md") or "", chain=chain)
+            saved = request.query_params.get("saved") == "1"
+            applied = request.query_params.get("applied") == "1"
+
+            return templates.TemplateResponse(
+                request,
+                "pages/tailor.html",
+                {
+                    "user": user,
+                    "job": job,
+                    "data": data,
+                    "bank": bank,
+                    "tailored_resume": tailored_resume,
+                    "saved": saved,
+                    "applied": applied,
+                },
+            )
+        except Exception as e:
+            import logging
+            logging.getLogger("trackboard.tailor").error("Tailor page error: %s", e)
+            return RedirectResponse("/jobs", status_code=303)
 
     @app.post("/jobs/{job_id}/tailor/approve")
     async def approve_tailor(request: Request, job_id: int):
