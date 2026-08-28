@@ -9,6 +9,7 @@ venv/
 .env.*
 !.env.example
 *.db
+!data/seed_data.db
 *.db-wal
 *.db-shm
 *.db-journal
