@@ -1,7 +1,7 @@
 """Provider-agnostic LLM client with fallback chain and PII redaction.
 
 BUILD_SPEC §4.1, §4.2, §9. No paid dependency: Gemini free tier first, then
-OpenAI-compatible free tiers (Groq, OpenRouter). Unused until M5; shipped now
+OpenAI-compatible free tiers (OpenRouter). Unused until M5; shipped now
 so the contracts are fixed and testable.
 
 Rules enforced here, not in callers:
@@ -85,26 +85,40 @@ class Provider:
 def default_providers() -> list[Provider]:
     s = get_settings()
     return [p for p in [
+        # Primary: Gemini free tier (3.5-flash is most reliable)
         Provider("gemini", "gemini", s.gemini_api_key,
                  "https://generativelanguage.googleapis.com/v1beta",
-                 "gemini-3.7-flash", "gemini-3.5-flash"),
-        Provider("openrouter", "openai", s.openrouter_api_key,
+                 "gemini-3.5-flash", "gemini-3.5-flash"),
+        # Fallback 1: Nvidia Nemotron on OpenRouter (free, high quality)
+        Provider("openrouter-nemotron", "openai", s.openrouter_api_key,
                  "https://openrouter.ai/api/v1",
-                 "z-ai/glm-5.2:free",
-                 "google/gemma-4-26b-a4b-it:free"),
+                 "nvidia/nemotron-3-ultra-550b-a55b:free",
+                 "nvidia/nemotron-3-ultra-550b-a55b:free"),
+        # Fallback 2: MiniMax M3 on OpenRouter (free, fast)
+        Provider("openrouter-minimax", "openai", s.openrouter_api_key,
+                 "https://openrouter.ai/api/v1",
+                 "minimax/minimax-m3:free",
+                 "minimax/minimax-m3:free"),
+        # Fallback 3: Poolside Laguna on OpenRouter (free)
+        Provider("openrouter-laguna", "openai", s.openrouter_api_key,
+                 "https://openrouter.ai/api/v1",
+                 "poolside/laguna-s-2.1:free",
+                 "poolside/laguna-s-2.1:free"),
     ] if p.key]
 
 
 def _call_gemini(p: Provider, model: str, system: str, user: str) -> str:
+    """Call Gemini API with immediate model fallback on 429 (no wasted retries)."""
     import time
     last_err = None
-    models_to_try = [model, "gemini-3.7-flash", "gemini-3.5-flash"]
-    seen_models = set()
+    # Cascade through Gemini models — switch immediately on rate limit
+    models_to_try = [model, "gemini-3.5-flash", "gemini-3.5-flash-lite"]
+    seen_models: set[str] = set()
     for m in models_to_try:
         if m in seen_models:
             continue
         seen_models.add(m)
-        for attempt in range(3):
+        for attempt in range(2):  # max 2 retries per model (not 3)
             try:
                 r = httpx.post(
                     f"{p.base_url}/models/{m}:generateContent",
@@ -114,9 +128,14 @@ def _call_gemini(p: Provider, model: str, system: str, user: str) -> str:
                         "contents": [{"role": "user", "parts": [{"text": user}]}],
                         "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"},
                     },
-                    timeout=60,
+                    timeout=45,
                 )
-                if r.status_code in (429, 500, 502, 503, 504):
+                if r.status_code == 429:
+                    # Immediate switch to next model — don't waste retries
+                    last_err = httpx.HTTPStatusError(f"HTTP 429 on {m}", request=r.request, response=r)
+                    time.sleep(1.0)
+                    break  # break inner loop → try next model
+                if r.status_code in (500, 502, 503, 504):
                     last_err = httpx.HTTPStatusError(f"HTTP {r.status_code}", request=r.request, response=r)
                     time.sleep(2.0 * (attempt + 1))
                     continue
@@ -126,7 +145,11 @@ def _call_gemini(p: Provider, model: str, system: str, user: str) -> str:
                 clean_text = re.sub(r"^```json\s*", "", text.strip(), flags=re.IGNORECASE)
                 clean_text = re.sub(r"```$", "", clean_text.strip())
                 return clean_text.strip()
-            except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
+            except httpx.TimeoutException as e:
+                last_err = e
+                time.sleep(1.0)
+                break  # timeout → try next model
+            except httpx.HTTPStatusError as e:
                 last_err = e
                 time.sleep(1.5 * (attempt + 1))
                 continue
@@ -138,7 +161,7 @@ def _call_gemini(p: Provider, model: str, system: str, user: str) -> str:
 def _call_openai(p: Provider, model: str, system: str, user: str) -> str:
     import time
     last_err = None
-    for attempt in range(3):
+    for attempt in range(2):
         try:
             r = httpx.post(
                 f"{p.base_url}/chat/completions",
@@ -148,18 +171,21 @@ def _call_openai(p: Provider, model: str, system: str, user: str) -> str:
                     "temperature": 0.2,
                     "messages": [{"role": "system", "content": system},
                                  {"role": "user", "content": user}],
-                    "include_reasoning": False,
                 },
-                timeout=60,
+                timeout=45,
             )
-            if r.status_code in (429, 500, 502, 503, 504) and attempt < 2:
+            if r.status_code == 429:
+                last_err = httpx.HTTPStatusError(f"HTTP 429", request=r.request, response=r)
+                time.sleep(2.0)
+                break  # switch to next provider
+            if r.status_code in (500, 502, 503, 504) and attempt < 1:
                 time.sleep(2.0 * (attempt + 1))
                 continue
             r.raise_for_status()
             return r.json()["choices"][0]["message"]["content"]
         except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
             last_err = e
-            if attempt < 2:
+            if attempt < 1:
                 time.sleep(1.5 * (attempt + 1))
                 continue
             raise

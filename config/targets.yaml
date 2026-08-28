@@ -17,6 +17,35 @@ target_titles:
   - Forward Deployed Engineer
   - Member of Technical Staff
 
+# Roles and seniority levels to STRICTLY AVOID / EXCLUDE during matching:
+avoid_titles:
+  - SDE-2
+  - SDE 2
+  - SDE-II
+  - SDE II
+  - SDE2
+  - Senior Software Engineer
+  - Senior Backend Engineer
+  - Senior
+  - Staff Engineer
+  - Principal Engineer
+  - Engineering Manager
+  - Tech Lead
+  - Team Lead
+  - Lead Engineer
+  - Director
+  - Vice President
+  - VP
+  - AVP
+  - Architect
+  - Business Operations
+  - Business Analyst
+  - Operations Specialist
+  - Operations Associate
+  - Operations Manager
+  - HR
+  - Recruiter
+
 # Vocabulary that pulls relevant JDs up the BM25 ranking.
 # Aligned with background at NPCI working on UPI and digital payments infrastructure:
 keywords:

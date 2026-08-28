@@ -1,4 +1,4 @@
-from __future__ import annotations
+
 
 import argparse
 import os
@@ -97,20 +97,31 @@ def create_app() -> FastAPI:
             r["key"]: r["value"]
             for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
         }
+
+        # Check if user has uploaded a resume
+        has_resume = db.query_one(
+            "SELECT COUNT(*) n FROM resumes WHERE user_id=? AND is_master=1",
+            (user["id"],),
+        )["n"] > 0
+
+        # Query matches — strictly exclude jobs already applied to (they belong in /pipeline)
         rows = db.query(
             "SELECT m.bm25_score, m.fit_score, m.verdict, m.reasoning, m.gaps_json, "
             "j.* , m.id AS match_id FROM matches m JOIN jobs j ON j.id = m.job_id "
             "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
-            "ORDER BY m.fit_score IS NULL, m.fit_score DESC, m.bm25_score DESC LIMIT 40",
-            (user["id"],))
+            "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
+            "ORDER BY m.fit_score IS NULL, m.fit_score DESC, m.bm25_score DESC LIMIT 20",
+            (user["id"], user["id"]))
         import json as _json
         items = []
         for r in rows:
             d = dict(r)
             d["gaps"] = _json.loads(d.get("gaps_json") or "[]")
             items.append(d)
+
         total_open = db.query_one("SELECT COUNT(*) n FROM jobs WHERE closed_at IS NULL")["n"]
         applied = request.query_params.get("applied") == "1"
+        matched = request.query_params.get("matched") == "1"
 
         proc = _RUNNING_AGENT.get("proc")
         agent_running = proc is not None and proc.poll() is None
@@ -125,7 +136,9 @@ def create_app() -> FastAPI:
             {
                 "user": user, "items": items, "total_open": total_open,
                 "matched_count": len(items), "answers": answers,
-                "applied": applied, "agent_running": agent_running,
+                "applied": applied, "matched": matched,
+                "has_resume": has_resume,
+                "agent_running": agent_running,
                 "agent_name": agent_name, "agent_started": agent_started,
                 "agent_stopped": agent_stopped, "agent_busy": agent_busy,
                 "digest_sent": digest_sent,
@@ -350,6 +363,11 @@ def create_app() -> FastAPI:
                 "VALUES (?, 'submitted', datetime('now'), 'user', 'Marked as applied manually', datetime('now'))",
                 (app_row["id"],)
             )
+        # Auto-dismiss from /jobs queue so it moves exclusively to /pipeline
+        db.execute(
+            "UPDATE matches SET dismissed_at=datetime('now') WHERE user_id=? AND job_id=?",
+            (user["id"], job_id)
+        )
         return RedirectResponse("/pipeline", status_code=303)
 
     @app.post("/a/applications/{app_id}/status")
@@ -517,6 +535,7 @@ def create_app() -> FastAPI:
         request: Request,
         display_name: str = Form(""),
         titles: str = Form(""),
+        avoid_titles: str = Form(""),
         keywords: str = Form(""),
         locations: str = Form(""),
         min_ctc: str = Form(""),
@@ -534,6 +553,7 @@ def create_app() -> FastAPI:
             )
         fields = {
             "titles": titles.strip(),
+            "avoid_titles": avoid_titles.strip(),
             "keywords": keywords.strip(),
             "locations": locations.strip(),
             "min_ctc": min_ctc.strip(),
@@ -576,6 +596,46 @@ def create_app() -> FastAPI:
                                     extracted_text = pdf_txt
                             except Exception as pdf_err:
                                 extracted_text = f"Notice: PDF extraction note: {pdf_err}\n\n" + (extracted_text or "")
+
+                            # Extract hyperlinks (LinkedIn, GitHub, email) from PDF annotations
+                            try:
+                                import io
+                                from pdfminer.pdfparser import PDFParser
+                                from pdfminer.pdfdocument import PDFDocument
+                                from pdfminer.pdfpage import PDFPage
+                                from pdfminer.psparser import PSLiteral
+
+                                hyperlinks: list[str] = []
+                                parser = PDFParser(io.BytesIO(content_bytes))
+                                doc = PDFDocument(parser)
+                                for page in PDFPage.create_pages(doc):
+                                    if page.annots:
+                                        annot_refs = page.annots
+                                        if hasattr(annot_refs, '__iter__'):
+                                            for annot_ref in annot_refs:
+                                                try:
+                                                    annot_obj = annot_ref.resolve() if hasattr(annot_ref, 'resolve') else annot_ref
+                                                    if isinstance(annot_obj, dict):
+                                                        a_dict = annot_obj.get('A') or {}
+                                                        if hasattr(a_dict, 'resolve'):
+                                                            a_dict = a_dict.resolve()
+                                                        uri = a_dict.get('URI') if isinstance(a_dict, dict) else None
+                                                        if uri:
+                                                            if isinstance(uri, bytes):
+                                                                uri = uri.decode('utf-8', errors='ignore')
+                                                            elif isinstance(uri, PSLiteral):
+                                                                uri = uri.name if hasattr(uri, 'name') else str(uri)
+                                                            if uri and uri.startswith('http'):
+                                                                hyperlinks.append(uri)
+                                                except Exception:
+                                                    pass
+
+                                if hyperlinks:
+                                    unique_links = list(dict.fromkeys(hyperlinks))
+                                    links_section = "\n\nEXTRACTED LINKS:\n" + "\n".join(f"- {lnk}" for lnk in unique_links)
+                                    extracted_text += links_section
+                            except Exception:
+                                pass
                         else:
                             try:
                                 extracted_text = content_bytes.decode("utf-8", errors="ignore").strip()
@@ -605,6 +665,31 @@ def create_app() -> FastAPI:
         from .agents.matcher import run_matcher_for_user
         run_matcher_for_user(user, force_bm25=False)
         return RedirectResponse("/jobs?matched=1", status_code=303)
+
+    @app.get("/api/cron/sync-and-match")
+    def cron_sync_and_match(request: Request):
+        """Vercel cron endpoint for automated syncing & matching at low-traffic hours.
+        Protected by CRON_SECRET header."""
+        import os
+        cron_secret = os.getenv("CRON_SECRET", "")
+        auth_header = request.headers.get("authorization", "")
+        if cron_secret and auth_header != f"Bearer {cron_secret}":
+            from fastapi.responses import JSONResponse
+            return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+        from .agents.matcher import run_matcher_for_user
+        results = []
+        all_users = db.query("SELECT * FROM users ORDER BY id")
+        for u in all_users:
+            u = dict(u)
+            try:
+                res = run_matcher_for_user(u, force_bm25=False)
+                results.append({"user": u["email"], "result": res})
+            except Exception as e:
+                results.append({"user": u["email"], "error": str(e)[:200]})
+
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"ok": True, "users_processed": len(results), "results": results})
 
     @app.get("/login", response_class=HTMLResponse)
     def login_page(request: Request, error: str | None = None):

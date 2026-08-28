@@ -13,16 +13,18 @@ and `README.md` (current repo state) before doing anything.
   Inbox status engine (prefilter, batch classification, forward-only
   transitions, ghost pass), Applier field matching, Digest, /jobs and
   /pipeline pages, three GitHub Actions workflows.
-- DONE (Live integrations):
+- DONE (Live integrations & overhauls):
   1. YouTube index: 347 mapped videos across takeUforward and TheAdityaVerma.
   2. Interactive Pattern Visualizers: Dedicated domain-specific visual models across all 26 DSA patterns on /patterns/{slug}.
   3. Master Recruiter Skill: skills/recruiter-analyst/SKILL.md created capturing 5 pillars wired into /jobs/{id}/tailor with LLM audit.
-  4. Applier Greenhouse/Razorpay Fix: precise India (+91) country code selection, clean 10-digit phone number, custom question mapping.
-  5. Daily Digest Email Service: trackboard.email + agents.digest with rich HTML templates from shourjya.h@gmail.com.
-  6. 100% Free Serverless Cloud Deployment: Live on Vercel at https://athena-phi-one.vercel.app with zero local system load.
-  7. Multi-User & Multi-Track Overhaul: /profile Web UI for uploading master PDF/text resumes, setting target roles & keywords, dual career tracks (Engineering/AI vs Business/Operations) with auto-filtered navigation and IST timezone localization across all views. All 32 test suite cases pass.
+  4. 100% Real Live ATS Ingestion: 460+ real live job openings ingested from Paytm, Meesho, Razorpay, CRED, FamPay, InMobi, Postman, Atlan, Canara Robeco AMC, Canara HSBC Life, HDFC Bank, ICICI Bank, Axis Bank, and NPCI with 100% verified 200 OK apply URLs (zero 404 links).
+  5. Precision Matcher & Dynamic Filtering: Positive target title matching, track-aware avoid lists (strictly excluding SDE-2, Senior, Manager, HR for tech; Dev/Eng Manager for business), experience-years regex checks in title, and domestic India/remote filtering.
+  6. Multi-Provider LLM Cascade: Primary Gemini 3.5-Flash with immediate rate-limit fallback to Nvidia Nemotron Ultra, MiniMax M3, and Poolside Laguna on OpenRouter without stalling on 429s.
+  7. Resume Gating & PDF Hyperlink Extraction: Master resume required before matching, in-memory PDF hyperlink annotation parser extracting LinkedIn, GitHub, and portfolio URLs.
+  8. Pipeline Synchronization: Applied jobs auto-hidden from /jobs queue upon marking applied and tracked exclusively in /pipeline.
+  9. Scheduled Automation: Nightly cron at 02:00 AM IST (20:30 UTC) in vercel.json during peak model success and low traffic.
 - NOT DONE — next steps:
-  1. Google OAuth login (spec §12) replacing users.current_user(); then the gmail --auth flow per user and a live inbox run over 90 days.
+  1. Google OAuth login (spec §12) replacing users.current_user() cookie context if strict OAuth 2.0 PKCE is desired.
   2. Real alert emails: save 1-2 per portal to a folder, run scout --alerts-dir.
   3. Hosted libSQL / Turso sync if multi-region persistent writes are required.
 - Follow LIVE_RUNBOOK.md strictly in order; it defines pass criteria per step.

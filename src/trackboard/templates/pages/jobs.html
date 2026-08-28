@@ -3,7 +3,7 @@
 {% block body %}
 
 <div class="page-head">
-  <div class="label">{% if matched_count > 0 %}{{ matched_count }} MATCHED ROLES FOR {{ (user.display_name or user.email.split('@')[0])|upper }}{% else %}MATCH QUEUE{% endif %}</div>
+  <div class="label">{% if matched_count > 0 %}{{ matched_count }} RELEVANT ROLES FOR {{ (user.display_name or user.email.split('@')[0])|upper }}{% else %}MATCH QUEUE{% endif %}</div>
   <h1>Target Match Queue</h1>
   <p class="sub">Filtered specifically for {{ user.display_name or user.email.split('@')[0] }} ({% if answers.get('titles') %}{{ answers.get('titles') }}{% else %}Set roles on Profile{% endif %}).</p>
 </div>
@@ -40,6 +40,16 @@
 </div>
 {% endif %}
 
+{% if matched %}
+<div class="banner banner-blue">
+  <span class="bi">✓</span>
+  <div class="bt">
+    <strong>Matcher agent finished.</strong>
+    <small>Evaluated active jobs against your profile and target criteria.</small>
+  </div>
+</div>
+{% endif %}
+
 {% if applied %}
 <div class="banner banner-amber">
   <span class="bi">⚡</span>
@@ -54,28 +64,8 @@
 <div class="banner banner-blue">
   <span class="bi">↻</span>
   <div class="bt">
-    <strong>Matcher agent finished.</strong>
-    <small>Matches updated for your profile.</small>
-  </div>
-</div>
-{% endif %}
-
-{% if items|length == 0 %}
-<div class="card" style="padding:36px;text-align:center;margin-top:20px;border:1px dashed var(--rule);background:var(--slate);">
-  <div style="font-size:32px;margin-bottom:12px;">🎯</div>
-  <h3 style="margin-bottom:8px;font-family:var(--sans);font-weight:600;">No Matched Jobs Yet for Your Profile</h3>
-  <p style="color:var(--muted);font-size:13px;max-width:540px;margin:0 auto 22px auto;line-height:1.5;">
-    We haven't scored active jobs against your specific resume and target roles yet. Set your preferred roles (e.g. <i>Business Analyst</i>, <i>SDE</i>, <i>Operations</i>, <i>AI Engineer</i>) on your profile.
-  </p>
-  <div style="display:flex;justify-content:center;gap:12px;">
-    <a href="/profile" class="btn btn-primary" style="text-decoration:none;padding:10px 20px;">
-      👤 Set Target Roles &amp; Upload Resume
-    </a>
-    <form action="/a/matcher/run" method="post" style="margin:0;">
-      <button type="submit" class="btn" style="padding:10px 20px;">
-        ⚡ Run Matcher Now
-      </button>
-    </form>
+    <strong>Agent started.</strong>
+    <small>Processing job queue.</small>
   </div>
 </div>
 {% endif %}
@@ -87,78 +77,107 @@
 </div>
 {% endif %}
 
-{# ── Filters ── #}
-<div class="filters">
-  <span class="fpill on">IC roles only</span>
-  <span class="fpill on">SDE · Backend · AI · Full-stack</span>
-  <span class="fpill">Senior &amp; Platform excluded</span>
-  <span class="fpill">India + Remote</span>
+{# ── Dynamic Filter Pills ── #}
+<div class="filters" style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:8px;">
+  {% if answers.get('titles') %}
+    <span class="fpill on" title="Active target title filter">🎯 {{ answers.get('titles') }}</span>
+  {% else %}
+    <span class="fpill on">🎯 SDE · Backend · AI Engineer</span>
+  {% endif %}
+
+  {% if answers.get('track') == 'business' %}
+    <span class="fpill on" style="border-color:var(--signal);color:var(--signal);">📊 Business &amp; Operations Track</span>
+  {% else %}
+    <span class="fpill on">💻 Engineering &amp; AI Track</span>
+  {% endif %}
+
+  <span class="fpill">📍 {{ answers.get('locations', 'India + Remote') }}</span>
+  <span class="fpill" title="Excluded from results" style="color:var(--muted);border-style:dashed;">🚫 Excluded: SDE-2, Senior, Manager, Director</span>
 </div>
 
 {# ── Job cards ── #}
-{% if items %}
+{% if items and items|length > 0 %}
 {% for j in items %}
-<div class="jcard">
+<div class="jcard" style="transition:transform 0.15s ease, border-color 0.15s ease;">
   {# Score ring #}
   {% if j.fit_score is not none %}
     {% if j.verdict == 'strong' %}
-      <div class="score-ring score-strong">{{ j.fit_score }}</div>
+      <div class="score-ring score-strong" title="Strong Fit ({{ j.fit_score }}/100)">{{ j.fit_score }}</div>
     {% elif j.verdict == 'worth_a_shot' %}
-      <div class="score-ring score-worth">{{ j.fit_score }}</div>
+      <div class="score-ring score-worth" title="Worth a Shot ({{ j.fit_score }}/100)">{{ j.fit_score }}</div>
     {% else %}
-      <div class="score-ring score-stretch">{{ j.fit_score }}</div>
+      <div class="score-ring score-stretch" title="Stretch Role ({{ j.fit_score }}/100)">{{ j.fit_score }}</div>
     {% endif %}
   {% else %}
-    <div class="score-ring score-none">—</div>
+    <div class="score-ring score-none" title="BM25 Rank">{{ '%.0f'|format(j.bm25_score) }}</div>
   {% endif %}
 
   <div class="jbody">
-    <div class="title">
-      {{ j.title }}
+    <div class="title" style="display:flex;align-items:baseline;flex-wrap:wrap;gap:6px;">
+      <span style="font-weight:600;font-size:15px;color:var(--chalk);">{{ j.title }}</span>
       <span style="color:var(--text-3);font-weight:400;"> · </span>
-      <span class="company">{{ j.company_name }}</span>
+      <span class="company" style="color:var(--signal);font-weight:500;">{{ j.company_name }}</span>
     </div>
 
-    <div class="meta">
+    <div class="meta" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
       {% if j.location %}<span class="pill">📍 {{ j.location }}</span>{% endif %}
-      <span class="pill">{{ j.source }}</span>
+      <span class="pill" style="text-transform:capitalize;">🏢 {{ j.source }}</span>
       {% if j.fit_score is not none %}
         {% if j.verdict == 'strong' %}
-          <span class="verdict verdict-strong">Strong fit</span>
+          <span class="verdict verdict-strong">★ Strong Fit</span>
         {% elif j.verdict == 'worth_a_shot' %}
-          <span class="verdict verdict-worth">Worth a shot</span>
+          <span class="verdict verdict-worth">⚡ Worth a Shot</span>
         {% else %}
           <span class="verdict verdict-stretch">Stretch</span>
         {% endif %}
       {% else %}
-        <span class="tag">bm25 {{ '%.1f'|format(j.bm25_score) }}</span>
+        <span class="tag">BM25 {{ '%.1f'|format(j.bm25_score) }}</span>
       {% endif %}
     </div>
 
     {% if j.reasoning %}
-    <div class="reasoning">{{ j.reasoning }}</div>
+    <div class="reasoning" style="margin-top:10px;font-size:12.5px;line-height:1.5;color:var(--chalk);background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:4px;border-left:2px solid var(--rule);">
+      {{ j.reasoning }}
+    </div>
     {% endif %}
 
-    <div class="actions">
+    <div class="actions" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
       <form method="post" action="/a/jobs/{{ j.id }}/apply" style="margin:0;">
         <button type="submit" class="btn btn-fill">⚡ Auto-fill</button>
       </form>
-      <a href="/jobs/{{ j.id }}/tailor" class="btn btn-blue">✏️ Tailor resume</a>
+      <a href="/jobs/{{ j.id }}/tailor" class="btn btn-blue">✏️ Tailor Resume</a>
       <form method="post" action="/a/jobs/{{ j.id }}/mark-applied" style="margin:0;">
-        <button type="submit" class="btn" title="Track this job directly in your Pipeline">✓ Mark Applied</button>
+        <button type="submit" class="btn" title="Move this job to your Pipeline">✓ Mark Applied</button>
       </form>
-      <a href="{{ j.apply_url }}" target="_blank" rel="noopener" class="btn">Open posting ↗</a>
+      <a href="{{ j.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn">Open Posting ↗</a>
       <form method="post" action="/a/match/{{ j.match_id }}/dismiss" style="margin:0;margin-left:auto;">
-        <button type="submit" class="btn btn-ghost">✕ Dismiss</button>
+        <button type="submit" class="btn btn-ghost" style="color:var(--muted);" title="Dismiss job">✕</button>
       </form>
     </div>
   </div>
 </div>
 {% endfor %}
 {% else %}
-<div class="empty">
-  <b>No matches yet.</b><br>
-  Click <b>Sync &amp; match</b> above to score jobs against your <code>config/resume.yaml</code>.
+<div class="card" style="padding:40px 24px;text-align:center;margin-top:20px;border:1px dashed var(--rule);background:var(--slate);border-radius:8px;">
+  <div style="font-size:36px;margin-bottom:14px;">🎯</div>
+  <h3 style="margin-bottom:8px;font-family:var(--sans);font-weight:600;color:var(--chalk);">No Matching Jobs in Queue</h3>
+  <p style="color:var(--muted);font-size:13px;max-width:520px;margin:0 auto 20px auto;line-height:1.6;">
+    {% if not has_resume %}
+      Upload your master resume on the <b>Profile</b> page to automatically score active openings against your experience and target keywords.
+    {% else %}
+      All active jobs have either been scored or don't match your current target criteria. Click <b>Sync &amp; match</b> to rescan.
+    {% endif %}
+  </p>
+  <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+    <a href="/profile" class="btn btn-primary" style="text-decoration:none;padding:9px 18px;">
+      👤 Edit Target Roles &amp; Resume
+    </a>
+    <form action="/a/matcher/run" method="post" style="margin:0;">
+      <button type="submit" class="btn" style="padding:9px 18px;">
+        ⚡ Sync &amp; Match Now
+      </button>
+    </form>
+  </div>
 </div>
 {% endif %}
 

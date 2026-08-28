@@ -29,8 +29,57 @@ def targets_text() -> str:
     parts = (t.get("target_titles") or []) + (t.get("keywords") or []) + (t.get("locations") or [])
     return " ".join(parts)
 
-SHORTLIST = 40
-BATCH = 8
+
+def load_avoid_titles(track: str = "tech") -> list[str]:
+    if track == "business":
+        return [
+            "director", "vice president", "vp of", "head of", "avp ", "avp-",
+            "managing director", "partner", "general manager", "chief",
+        ]
+    avoids = [
+        "sde-2", "sde 2", "sde-ii", "sde ii", "sde2",
+        "sde-3", "sde 3", "sde-iii", "sde iii", "sde3",
+        "sde-iv", "sde iv", "sde-4", "sde 4", "sde4",
+        "sdet 2", "sdet ii", "sdet-2", "sdet-ii",
+        "level 2", "level ii", "level 3", "level iii",
+        "senior", "sr.", "sr ", "sr-", "staff", "principal", "lead ", "lead-", "tech lead", "team lead",
+        "manager", "director", "vice president", "vp of", "head of", "avp ", "avp-",
+        "architect", "distinguished", "solutions engineer",
+    ]
+    if TARGETS_PATH.exists():
+        try:
+            t = yaml.safe_load(TARGETS_PATH.read_text()) or {}
+            for item in t.get("avoid_titles", []):
+                val = str(item).lower().strip()
+                if val and val not in avoids:
+                    avoids.append(val)
+        except Exception:
+            pass
+    return avoids
+
+
+# Reduced from 40→20 for focused, quality matches; batch from 8→4 for rate-limit safety
+SHORTLIST = 20
+BATCH = 4
+
+# ── Track-aware exclusions — tech track excludes ops/business; business track excludes pure dev ──
+TECH_TRACK_EXCLUSIONS = [
+    "business analyst", "business operations", "operations specialist",
+    "operations associate", "operations officer", "operations manager",
+    "collections", "accounts payable", "accounts receivable",
+    "sales", "marketing", "hr ", "recruiter", "talent acquisition",
+    "customer success", "customer support", "content writer",
+    "graphic designer", "social media", "seo specialist",
+    "branch banking", "policy servicing", "underwriting",
+    "clearing & settlement", "kyc documentation",
+]
+
+BUSINESS_TRACK_EXCLUSIONS = [
+    "engineering manager", "sde", "backend engineer", "frontend engineer",
+    "full stack developer", "software engineer", "devops", "cloud network",
+    "embedded infrastructure", "lead engineer", "platform engineer",
+    "site reliability", "machine learning engineer",
+]
 
 
 class FitItem(BaseModel):
@@ -66,80 +115,136 @@ def _tok(text: str) -> list[str]:
     return re.findall(r"[a-z0-9+#.]+", (text or "").lower())
 
 
+def _title_matches_targets(title_lower: str, user_titles: list[str]) -> bool:
+    """Positive match: does the job title match ANY of the user's target titles?"""
+    if not user_titles:
+        return True  # no filter set => allow all
+    anchors = {
+        "backend", "frontend", "fullstack", "full stack", "ai", "settlement",
+        "clearing", "operations", "depository", "underwriting", "kyc", "payments",
+        "upi", "banking", "sde", "developer", "engineer", "analyst", "specialist",
+        "associate", "officer", "distributed", "platform", "machine learning", "data"
+    }
+    for ut in user_titles:
+        ut_clean = ut.strip().lower()
+        if not ut_clean:
+            continue
+        # Exact substring match
+        if ut_clean in title_lower or title_lower in ut_clean:
+            return True
+        # Whole word token match
+        tokens = re.findall(r"[a-z0-9+#.]+", title_lower)
+        if ut_clean in tokens:
+            return True
+        # Match significant words with anchors
+        ut_words = [w for w in re.findall(r"[a-z0-9+#.]+", ut_clean) if len(w) > 2]
+        matches = [w for w in ut_words if w in title_lower]
+        if matches:
+            if any(w in anchors for w in matches):
+                return True
+            if len(matches) >= 2:
+                return True
+    return False
+
+
 def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[dict]:
-    # Extract user profile preferences
+    # ── 1. Load user profile preferences ──
     answers = {
         r["key"]: r["value"]
         for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user_id,))
     }
     user_titles = [t.strip().lower() for t in answers.get("titles", "").split(",") if t.strip()]
+    if not user_titles and TARGETS_PATH.exists():
+        try:
+            t = yaml.safe_load(TARGETS_PATH.read_text()) or {}
+            user_titles = [str(item).strip().lower() for item in t.get("target_titles", []) if str(item).strip()]
+        except Exception:
+            pass
+
     user_exp = int(answers.get("experience_years", "2") or "2")
     user_locs = [l.strip().lower() for l in answers.get("locations", "india,remote").split(",") if l.strip()]
     user_track = answers.get("track", "tech")
+    user_avoids = [a.strip().lower() for a in answers.get("avoid_titles", "").split(",") if a.strip()]
+    all_avoids = load_avoid_titles(user_track) + user_avoids
 
-    # Query only active open jobs
+    # ── 2. Query only active open jobs not already applied to ──
     rows = [
         dict(r)
         for r in db.query(
             "SELECT j.* FROM jobs j WHERE j.closed_at IS NULL "
-            "AND j.id NOT IN (SELECT job_id FROM matches WHERE user_id=?)",
+            "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?)",
             (user_id,),
         )
     ]
-    if not rows:
-        return []
-
-    # Non-India on-site filter (allow Remote and preferred locations)
-    non_india = {
+       # ── 3. Overseas filter keywords ──
+    overseas_keywords = {
         "san francisco", "sf", "seattle", "new york", "dublin", "london",
         "tokyo", "paris", "sydney", "north america", "europe", "ontario",
         "malaysia", "singapore", "são paulo", "washington", "mountain view",
-        "california", "united states", "austin", "chicago"
+        "california", "united states", "austin", "chicago", "denmark",
+        "italy", "calgary", "canada", "israel", "sweden", "netherlands",
+        "united kingdom", "germany", "france", "japan", "australia",
+        "brazil", "ireland", "spain", "poland", "nordics", "emea", "latam",
+        "toronto", "austin", "tel aviv",
+    }
+    overseas_tokens = {
+        "us", "usa", "canada", "toronto", "calgary", "ontario", "israel",
+        "denmark", "sweden", "netherlands", "uk", "london", "germany", "france",
+        "japan", "tokyo", "australia", "sydney", "brazil", "ireland", "dublin",
+        "spain", "poland", "singapore", "malaysia", "nordics", "emea", "latam",
+        "pst", "est", "cst", "mst", "austin", "seattle", "sf", "california"
     }
 
     filtered_rows = []
     for r in rows:
         title_lower = (r.get("title") or "").lower()
-        desc_lower = (r.get("description_md") or "").lower()
-        loc_lower = (r.get("location") or "").lower()
 
-        # Filter extreme executive/director titles if candidate has <= 3 years experience
-        if user_exp <= 3:
-            extreme_senior = ["director", "vice president", "vp of", "head of", "principal", "avp ", "avp -"]
-            if any(ex in title_lower for ex in extreme_senior):
+        # ── 3a. Seniority & Avoid blocklist (excludes SDE-2, Senior, Manager, etc.) ──
+        if user_exp <= 3 or user_avoids:
+            if any(ex in title_lower for ex in all_avoids):
                 continue
 
-        # Track-based filtering
-        if user_track == "business":
-            # For business/operations track, exclude pure software dev & engineering manager roles
-            tech_dev_exclusions = [
-                "engineering manager", "sde", "backend engineer", "frontend engineer",
-                "full stack developer", "software engineer", "devops", "cloud network",
-                "embedded infrastructure", "architect", "lead engineer"
-            ]
-            if any(tk in title_lower for tk in tech_dev_exclusions):
+        # ── 3b. Experience check in title: e.g. "7 to 11 years", "4+ YOE", "5-7 years" ──
+        exp_match = re.search(r"(\d+)\s*(?:-|to|\+)\s*(?:\d+)?\s*(?:years?|yoe|yrs?)", title_lower)
+        if exp_match:
+            min_req_years = int(exp_match.group(1))
+            if min_req_years > user_exp + 1:
                 continue
 
-        # Location filtering
-        is_remote = "remote" in loc_lower or "anywhere" in loc_lower
-        is_preferred_loc = any(pl in loc_lower for pl in user_locs) if user_locs else True
-        is_overseas_onsite = any(f in loc_lower for f in non_india) and not is_remote and not is_preferred_loc
-        if is_overseas_onsite:
+        # ── 3c. Track-based filtering ──
+        if user_track == "tech":
+            if any(ex in title_lower for ex in TECH_TRACK_EXCLUSIONS):
+                continue
+        elif user_track == "business":
+            if any(tk in title_lower for tk in BUSINESS_TRACK_EXCLUSIONS):
+                continue
+
+        # ── 3d. Positive title matching — only keep jobs matching user targets ──
+        if user_titles and not _title_matches_targets(title_lower, user_titles):
             continue
 
-        # Boost matching if title contains one of user target titles
-        if user_titles:
-            has_title_match = any(
-                ut in title_lower or any(word in title_lower for word in ut.split() if len(word) > 3)
-                for ut in user_titles
-            )
-            r["title_matched"] = has_title_match
+        # ── 3e. Location filtering ──
+        loc_lower = (r.get("location") or "").lower()
+        loc_tokens = set(re.findall(r"[a-z0-9]+", loc_lower))
+        is_overseas = bool(overseas_tokens & loc_tokens) or any(k in loc_lower for k in overseas_keywords)
+        is_preferred_loc = any((pl in loc_lower and (pl not in ("remote", "anywhere") or not is_overseas)) for pl in user_locs) if user_locs else False
+        is_india_or_general_remote = ("india" in loc_lower or "bengaluru" in loc_lower or "bangalore" in loc_lower
+                                      or "mumbai" in loc_lower or "hyderabad" in loc_lower or "delhi" in loc_lower
+                                      or "gurugram" in loc_lower or "pune" in loc_lower or "noida" in loc_lower
+                                      or "chennai" in loc_lower or ("remote" in loc_lower and not is_overseas))
+
+        if is_overseas and not is_preferred_loc:
+            continue
+        if not is_preferred_loc and not is_india_or_general_remote and not ("remote" in loc_lower and not is_overseas):
+            continue
 
         filtered_rows.append(r)
 
-    candidate_pool = filtered_rows or rows
+    candidate_pool = filtered_rows
+    if not candidate_pool:
+        return []
 
-    # Score with BM25 against user profile text
+    # ── 4. Score with BM25 against user profile text ──
     corpus = [
         _tok(f"{r['title']} {r.get('description_md') or ''} {r.get('location') or ''}")
         for r in candidate_pool
@@ -150,8 +255,7 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
 
     scores = BM25Okapi(corpus).get_scores(tokenized_query)
     for r, s in zip(candidate_pool, scores):
-        bonus = 10.0 if r.get("title_matched") else 0.0
-        r["bm25_score"] = float(s) + bonus
+        r["bm25_score"] = float(s)
 
     return sorted(candidate_pool, key=lambda r: r["bm25_score"], reverse=True)[:limit]
 
@@ -177,12 +281,17 @@ def build_system_prompt(user_id: int) -> str:
         f"- Preferred Locations: {locations}\n"
         f"- Total Experience: ~{exp} years\n"
         f"- Career Track: {track}\n\n"
-        "EVALUATION RULES:\n"
-        "1. ROLE RELEVANCE: Prioritize jobs matching the candidate's target roles and skills. "
-        f"If the role demands 7+ years of experience and candidate has {exp} years, mark verdict='skip' or 'stretch'. "
-        "2. LOCATION: Accept preferred locations or Remote roles. Reject on-site non-India roles unless remote is allowed.\n"
-        "3. SCORING: Score 0-100 for fit against the candidate's profile AS WRITTEN.\n"
-        "verdicts: strong (80-100) | worth_a_shot (60-79) | stretch (40-59) | skip (<40).\n\n"
+        "STRICT EVALUATION RULES:\n"
+        "1. EXPERIENCE CHECK: If the JD explicitly requires MORE years of experience than the candidate has, "
+        f"the candidate has {exp} years. If JD asks for {int(exp)+3}+ years, verdict MUST be 'skip'.\n"
+        "2. ROLE RELEVANCE: Score HIGH only if the role closely matches the candidate's target roles and skills. "
+        "A 'Software Engineer' candidate should NOT score high on 'Business Analyst' roles.\n"
+        "3. LOCATION: Accept preferred locations or Remote roles. Reject on-site non-India roles.\n"
+        "4. SCORING: Score 0-100 for fit against the candidate's profile AS WRITTEN.\n"
+        "   - strong (80-100): role matches target titles, skills align, experience fits\n"
+        "   - worth_a_shot (60-79): partial match, some skill overlap\n"
+        "   - stretch (40-59): tangential fit, significant skill gaps\n"
+        "   - skip (<40): wrong domain, wrong seniority, or wrong location\n\n"
         "Respond ONLY with valid JSON matching:\n"
         '{"results": [{"job_ref": str, "fit_score": int, "verdict": str, "reasoning": str, "strengths": [str], "gaps": [str]}]}'
     )
@@ -207,6 +316,13 @@ def score_batch(chain: Chain, user_id: int, profile_text: str, batch: list[dict]
 def run_for_user(user_id: int, profile_text: str, chain: Chain | None = None) -> dict:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     cands = shortlist(user_id, profile_text)
+
+    # Clear stale unscored matches before re-inserting (prevents phantom scores)
+    db.execute(
+        "DELETE FROM matches WHERE user_id=? AND fit_score IS NULL AND dismissed_at IS NULL",
+        (user_id,),
+    )
+
     for c in cands:
         db.execute(
             "INSERT INTO matches (user_id, job_id, bm25_score) VALUES (?,?,?) "
@@ -216,6 +332,7 @@ def run_for_user(user_id: int, profile_text: str, chain: Chain | None = None) ->
     scored = failed = llm_calls = 0
 
     if chain is not None:
+        import time
         for i in range(0, len(cands), BATCH):
             batch = cands[i:i + BATCH]
             llm_calls += 1
@@ -251,7 +368,7 @@ def run_for_user(user_id: int, profile_text: str, chain: Chain | None = None) ->
                 import logging
                 logging.getLogger("trackboard.matcher").warning("Batch scoring error: %s", e)
                 failed += len(batch)
-            import time
-            time.sleep(0.5)
+            # 3s inter-batch delay to avoid rate-limit cascades on free tiers
+            time.sleep(3.0)
 
     return {"shortlisted": len(cands), "scored": scored, "unscored": failed, "llm_calls": llm_calls}

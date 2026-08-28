@@ -14,6 +14,12 @@
       }
     }
   ],
+  "crons": [
+    {
+      "path": "/api/cron/sync-and-match",
+      "schedule": "30 20 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

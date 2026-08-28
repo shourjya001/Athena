@@ -55,8 +55,14 @@
 
         <div>
           <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Target Job Titles (comma-separated)</label>
-          <input type="text" name="titles" value="{{ answers.get('titles', '') }}" placeholder="e.g. SDE, Backend Engineer, Business Analyst, Operations Manager" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;">
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Used to filter and rank job titles in Scout & Matcher.</div>
+          <input type="text" name="titles" value="{{ answers.get('titles', '') }}" placeholder="e.g. SDE, Backend Engineer, AI Engineer, Software Developer" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;">
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Positive matching: only jobs matching these target roles will be shortlisted.</div>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Excluded Roles & Seniorities to Avoid (comma-separated)</label>
+          <input type="text" name="avoid_titles" value="{{ answers.get('avoid_titles', '') }}" placeholder="e.g. SDE-2, Senior, Staff, Lead, Manager, Director, Business Analyst" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;">
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Roles containing these words are strictly filtered out (defaults to targets.yaml avoid list if empty).</div>
         </div>
 
         <div>
