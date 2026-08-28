@@ -35,6 +35,8 @@ class Settings(BaseSettings):
 
     @property
     def db_path(self) -> Path:
+        if os.getenv("VERCEL") and not os.getenv("DB_URL"):
+            return Path("/tmp/app.db")
         raw = self.db_url
         if raw.startswith("sqlite:///"):
             raw = raw[len("sqlite:///") :]

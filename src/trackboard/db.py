@@ -14,15 +14,28 @@ from typing import Any
 
 from .settings import get_settings
 
-MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
+def get_migrations_dir() -> Path:
+    base = Path(__file__).resolve().parents[2] / "migrations"
+    if base.exists():
+        return base
+    for alt in [Path("/var/task/migrations"), Path("migrations").resolve()]:
+        if alt.exists():
+            return alt
+    return base
 
 
 def connect() -> sqlite3.Connection:
     path = get_settings().db_path
     path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path, timeout=5.0)
+    conn = sqlite3.connect(path, timeout=10.0)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode = WAL")
+    try:
+        conn.execute("PRAGMA journal_mode = WAL")
+    except Exception:
+        try:
+            conn.execute("PRAGMA journal_mode = DELETE")
+        except Exception:
+            pass
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA busy_timeout = 5000")
     conn.execute("PRAGMA synchronous = NORMAL")
@@ -80,7 +93,7 @@ def migrate(verbose: bool = True) -> list[str]:
     conn = connect()
     try:
         done = _applied(conn)
-        for path in sorted(MIGRATIONS_DIR.glob("*.sql")):
+        for path in sorted(get_migrations_dir().glob("*.sql")):
             if path.name in done:
                 continue
             conn.executescript(path.read_text())
