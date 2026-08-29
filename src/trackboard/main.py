@@ -351,6 +351,9 @@ def create_app() -> FastAPI:
     @app.post("/a/jobs/{job_id}/apply")
     def launch_applier(request: Request, job_id: int):
         user = users.current_user(request)
+        job = db.query_one("SELECT * FROM jobs WHERE id=?", (job_id,))
+        
+        # 1. Update application status
         db.execute(
             "INSERT INTO applications (user_id, job_id, status, status_source, applied_at, last_event_at) "
             "VALUES (?, ?, 'submitted', 'user', datetime('now'), datetime('now')) "
@@ -362,16 +365,32 @@ def create_app() -> FastAPI:
         if app_row:
             db.execute(
                 "INSERT INTO application_events (application_id, status, occurred_at, source, evidence, created_at) "
-                "VALUES (?, 'submitted', datetime('now'), 'applier', 'Playwright auto-applier executed', datetime('now'))",
+                "VALUES (?, 'submitted', datetime('now'), 'applier', 'Auto-fill application initiated', datetime('now'))",
                 (app_row["id"],)
             )
 
-        import subprocess, sys
-        subprocess.Popen([
-            sys.executable, "-m", "trackboard.agents.applier",
-            str(job_id), "--user", user["email"]
-        ])
-        return RedirectResponse("/jobs?applied=1", status_code=303)
+        # 2. Auto-dismiss from active matches queue so it moves to /pipeline
+        db.execute(
+            "UPDATE matches SET dismissed_at=datetime('now') WHERE user_id=? AND job_id=?",
+            (user["id"], job_id)
+        )
+
+        # 3. If running locally on desktop, spawn Playwright headed browser
+        if not os.getenv("VERCEL"):
+            try:
+                import subprocess, sys
+                subprocess.Popen([
+                    sys.executable, "-m", "trackboard.agents.applier",
+                    str(job_id), "--user", user["email"]
+                ])
+            except Exception as e:
+                import sys
+                print(f"Notice on applier process spawn: {e}", file=sys.stderr)
+
+        # 4. Redirect directly to official apply URL or to pipeline
+        if job and job["apply_url"] and job["apply_url"].startswith("http"):
+            return RedirectResponse(job["apply_url"], status_code=303)
+        return RedirectResponse("/pipeline", status_code=303)
 
     @app.post("/a/jobs/{job_id}/mark-applied")
     def mark_applied_route(request: Request, job_id: int):
