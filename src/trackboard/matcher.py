@@ -212,11 +212,15 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
             if any(ex in title_lower for ex in all_avoids):
                 continue
 
-        # ── 3b. Experience check in title: e.g. "7 to 11 years", "4+ YOE", "5-7 years" ──
+        # ── 3b. Experience check: strictly block 2+ years, 3+ years, 4+ years, and senior requirements ──
+        if any(x in title_lower for x in ["2+", "2 +", "3+", "3 +", "4+", "4 +", "5+", "5 +", "6+", "7+", "8+"]):
+            continue
         exp_match = re.search(r"(\d+)\s*(?:-|to|\+)\s*(?:\d+)?\s*(?:years?|yoe|yrs?)", title_lower)
         if exp_match:
             min_req_years = int(exp_match.group(1))
-            if min_req_years > user_exp + 1:
+            if min_req_years >= 2 and ("+" in title_lower or min_req_years > 2):
+                continue
+            if min_req_years > user_exp:
                 continue
 
         # ── 3c. Track-based filtering ──
@@ -290,8 +294,8 @@ def build_system_prompt(user_id: int) -> str:
         f"- Total Experience: ~{exp} years\n"
         f"- Career Track: {track}\n\n"
         "STRICT EVALUATION RULES:\n"
-        "1. EXPERIENCE CHECK: If the JD explicitly requires MORE years of experience than the candidate has, "
-        f"the candidate has {exp} years. If JD asks for {int(exp)+3}+ years, verdict MUST be 'skip'.\n"
+        "1. EXPERIENCE CHECK: The candidate has ~1-2 years of experience. If the JD explicitly requires 2+ years, "
+        "3+ years, 4+ years, or senior experience, verdict MUST be 'skip' and fit_score MUST be < 30.\n"
         "2. ROLE RELEVANCE: Score HIGH only if the role closely matches the candidate's target roles and skills. "
         "A 'Software Engineer' candidate should NOT score high on 'Business Analyst' roles.\n"
         "3. LOCATION: Accept preferred locations or Remote roles. Reject on-site non-India roles.\n"
