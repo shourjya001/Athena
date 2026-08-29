@@ -1,4 +1,4 @@
-
+from __future__ import annotations
 
 import argparse
 import os
@@ -12,7 +12,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi import Form, File, UploadFile
 from fastapi.responses import RedirectResponse
 
-from . import content, db, drill, practice, users
+from . import content, db, drill, llm, practice, users
 from .settings import get_settings
 
 BASE = Path(__file__).resolve().parent
@@ -60,6 +60,28 @@ def create_app() -> FastAPI:
             },
         )
 
+    @app.get("/practice", response_class=HTMLResponse)
+    def practice_page(request: Request):
+        user = users.current_user(request)
+        answers = {
+            r["key"]: r["value"]
+            for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
+        }
+        q = practice.build_queue(user["id"])
+        return templates.TemplateResponse(
+            request,
+            "pages/practice.html",
+            {
+                "user": user,
+                "stats": practice.stats(user["id"]),
+                "due": q.due,
+                "new": q.new,
+                "general_resources": content.general_resources(),
+                "patterns": content.list_patterns(user["id"]),
+                "answers": answers,
+            },
+        )
+
     @app.get("/patterns", response_class=HTMLResponse)
     def pattern_index(request: Request):
         user = users.current_user(request)
@@ -72,13 +94,11 @@ def create_app() -> FastAPI:
             {"user": user, "families": families, "total": len(pats)})
 
     @app.get("/patterns/{slug}", response_class=HTMLResponse)
-    def pattern_detail(request: Request, slug: str):
+    def pattern_detail(slug: str, request: Request):
         user = users.current_user(request)
-        pat = content.get_pattern(slug)
+        pat = content.pattern_by_slug(slug)
         if not pat:
-            return templates.TemplateResponse(
-                request, "pages/missing.html",
-                {"user": user, "slug": slug, "kind": "pattern"}, status_code=404)
+            return RedirectResponse("/practice", status_code=303)
         return templates.TemplateResponse(
             request,
             "pages/pattern.html",
@@ -106,18 +126,20 @@ def create_app() -> FastAPI:
 
         items = []
         if has_resume:
-            # Query matches — strictly exclude jobs already applied to (they belong in /pipeline)
+            # Query matches — strictly exclude jobs already applied to or dismissed, and filter low fits (<50)
             rows = db.query(
-                "SELECT m.bm25_score, m.fit_score, m.verdict, m.reasoning, m.gaps_json, "
+                "SELECT m.bm25_score, m.fit_score, m.verdict, m.reasoning, m.gaps_json, m.strengths_json, "
                 "j.* , m.id AS match_id FROM matches m JOIN jobs j ON j.id = m.job_id "
                 "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
                 "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
+                "AND (m.fit_score IS NULL OR m.fit_score >= 50) "
                 "ORDER BY m.fit_score IS NULL, m.fit_score DESC, m.bm25_score DESC LIMIT 20",
                 (user["id"], user["id"]))
             import json as _json
             for r in rows:
                 d = dict(r)
                 d["gaps"] = _json.loads(d.get("gaps_json") or "[]")
+                d["strengths"] = _json.loads(d.get("strengths_json") or "[]")
                 items.append(d)
 
         total_open = db.query_one("SELECT COUNT(*) n FROM jobs WHERE closed_at IS NULL")["n"]
@@ -420,17 +442,6 @@ def create_app() -> FastAPI:
         return templates.TemplateResponse(
             request, "pages/pipeline.html", {"user": user, "cols": cols, "answers": answers})
 
-    @app.get("/practice", response_class=HTMLResponse)
-    def practice_page(request: Request):
-        user = users.current_user(request)
-        answers = {
-            r["key"]: r["value"]
-            for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
-        }
-        return templates.TemplateResponse(
-            request, "pages/practice.html",
-            {"user": user, "q": practice.build_queue(user["id"]), "answers": answers},
-        )
 
     @app.post("/a/attempt")
     def record_attempt(

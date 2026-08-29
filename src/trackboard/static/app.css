@@ -293,63 +293,77 @@ h2::after {
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 12.5px;
   font-weight: 500;
-  padding: 7px 14px;
-  border-radius: var(--r-sm);
+  padding: 8px 16px;
+  border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--bg-2);
-  color: var(--text-2);
+  color: var(--text-1);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
   white-space: nowrap;
   line-height: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 .btn:hover {
   background: var(--bg-hover);
   color: var(--text-0);
   border-color: var(--text-3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Primary — amber filled */
 .btn-fill {
-  background: var(--amber);
+  background: linear-gradient(135deg, #F2C94C, #E2B93B);
   color: #0D1117;
-  border-color: var(--amber);
+  border-color: #F2C94C;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(242, 201, 76, 0.3);
 }
 .btn-fill:hover {
-  background: #EFC050;
-  border-color: #EFC050;
+  background: linear-gradient(135deg, #FFE082, #F2C94C);
+  border-color: #FFE082;
   color: #0D1117;
+  box-shadow: 0 4px 16px rgba(242, 201, 76, 0.45);
 }
 
 /* Green filled */
 .btn-green {
-  background: var(--green);
-  color: #0D1117;
-  border-color: var(--green);
+  background: linear-gradient(135deg, #2EA043, #238636);
+  color: #FFFFFF;
+  border-color: #2EA043;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(46, 160, 67, 0.3);
 }
 .btn-green:hover {
-  background: #56D364;
-  border-color: #56D364;
-  color: #0D1117;
+  background: linear-gradient(135deg, #3FB950, #2EA043);
+  border-color: #3FB950;
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(63, 185, 80, 0.45);
 }
 
-/* Blue ghost */
+/* Blue filled / ghost */
 .btn-blue {
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(88, 166, 255, 0.08));
   color: var(--blue);
-  border-color: rgba(88, 166, 255, 0.3);
-  background: var(--blue-dim);
+  border: 1px solid rgba(88, 166, 255, 0.4);
+  font-weight: 500;
 }
 .btn-blue:hover {
-  background: rgba(88, 166, 255, 0.2);
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.28), rgba(88, 166, 255, 0.18));
   border-color: var(--blue);
-  color: #fff;
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(88, 166, 255, 0.3);
 }
 
 /* Red ghost */
@@ -366,14 +380,16 @@ h2::after {
 /* Tiny / dismiss */
 .btn-ghost {
   background: transparent;
-  border-color: transparent;
+  border: 1px solid transparent;
   color: var(--text-3);
-  padding: 4px 8px;
-  font-size: 11px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 4px;
 }
 .btn-ghost:hover {
-  color: var(--text-2);
-  background: var(--bg-2);
+  color: var(--text-1);
+  background: var(--bg-3);
+  border-color: var(--border);
 }
 
 /* ─── CARDS ────────────────────────────────────────────────── */

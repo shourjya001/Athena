@@ -92,7 +92,7 @@
   {% endif %}
 
   <span class="fpill">📍 {{ answers.get('locations', 'India + Remote') }}</span>
-  <span class="fpill" title="Excluded from results" style="color:var(--muted);border-style:dashed;">🚫 Excluded: SDE-2, Senior, Manager, Director</span>
+  <span class="fpill" title="Excluded from results" style="color:var(--muted);border-style:dashed;">🚫 Excluded: SDE-2/3, Senior, Lead, Manager, Director</span>
 </div>
 
 {# ── Job cards ── #}
@@ -142,17 +142,43 @@
     </div>
     {% endif %}
 
+    {% if (j.strengths and j.strengths|length > 0) or (j.gaps and j.gaps|length > 0) %}
+    <details style="margin-top:10px;background:rgba(255,255,255,0.02);border:1px solid var(--border-dim);border-radius:6px;padding:8px 12px;">
+      <summary style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:500;user-select:none;">
+        🔍 5-Pillar Recruiter Assessment (Strengths &amp; Gaps)
+      </summary>
+      <div style="margin-top:8px;font-size:12px;line-height:1.6;">
+        {% if j.strengths and j.strengths|length > 0 %}
+          <div style="color:var(--green);margin-bottom:6px;">
+            <strong>✓ Standout Capability Proofs:</strong>
+            <ul style="margin:4px 0 6px 18px;padding:0;">
+              {% for s in j.strengths %}<li>{{ s }}</li>{% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+        {% if j.gaps and j.gaps|length > 0 %}
+          <div style="color:var(--amber);">
+            <strong>⚠️ Identified Competency Gaps:</strong>
+            <ul style="margin:4px 0 0 18px;padding:0;">
+              {% for g in j.gaps %}<li>{{ g }}</li>{% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+    </details>
+    {% endif %}
+
     <div class="actions" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
       <form method="post" action="/a/jobs/{{ j.id }}/apply" style="margin:0;">
         <button type="submit" class="btn btn-fill">⚡ Auto-fill</button>
       </form>
       <a href="/jobs/{{ j.id }}/tailor" class="btn btn-blue">✏️ Tailor Resume</a>
       <form method="post" action="/a/jobs/{{ j.id }}/mark-applied" style="margin:0;">
-        <button type="submit" class="btn" title="Move this job to your Pipeline">✓ Mark Applied</button>
+        <button type="submit" class="btn btn-green" title="Move this job to your Pipeline">✓ Mark Applied</button>
       </form>
       <a href="{{ j.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn">Open Posting ↗</a>
       <form method="post" action="/a/match/{{ j.match_id }}/dismiss" style="margin:0;margin-left:auto;">
-        <button type="submit" class="btn btn-ghost" style="color:var(--muted);" title="Dismiss job">✕</button>
+        <button type="submit" class="btn btn-ghost" title="Dismiss this role from queue">✕ Dismiss</button>
       </form>
     </div>
   </div>

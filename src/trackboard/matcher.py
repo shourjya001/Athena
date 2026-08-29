@@ -40,11 +40,18 @@ def load_avoid_titles(track: str = "tech") -> list[str]:
         "sde-2", "sde 2", "sde-ii", "sde ii", "sde2",
         "sde-3", "sde 3", "sde-iii", "sde iii", "sde3",
         "sde-iv", "sde iv", "sde-4", "sde 4", "sde4",
+        " iii", " - iii", "-iii", "iii -", "iii ",
+        " ii", " - ii", "-ii", "ii -", "ii ",
+        " - 2", "- 2", "-2", " -2",
+        " - 3", "- 3", "-3", " -3",
         "sdet 2", "sdet ii", "sdet-2", "sdet-ii",
         "level 2", "level ii", "level 3", "level iii",
-        "senior", "sr.", "sr ", "sr-", "staff", "principal", "lead ", "lead-", "tech lead", "team lead",
+        "senior", "sr.", "sr ", "sr-", "staff", "principal",
+        "technical lead", "tech lead", "team lead", "lead ", "lead-",
+        "product manager", "project manager", "program manager", "engineering manager",
         "manager", "director", "vice president", "vp of", "head of", "avp ", "avp-",
         "architect", "distinguished", "solutions engineer",
+        "field security", "security engineer", "secops", "siem",
     ]
     if TARGETS_PATH.exists():
         try:
@@ -167,13 +174,14 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
     user_avoids = [a.strip().lower() for a in answers.get("avoid_titles", "").split(",") if a.strip()]
     all_avoids = load_avoid_titles(user_track) + user_avoids
 
-    # ── 2. Query only active open jobs not already applied to ──
+    # ── 2. Query only active open jobs not already applied to or dismissed ──
     rows = [
         dict(r)
         for r in db.query(
             "SELECT j.* FROM jobs j WHERE j.closed_at IS NULL "
-            "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?)",
-            (user_id,),
+            "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
+            "AND j.id NOT IN (SELECT job_id FROM matches WHERE user_id=? AND dismissed_at IS NOT NULL)",
+            (user_id, user_id),
         )
     ]
        # ── 3. Overseas filter keywords ──
