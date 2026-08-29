@@ -89,21 +89,26 @@ def create_app() -> FastAPI:
             {"user": user, "families": families, "total": len(pats)})
 
     @app.get("/patterns/{slug}", response_class=HTMLResponse)
-    def pattern_detail(slug: str, request: Request):
-        user = users.current_user(request)
-        pat = content.get_pattern(slug)
-        if not pat:
-            return RedirectResponse("/practice", status_code=303)
-        return templates.TemplateResponse(
-            request,
-            "pages/pattern.html",
-            {
-                "user": user,
-                "p": pat,
-                "problems": content.pattern_problems(pat["id"], user["id"]),
-                "resources": content.pattern_resources(pat["id"]),
-            },
-        )
+    def pattern_detail(request: Request, slug: str):
+        try:
+            user = users.current_user(request)
+            pat = content.get_pattern(slug)
+            if not pat:
+                return RedirectResponse("/patterns", status_code=303)
+            return templates.TemplateResponse(
+                request,
+                "pages/pattern.html",
+                {
+                    "user": user,
+                    "p": pat,
+                    "problems": content.pattern_problems(pat["id"], user["id"]),
+                    "resources": content.pattern_resources(pat["id"]),
+                },
+            )
+        except Exception as e:
+            import sys
+            print(f"Error rendering pattern {slug}: {e}", file=sys.stderr)
+            return RedirectResponse("/patterns", status_code=303)
 
     @app.get("/jobs", response_class=HTMLResponse)
     def jobs_page(request: Request):

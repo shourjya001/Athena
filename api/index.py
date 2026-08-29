@@ -28,11 +28,12 @@ def init_serverless_db() -> None:
         ]
         seed_db = next((p for p in seed_candidates if p.exists() and p.stat().st_size > 0), None)
 
-        if seed_db:
-            shutil.copyfile(seed_db, tmp_db)
-            print(f"Initialized /tmp/app.db from {seed_db} ({seed_db.stat().st_size // 1024} KB)")
-        else:
-            db.migrate(verbose=False)
+        if not tmp_db.exists() or tmp_db.stat().st_size == 0:
+            if seed_db:
+                shutil.copyfile(seed_db, tmp_db)
+                print(f"Initialized /tmp/app.db from {seed_db} ({seed_db.stat().st_size // 1024} KB)")
+            else:
+                db.migrate(verbose=False)
     except Exception as e:
         print(f"Notice on serverless DB init: {e}", file=sys.stderr)
 
