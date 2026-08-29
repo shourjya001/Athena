@@ -152,6 +152,21 @@ def create_app() -> FastAPI:
                 d["strengths"] = _json.loads(d.get("strengths_json") or "[]")
                 items.append(d)
 
+        if not items:
+            # Fallback: display freshest open jobs so candidate always sees the real live catalog
+            rows = db.query(
+                "SELECT 0.0 as bm25_score, NULL as fit_score, NULL as verdict, NULL as reasoning, '[]' as gaps_json, '[]' as strengths_json, "
+                "j.*, 0 as match_id FROM jobs j WHERE j.closed_at IS NULL "
+                "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
+                "ORDER BY j.first_seen_at DESC LIMIT 40",
+                (user["id"],)
+            )
+            for r in rows:
+                d = dict(r)
+                d["gaps"] = []
+                d["strengths"] = []
+                items.append(d)
+
         total_open = db.query_one("SELECT COUNT(*) n FROM jobs WHERE closed_at IS NULL")["n"]
         applied = request.query_params.get("applied") == "1"
         matched = request.query_params.get("matched") == "1"

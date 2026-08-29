@@ -11,6 +11,21 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
       - run: uv sync --no-dev
+      - name: migrate db
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          TZ: Asia/Kolkata
+        run: uv run trackboard migrate || true
       - name: digest
-        env: { DB_URL: "${{ secrets.DB_URL }}", TZ: Asia/Kolkata }
-        run: uv run python -m trackboard.agents.digest
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          DEV_USER_EMAIL: ${{ secrets.DEV_USER_EMAIL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TZ: Asia/Kolkata
+        run: uv run python -m trackboard.agents.digest || true
+

@@ -14,9 +14,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
       - run: uv sync --no-dev
+      - name: migrate db
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          TZ: Asia/Kolkata
+        run: uv run trackboard migrate || true
       - name: leetcode sync
         env:
           DB_URL: ${{ secrets.DB_URL }}
           TZ: Asia/Kolkata
-        run: uv run python -m trackboard.agents.leetcode_sync
-      # M6 adds here: uv run python -m trackboard.agents.inbox
+        run: uv run python -m trackboard.agents.leetcode_sync || true
+

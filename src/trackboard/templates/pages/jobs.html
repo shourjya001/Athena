@@ -134,6 +134,7 @@
     </div>
 
     <div class="meta" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+      <span class="pill" style="background:rgba(63,185,80,0.15);color:var(--green);border-color:rgba(63,185,80,0.3);font-weight:600;">✨ NEW</span>
       {% if j.location %}<span class="pill">📍 {{ j.location }}</span>{% endif %}
       <span class="pill" style="text-transform:capitalize;">🏢 {{ j.source }}</span>
       {% if j.fit_score is not none %}
@@ -183,14 +184,11 @@
     {% endif %}
 
     <div class="actions" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-      <form method="post" action="/a/jobs/{{ j.id }}/apply" target="_blank" style="margin:0;">
-        <button type="submit" class="btn btn-fill" title="Open official application form and record in pipeline">⚡ Auto-fill &amp; Apply ↗</button>
-      </form>
+      <a href="{{ j.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-fill" title="Open official job application form in new tab">⚡ Apply on Company Site ↗</a>
       <a href="/jobs/{{ j.id }}/tailor" class="btn btn-blue">✏️ Tailor Resume</a>
       <form method="post" action="/a/jobs/{{ j.id }}/mark-applied" style="margin:0;">
-        <button type="submit" class="btn btn-green" title="Move this job to your Pipeline">✓ Mark Applied</button>
+        <button type="submit" class="btn btn-green" title="Move this job to your Pipeline after applying">✓ Mark Applied</button>
       </form>
-      <a href="{{ j.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn">Open Posting ↗</a>
       <form method="post" action="/a/match/{{ j.match_id }}/dismiss" style="margin:0;margin-left:auto;">
         <button type="submit" class="btn btn-ghost" title="Dismiss this role from queue">✕ Dismiss</button>
       </form>
