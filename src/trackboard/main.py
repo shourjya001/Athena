@@ -136,14 +136,14 @@ def create_app() -> FastAPI:
                     import sys
                     print(f"Notice on auto-match cold start: {e}", file=sys.stderr)
 
-            # Query matches — strictly exclude jobs already applied to or dismissed, and filter low fits (<50)
+            # Query matches — strictly exclude jobs already applied to or dismissed, and filter low fits (<40)
             rows = db.query(
                 "SELECT m.bm25_score, m.fit_score, m.verdict, m.reasoning, m.gaps_json, m.strengths_json, "
                 "j.* , m.id AS match_id FROM matches m JOIN jobs j ON j.id = m.job_id "
                 "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
                 "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
-                "AND (m.fit_score IS NULL OR m.fit_score >= 50) "
-                "ORDER BY m.fit_score IS NULL, m.fit_score DESC, m.bm25_score DESC LIMIT 20",
+                "AND (m.fit_score IS NULL OR m.fit_score >= 40) "
+                "ORDER BY m.fit_score IS NULL, m.fit_score DESC, m.bm25_score DESC LIMIT 40",
                 (user["id"], user["id"]))
             import json as _json
             for r in rows:

@@ -65,9 +65,9 @@ def load_avoid_titles(track: str = "tech") -> list[str]:
     return avoids
 
 
-# Reduced from 40→20 for focused, quality matches; batch from 8→4 for rate-limit safety
-SHORTLIST = 20
-BATCH = 4
+# Shortlist 40 high-relevance jobs for a full, rich daily portal queue
+SHORTLIST = 40
+BATCH = 5
 
 # ── Track-aware exclusions — tech track excludes ops/business; business track excludes pure dev ──
 TECH_TRACK_EXCLUSIONS = [

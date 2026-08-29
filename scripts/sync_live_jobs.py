@@ -208,14 +208,21 @@ def main():
     all_jobs.extend(fetch_live_lever_jobs("meesho", "Meesho"))
     all_jobs.extend(fetch_live_lever_jobs("cred", "CRED"))
     all_jobs.extend(fetch_live_lever_jobs("fampay", "FamPay"))
+    all_jobs.extend(fetch_live_lever_jobs("epifi", "Fi Money"))
+    all_jobs.extend(fetch_live_lever_jobs("zeta", "Zeta"))
     
     # 2. Real Greenhouse Boards
     all_jobs.extend(fetch_live_greenhouse_jobs("razorpaysoftwareprivatelimited", "Razorpay"))
     all_jobs.extend(fetch_live_greenhouse_jobs("postman", "Postman"))
     all_jobs.extend(fetch_live_greenhouse_jobs("inmobi", "InMobi"))
+    all_jobs.extend(fetch_live_greenhouse_jobs("slice", "Slice"))
+    all_jobs.extend(fetch_live_greenhouse_jobs("observeai", "Observe.AI"))
     
     # 3. Real Ashby Boards
     all_jobs.extend(fetch_live_ashby_jobs("atlan", "Atlan"))
+    all_jobs.extend(fetch_live_ashby_jobs("sarvam", "Sarvam AI"))
+    all_jobs.extend(fetch_live_ashby_jobs("navi", "Navi"))
+    all_jobs.extend(fetch_live_ashby_jobs("composio", "Composio"))
     
     # 4. Real Curated Banking Operations
     all_jobs.extend(banking_real_roles)
