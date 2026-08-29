@@ -16,13 +16,14 @@ and `README.md` (current repo state) before doing anything.
 - DONE (Live integrations & overhauls):
   1. YouTube index: 347 mapped videos across takeUforward and TheAdityaVerma.
   2. Interactive Pattern Visualizers: Dedicated domain-specific visual models across all 26 DSA patterns on /patterns/{slug}.
-  3. Master Recruiter Skill: skills/recruiter-analyst/SKILL.md created capturing 5 pillars wired into /jobs/{id}/tailor with LLM audit.
+  3. Master Recruiter Skill: skills/recruiter-analyst/SKILL.md created capturing 5 pillars wired into /jobs/{id}/tailor and /jobs with LLM audit.
   4. 100% Real Live ATS Ingestion: 460+ real live job openings ingested from Paytm, Meesho, Razorpay, CRED, FamPay, InMobi, Postman, Atlan, Canara Robeco AMC, Canara HSBC Life, HDFC Bank, ICICI Bank, Axis Bank, and NPCI with 100% verified 200 OK apply URLs (zero 404 links).
-  5. Precision Matcher & Dynamic Filtering: Positive target title matching, track-aware avoid lists (strictly excluding SDE-2, Senior, Manager, HR for tech; Dev/Eng Manager for business), experience-years regex checks in title, and domestic India/remote filtering.
-  6. Multi-Provider LLM Cascade: Primary Gemini 3.5-Flash with immediate rate-limit fallback to Nvidia Nemotron Ultra, MiniMax M3, and Poolside Laguna on OpenRouter without stalling on 429s.
+  5. Precision Matcher & Dynamic Filtering: Positive target title matching, track-aware avoid lists (strictly excluding SDE-2/3, Senior, Lead, Manager, SecOps for tech; Dev/Eng Manager for business), experience-years regex checks in title, and domestic India/remote filtering.
+  6. Multi-Provider LLM Cascade: Primary Nvidia Nemotron 550B Ultra on OpenRouter with immediate rate-limit fallback to MiniMax M3, Poolside Laguna, and Gemini 3.5-Flash without stalling on 429s.
   7. Resume Gating & PDF Hyperlink Extraction: Master resume required before matching, in-memory PDF hyperlink annotation parser extracting LinkedIn, GitHub, and portfolio URLs.
   8. Pipeline Synchronization: Applied jobs auto-hidden from /jobs queue upon marking applied and tracked exclusively in /pipeline.
   9. Scheduled Automation: Nightly cron at 02:00 AM IST (20:30 UTC) in vercel.json during peak model success and low traffic.
+  10. Pattern Detail & Practice Routing: Fixed get_pattern function calls and template context, verifying 200 OK across all 26 interactive pattern workbenches.
 - NOT DONE — next steps:
   1. Google OAuth login (spec §12) replacing users.current_user() cookie context if strict OAuth 2.0 PKCE is desired.
   2. Real alert emails: save 1-2 per portal to a folder, run scout --alerts-dir.
