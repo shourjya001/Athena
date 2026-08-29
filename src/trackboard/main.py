@@ -126,6 +126,16 @@ def create_app() -> FastAPI:
 
         items = []
         if has_resume:
+            match_count = db.query_one("SELECT COUNT(*) n FROM matches WHERE user_id=?", (user["id"],))["n"]
+            if match_count == 0:
+                # Auto-initialize matching and scoring for the candidate immediately
+                try:
+                    from .agents.matcher import run_matcher_for_user
+                    run_matcher_for_user(user, force_bm25=False)
+                except Exception as e:
+                    import sys
+                    print(f"Notice on auto-match cold start: {e}", file=sys.stderr)
+
             # Query matches — strictly exclude jobs already applied to or dismissed, and filter low fits (<50)
             rows = db.query(
                 "SELECT m.bm25_score, m.fit_score, m.verdict, m.reasoning, m.gaps_json, m.strengths_json, "
@@ -688,7 +698,16 @@ def create_app() -> FastAPI:
                     (uid, label, f"upload/{label}", extracted_text),
                 )
 
-            return RedirectResponse("/profile?resume_saved=1", status_code=303)
+            # Auto-run matcher so matches are immediately generated upon resume submission
+            try:
+                from .agents.matcher import run_matcher_for_user
+                user_obj = users.current_user(request)
+                run_matcher_for_user(user_obj, force_bm25=False)
+            except Exception as e:
+                import sys
+                print(f"Notice on auto-match after resume upload: {e}", file=sys.stderr)
+
+            return RedirectResponse("/jobs?matched=1", status_code=303)
         except Exception as e:
             import urllib.parse
             err_msg = urllib.parse.quote_plus(f"Upload notice: {e}")
