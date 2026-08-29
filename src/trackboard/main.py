@@ -67,17 +67,12 @@ def create_app() -> FastAPI:
             r["key"]: r["value"]
             for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
         }
-        q = practice.build_queue(user["id"])
         return templates.TemplateResponse(
             request,
             "pages/practice.html",
             {
                 "user": user,
-                "stats": practice.stats(user["id"]),
-                "due": q.due,
-                "new": q.new,
-                "general_resources": content.general_resources(),
-                "patterns": content.list_patterns(user["id"]),
+                "q": practice.build_queue(user["id"]),
                 "answers": answers,
             },
         )
@@ -96,7 +91,7 @@ def create_app() -> FastAPI:
     @app.get("/patterns/{slug}", response_class=HTMLResponse)
     def pattern_detail(slug: str, request: Request):
         user = users.current_user(request)
-        pat = content.pattern_by_slug(slug)
+        pat = content.get_pattern(slug)
         if not pat:
             return RedirectResponse("/practice", status_code=303)
         return templates.TemplateResponse(

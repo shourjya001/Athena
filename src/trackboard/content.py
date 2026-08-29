@@ -36,6 +36,9 @@ def get_pattern(slug: str) -> dict[str, Any] | None:
     return _pattern(row) if row else None
 
 
+pattern_by_slug = get_pattern
+
+
 def pattern_problems(pattern_id: int, user_id: int | None = None) -> list[dict[str, Any]]:
     rows = db.query(
         """
