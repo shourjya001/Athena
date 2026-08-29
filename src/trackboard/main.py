@@ -313,7 +313,11 @@ def create_app() -> FastAPI:
             if role_list:
                 chosen_bullets[role_comp] = role_list
 
-        skills = tailor.reorder_skills(bank, job.get("description_md") or "")
+        custom_skills_raw = form_data.get("custom_skills")
+        if custom_skills_raw:
+            skills = [s.strip() for s in str(custom_skills_raw).split(",") if s.strip()]
+        else:
+            skills = tailor.reorder_skills(bank, job.get("description_md") or "")
         out_dir = Path("/tmp/resumes") if os.getenv("VERCEL") else (BASE / "static" / "resumes")
         out_dir.mkdir(parents=True, exist_ok=True)
         pdf_name = f"tailored_{user['id']}_{job_id}.pdf"

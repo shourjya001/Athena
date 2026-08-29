@@ -147,12 +147,15 @@
       </div>
       {% if rev.ats_visibility.missing_keywords %}
       <div>
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--amber);margin-bottom:6px;">High-Priority Missing Keywords</div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--amber);margin-bottom:6px;">High-Priority Missing Keywords &amp; Natural Injection</div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           {% for kw in rev.ats_visibility.missing_keywords %}
-          <div style="font-size:12px;background:var(--bg-3);padding:6px 10px;border-radius:4px;border-left:2px solid var(--amber);">
-            <strong style="color:var(--text-0);">{{ kw.term }}</strong>
-            {% if kw.injection_hint %}<span style="color:var(--text-2);margin-left:6px;">→ {{ kw.injection_hint }}</span>{% endif %}
+          <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-3);padding:6px 10px;border-radius:4px;border-left:2px solid var(--amber);flex-wrap:wrap;gap:6px;">
+            <div>
+              <strong style="color:var(--text-0);">{{ kw.term }}</strong>
+              {% if kw.injection_hint %}<span style="color:var(--text-2);margin-left:6px;font-size:11.5px;">→ {{ kw.injection_hint }}</span>{% endif %}
+            </div>
+            <button type="button" class="btn btn-ghost" style="padding:2px 8px;font-size:11px;color:var(--signal);border:1px solid rgba(88,166,255,0.3);background:rgba(88,166,255,0.06);" onclick="addSkill('{{ kw.term }}')">+ Add to Skills</button>
           </div>
           {% endfor %}
         </div>
@@ -193,7 +196,7 @@
 <form method="post" action="/jobs/{{ job.id }}/tailor/approve">
   <h2>Side-by-side comparison</h2>
   <p class="lede" style="margin-bottom:16px;">
-    Your verified bullets from <code>config/resume.yaml</code>, re-aligned with this JD's vocabulary.
+    Your verified experience bullets, aligned with this JD's terminology.
     Edit the right column directly.
   </p>
 
@@ -229,15 +232,14 @@
 
   {# Skills #}
   <div class="card" style="margin-bottom:24px;">
-    <div style="font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:8px;">JD-prioritised skills</div>
-    <p style="font-size:13px;color:var(--text-3);margin-bottom:10px;">
-      Sorted so technologies matching this JD lead your resume's skills section.
-    </p>
-    <div style="display:flex;flex-wrap:wrap;gap:4px;">
-      {% for s in data.skills %}
-        <span class="sk">{{ s }}</span>
-      {% endfor %}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text-2);">JD-prioritised skills &amp; keywords (editable)</div>
+      <span style="font-size:11px;color:var(--text-3);">Comma-separated · Included in rendered PDF</span>
     </div>
+    <p style="font-size:12.5px;color:var(--text-3);margin-bottom:10px;">
+      Sorted so matching technologies lead your resume. Add recommended keywords above by clicking <b>+ Add to Skills</b> or typing directly below.
+    </p>
+    <textarea id="custom_skills" name="custom_skills" rows="3" class="diff-edit" style="width:100%;font-size:13px;line-height:1.5;padding:8px 12px;border-radius:6px;box-sizing:border-box;">{{ data.skills|join(', ') }}</textarea>
   </div>
 
   {# Approve #}
@@ -246,5 +248,19 @@
     <a href="/jobs" class="btn">Cancel</a>
   </div>
 </form>
+
+<script>
+function addSkill(term) {
+  const el = document.getElementById('custom_skills');
+  if (!el) return;
+  const current = el.value.split(',').map(s => s.trim()).filter(Boolean);
+  if (!current.some(s => s.toLowerCase() === term.toLowerCase())) {
+    current.push(term);
+    el.value = current.join(', ');
+    el.style.borderColor = 'var(--signal)';
+    setTimeout(() => { el.style.borderColor = ''; }, 1200);
+  }
+}
+</script>
 
 {% endblock %}
