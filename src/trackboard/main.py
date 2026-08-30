@@ -153,10 +153,10 @@ def create_app() -> FastAPI:
             track_exclusions = TECH_TRACK_EXCLUSIONS if user_track == "tech" else BUSINESS_TRACK_EXCLUSIONS
 
             for r in rows:
-                title_lower = (r.get("title") or "").lower()
+                d = dict(r)
+                title_lower = (d.get("title") or "").lower()
                 if any(av in title_lower for av in full_avoids) or any(tx in title_lower for tx in track_exclusions):
                     continue
-                d = dict(r)
                 d["gaps"] = _json.loads(d.get("gaps_json") or "[]")
                 d["strengths"] = _json.loads(d.get("strengths_json") or "[]")
                 items.append(d)
@@ -178,10 +178,10 @@ def create_app() -> FastAPI:
                 (user["id"],)
             )
             for r in rows:
-                t = (r["title"] or "").lower()
+                d = dict(r)
+                t = (d.get("title") or "").lower()
                 if any(av in t for av in avoid_list):
                     continue
-                d = dict(r)
                 d["gaps"] = []
                 d["strengths"] = []
                 items.append(d)
