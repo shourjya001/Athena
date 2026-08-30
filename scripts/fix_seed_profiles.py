@@ -39,16 +39,16 @@ def fix_db(db_path: Path):
             for k, v in manshi_answers.items():
                 conn.execute("INSERT INTO profile_answers (user_id, key, value) VALUES (?, ?, ?) ON CONFLICT(user_id, key) DO UPDATE SET value=excluded.value", (uid2, k, v))
 
-        # 3. Fix User 3: Prerna (Business & Operations)
-        conn.execute("INSERT INTO users (email, display_name, created_at, last_seen_at) VALUES ('prerna@gmail.com', 'Prerna', datetime('now'), datetime('now')) ON CONFLICT(email) DO UPDATE SET display_name='Prerna'")
-        u3 = conn.execute("SELECT id FROM users WHERE email='prerna@gmail.com'").fetchone()
+        # 3. Fix User 3: Prerna Rohilla (Business & Operations)
+        conn.execute("INSERT INTO users (email, display_name, created_at, last_seen_at) VALUES ('prernarohilla050802@gmail.com', 'Prerna Rohilla', datetime('now'), datetime('now')) ON CONFLICT(email) DO UPDATE SET display_name='Prerna Rohilla'")
+        u3 = conn.execute("SELECT id FROM users WHERE email='prernarohilla050802@gmail.com'").fetchone()
         if u3:
             uid3 = u3["id"]
             prerna_answers = {
-                "titles": "Business Analyst, Operations Manager, Product Analyst, Operations Specialist",
-                "keywords": "SQL, Excel, Operations, Tableau, Agile, Jira, Stakeholder Management, Process Optimization",
-                "locations": "Bengaluru, Mumbai, Remote, India",
-                "min_ctc": "18 LPA",
+                "titles": "Operations Associate, Banking Operations Specialist, Operations Analyst, Business Analyst",
+                "keywords": "Banking Operations, Settlement, Clearing, KYC, AML, Core Banking, Finacle, Operations, SQL, Excel",
+                "locations": "Bengaluru, Mumbai, Gurugram, India",
+                "min_ctc": "15 LPA",
                 "experience_years": "2",
                 "track": "business"
             }
