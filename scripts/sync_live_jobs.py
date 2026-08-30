@@ -200,29 +200,62 @@ def fetch_live_ashby_jobs(board_token: str, company_name: str) -> list[dict]:
     return results
 
 def main():
-    print("=== 1. FETCHING LIVE ATS JOB POSTINGS ===")
+    print("=== 1. FETCHING LIVE ATS JOB POSTINGS (40+ TECH & PRODUCT COMPANIES) ===")
     all_jobs: list[dict] = []
     
     # 1. Real Lever Boards
-    all_jobs.extend(fetch_live_lever_jobs("paytm", "Paytm"))
-    all_jobs.extend(fetch_live_lever_jobs("meesho", "Meesho"))
-    all_jobs.extend(fetch_live_lever_jobs("cred", "CRED"))
-    all_jobs.extend(fetch_live_lever_jobs("fampay", "FamPay"))
-    all_jobs.extend(fetch_live_lever_jobs("epifi", "Fi Money"))
-    all_jobs.extend(fetch_live_lever_jobs("zeta", "Zeta"))
+    lever_boards = [
+        ("paytm", "Paytm"),
+        ("meesho", "Meesho"),
+        ("cred", "CRED"),
+        ("fampay", "FamPay"),
+        ("epifi", "Fi Money"),
+        ("zeta", "Zeta"),
+        ("clevertap", "CleverTap"),
+        ("chargebee", "Chargebee"),
+        ("juspay", "Juspay"),
+    ]
+    for token, name in lever_boards:
+        all_jobs.extend(fetch_live_lever_jobs(token, name))
     
     # 2. Real Greenhouse Boards
-    all_jobs.extend(fetch_live_greenhouse_jobs("razorpaysoftwareprivatelimited", "Razorpay"))
-    all_jobs.extend(fetch_live_greenhouse_jobs("postman", "Postman"))
-    all_jobs.extend(fetch_live_greenhouse_jobs("inmobi", "InMobi"))
-    all_jobs.extend(fetch_live_greenhouse_jobs("slice", "Slice"))
-    all_jobs.extend(fetch_live_greenhouse_jobs("observeai", "Observe.AI"))
+    greenhouse_boards = [
+        ("razorpaysoftwareprivatelimited", "Razorpay"),
+        ("postman", "Postman"),
+        ("inmobi", "InMobi"),
+        ("slice", "Slice"),
+        ("observeai", "Observe.AI"),
+        ("phonepe", "PhonePe"),
+        ("urbancompany", "Urban Company"),
+        ("browserstack", "BrowserStack"),
+    ]
+    for token, name in greenhouse_boards:
+        all_jobs.extend(fetch_live_greenhouse_jobs(token, name))
     
     # 3. Real Ashby Boards
-    all_jobs.extend(fetch_live_ashby_jobs("atlan", "Atlan"))
-    all_jobs.extend(fetch_live_ashby_jobs("sarvam", "Sarvam AI"))
-    all_jobs.extend(fetch_live_ashby_jobs("navi", "Navi"))
-    all_jobs.extend(fetch_live_ashby_jobs("composio", "Composio"))
+    ashby_boards = [
+        ("atlan", "Atlan"),
+        ("sarvam", "Sarvam AI"),
+        ("navi", "Navi"),
+        ("composio", "Composio"),
+        ("groww", "Groww"),
+        ("zepto", "Zepto"),
+        ("truefoundry", "TrueFoundry"),
+        ("portkey", "Portkey"),
+        ("simplismart", "Simplismart"),
+        ("sprinto", "Sprinto"),
+        ("moengage", "MoEngage"),
+        ("innovaccer", "Innovaccer"),
+        ("sharechat", "ShareChat"),
+        ("hasura", "Hasura"),
+        ("smallcase", "smallcase"),
+        ("jar", "Jar"),
+        ("indmoney", "INDmoney"),
+        ("pocketfm", "Pocket FM"),
+        ("delhivery", "Delhivery"),
+    ]
+    for token, name in ashby_boards:
+        all_jobs.extend(fetch_live_ashby_jobs(token, name))
     
     # 4. Real Curated Banking Operations
     all_jobs.extend(banking_real_roles)
@@ -281,3 +314,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

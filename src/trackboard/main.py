@@ -737,8 +737,7 @@ def create_app() -> FastAPI:
 
     @app.get("/api/cron/sync-and-match")
     def cron_sync_and_match(request: Request):
-        """Vercel cron endpoint for automated syncing & matching at low-traffic hours.
-        Protected by CRON_SECRET header."""
+        """Vercel cron endpoint for automated syncing, matching & digest dispatch."""
         import os
         cron_secret = os.getenv("CRON_SECRET", "")
         auth_header = request.headers.get("authorization", "")
@@ -747,15 +746,47 @@ def create_app() -> FastAPI:
             return JSONResponse({"error": "unauthorized"}, status_code=401)
 
         from .agents.matcher import run_matcher_for_user
+        from . import email
         results = []
         all_users = db.query("SELECT * FROM users ORDER BY id")
         for u in all_users:
             u = dict(u)
+            user_res = {"user": u["email"]}
             try:
-                res = run_matcher_for_user(u, force_bm25=False)
-                results.append({"user": u["email"], "result": res})
+                m_res = run_matcher_for_user(u, force_bm25=False)
+                user_res["matched"] = m_res
             except Exception as e:
-                results.append({"user": u["email"], "error": str(e)[:200]})
+                user_res["matcher_error"] = str(e)[:200]
+            
+            # Auto-dispatch daily HTML digest
+            try:
+                top_matches = db.query(
+                    "SELECT j.title, j.company_name, j.location, j.apply_url, m.fit_score, m.verdict, m.reasoning "
+                    "FROM matches m JOIN jobs j ON j.id=m.job_id "
+                    "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
+                    "AND (m.fit_score IS NULL OR m.fit_score >= 50) "
+                    "ORDER BY m.fit_score DESC LIMIT 6",
+                    (u["id"],)
+                )
+                top_matches = [dict(r) for r in top_matches]
+                if top_matches:
+                    digest_payload = {
+                        "top_matches": top_matches,
+                        "pipeline_moves": [],
+                        "problems_practiced": db.query_one("SELECT COUNT(*) n FROM practice_attempts WHERE user_id=? AND date(occurred_at)=date('now')", (u["id"],))["n"],
+                        "source_failures": []
+                    }
+                    html = email.render_digest_html(digest_payload, u["email"])
+                    sent = email.send_email(
+                        to_email=u["email"],
+                        subject=f"⚡ Trackboard Digest: {len(top_matches)} High-Fit Job Matches for {u.get('display_name') or 'You'}",
+                        html_body=html
+                    )
+                    user_res["digest_dispatched"] = sent
+            except Exception as e:
+                user_res["digest_error"] = str(e)[:200]
+
+            results.append(user_res)
 
         from fastapi.responses import JSONResponse
         return JSONResponse({"ok": True, "users_processed": len(results), "results": results})

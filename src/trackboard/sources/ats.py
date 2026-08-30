@@ -171,11 +171,55 @@ def fetch_oracle_cx(token: str, fetch: Fetch | None = None) -> list[dict]:
     return out
 
 
+def extract_closing_date(text: str) -> str | None:
+    """Extract explicit application deadline / closing date from JD text if stated."""
+    if not text:
+        return None
+    patterns = [
+        r"(?:apply\s+(?:before|by|until)|deadline|closing\s+date|last\s+date\s+(?:to\s+apply)?|applications\s+close\s+on)\s*[:\-–]?\s*([A-Za-z]{3,9}\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2}|\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})",
+    ]
+    for p in patterns:
+        m = re.search(p, text, flags=re.IGNORECASE)
+        if m:
+            return m.group(1).strip()
+    return None
+
+
+def fetch_smartrecruiters(token: str, fetch: Fetch | None = None) -> list[dict]:
+    """Fetch jobs from SmartRecruiters public API."""
+    url = f"https://api.smartrecruiters.com/v1/companies/{token}/postings"
+    out = []
+    try:
+        r = httpx.get(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}, timeout=15)
+        if r.status_code == 200:
+            data = r.json()
+            for j in data.get("content", []):
+                loc = j.get("location") or {}
+                city = loc.get("city", "")
+                country = loc.get("country", "")
+                loc_str = f"{city}, {country}".strip(", ")
+                out.append({
+                    "title": (j.get("name") or "").strip(),
+                    "location": loc_str,
+                    "remote": 1 if (loc.get("remote") or "remote" in loc_str.lower()) else 0,
+                    "description_md": "",
+                    "apply_url": f"https://jobs.smartrecruiters.com/{token}/{j.get('id')}",
+                    "source": "smartrecruiters",
+                    "source_job_id": str(j.get("id")),
+                    "posted_at": (j.get("releasedDate") or "")[:10] or None,
+                })
+    except Exception:
+        pass
+    return out
+
+
 FETCHERS = {
     "greenhouse": fetch_greenhouse,
     "lever": fetch_lever,
     "ashby": fetch_ashby,
     "workday": fetch_workday,
     "oracle_cx": fetch_oracle_cx,
+    "smartrecruiters": fetch_smartrecruiters,
 }
+
 

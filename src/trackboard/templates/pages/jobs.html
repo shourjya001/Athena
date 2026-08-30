@@ -134,7 +134,11 @@
     </div>
 
     <div class="meta" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-      <span class="pill" style="background:rgba(63,185,80,0.15);color:var(--green);border-color:rgba(63,185,80,0.3);font-weight:600;">✨ NEW</span>
+      <span class="pill" style="background:rgba(63,185,80,0.15);color:var(--green);border-color:rgba(63,185,80,0.3);font-weight:600;">✨ Found Today</span>
+      {% if j.fit_score and j.fit_score >= 80 %}
+        <span class="pill" style="background:rgba(227,179,65,0.15);color:var(--signal);border-color:rgba(227,179,65,0.3);font-weight:600;" title="High Match — Early applicants have 3x higher callback rate">⚡ High Priority Match</span>
+      {% endif %}
+      {% if j.posted_at %}<span class="pill" style="color:var(--text-3);">🗓️ Posted: {{ j.posted_at }}</span>{% endif %}
       {% if j.location %}<span class="pill">📍 {{ j.location }}</span>{% endif %}
       <span class="pill" style="text-transform:capitalize;">🏢 {{ j.source }}</span>
       {% if j.fit_score is not none %}
