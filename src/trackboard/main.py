@@ -839,7 +839,7 @@ def create_app() -> FastAPI:
     @app.post("/login")
     def do_login(email: str = Form(...)):
         s = get_settings()
-        clean = email.strip().lower()
+        clean = users.resolve_email(email.strip().lower())
         if "@" not in clean:
             return RedirectResponse(
                 url="/login?error=Please+enter+a+valid+email+address.",
