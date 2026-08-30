@@ -212,9 +212,30 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
             if any(ex in title_lower for ex in all_avoids):
                 continue
 
-        # ── 3b. Experience check: strictly block 2+ years, 3+ years, 4+ years, and senior requirements ──
+        # ── 3b. Experience check: strictly scan BOTH title and JD description ──
+        desc_lower = (r.get("description_md") or "").lower()
+        full_text = f"{title_lower}\n{desc_lower}"
+        
+        # Hard rejection on title
         if any(x in title_lower for x in ["2+", "2 +", "3+", "3 +", "4+", "4 +", "5+", "5 +", "6+", "7+", "8+"]):
             continue
+
+        if user_exp <= 2:
+            # Check description for explicit 3+, 4+, 5+, 6+ years requirements
+            high_exp_patterns = [
+                r"(?:at least|minimum|min|have|\+)\s*(?:3|4|5|6|7|8|9|10)\s*(?:\+)?\s*(?:years?|yrs?|yoe)",
+                r"(?:3|4|5|6|7|8|9|10)\s*(?:\+)\s*(?:years?|yrs?|yoe)",
+                r"(?:3|4|5|6|7|8|9|10)\s*(?:-|to)\s*(?:\d+)\s*(?:years?|yrs?|yoe)",
+                r"(?:3|4|5|6|7|8|9|10)\s*years?\s*of\s*(?:relevant\s*)?(?:hands-on\s*)?experience",
+            ]
+            is_high_exp = False
+            for pat in high_exp_patterns:
+                if re.search(pat, full_text):
+                    is_high_exp = True
+                    break
+            if is_high_exp:
+                continue
+
         exp_match = re.search(r"(\d+)\s*(?:-|to|\+)\s*(?:\d+)?\s*(?:years?|yoe|yrs?)", title_lower)
         if exp_match:
             min_req_years = int(exp_match.group(1))

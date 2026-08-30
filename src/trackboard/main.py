@@ -164,11 +164,17 @@ def create_app() -> FastAPI:
                     break
 
         if not items:
-            # Fallback: display freshest open jobs filtered strictly by avoid list (excluding Senior, Lead, Manager, SDE-2/3)
+            # Fallback: display freshest open jobs filtered strictly by avoid list (excluding Senior, Lead, Manager, SDE-2/3, 3+ YOE)
             avoid_list = [
                 "senior", "sr.", "sr ", "sr-", "staff", "principal", "lead", "manager", "director",
                 "vp", "head of", "architect", "sde-2", "sde 2", "sde-ii", "sde ii", "sde2",
                 "sde-3", "sde 3", "sde-iii", "sde iii", "sde3", "2+", "3+", "4+", "5+", "6+"
+            ]
+            high_exp_pats = [
+                r"(?:at least|minimum|min|have|\+)\s*(?:3|4|5|6|7|8|9|10)\s*(?:\+)?\s*(?:years?|yrs?|yoe)",
+                r"(?:3|4|5|6|7|8|9|10)\s*(?:\+)\s*(?:years?|yrs?|yoe)",
+                r"(?:3|4|5|6|7|8|9|10)\s*(?:-|to)\s*(?:\d+)\s*(?:years?|yrs?|yoe)",
+                r"(?:3|4|5|6|7|8|9|10)\s*years?\s*of\s*(?:relevant\s*)?(?:hands-on\s*)?experience",
             ]
             rows = db.query(
                 "SELECT 0.0 as bm25_score, NULL as fit_score, NULL as verdict, NULL as reasoning, '[]' as gaps_json, '[]' as strengths_json, "
@@ -177,10 +183,14 @@ def create_app() -> FastAPI:
                 "ORDER BY j.first_seen_at DESC LIMIT 150",
                 (user["id"],)
             )
+            import re as _re
             for r in rows:
                 d = dict(r)
                 t = (d.get("title") or "").lower()
+                desc = (d.get("description_md") or "").lower()
                 if any(av in t for av in avoid_list):
+                    continue
+                if any(_re.search(pat, f"{t}\n{desc}") for pat in high_exp_pats):
                     continue
                 d["gaps"] = []
                 d["strengths"] = []
