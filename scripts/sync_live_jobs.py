@@ -218,7 +218,7 @@ def main():
     for token, name in lever_boards:
         all_jobs.extend(fetch_live_lever_jobs(token, name))
     
-    # 2. Real Greenhouse Boards
+    # 2. Real Greenhouse Boards (Indian Leaders + Big Tech & Frontier AI)
     greenhouse_boards = [
         ("razorpaysoftwareprivatelimited", "Razorpay"),
         ("postman", "Postman"),
@@ -228,6 +228,14 @@ def main():
         ("phonepe", "PhonePe"),
         ("urbancompany", "Urban Company"),
         ("browserstack", "BrowserStack"),
+        ("anthropic", "Anthropic"),
+        ("openai", "OpenAI"),
+        ("stripe", "Stripe"),
+        ("figma", "Figma"),
+        ("cloudflare", "Cloudflare"),
+        ("databricks", "Databricks"),
+        ("scaleai", "Scale AI"),
+        ("github", "GitHub"),
     ]
     for token, name in greenhouse_boards:
         all_jobs.extend(fetch_live_greenhouse_jobs(token, name))

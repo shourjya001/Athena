@@ -31,70 +31,70 @@
 </div>
 {% endif %}
 
-<div class="grid g2" style="gap:20px;align-items:start;">
+<div class="grid g2" style="gap:24px;align-items:start;">
 
   {# Left Column: Target Roles & Keywords #}
   <div style="display:flex;flex-direction:column;gap:20px;">
-    <div class="card" style="padding:20px;">
-      <div class="label" style="margin-bottom:12px;">1. Target Career Preferences & Keywords</div>
-      <form action="/profile/targets" method="post" style="display:flex;flex-direction:column;gap:14px;">
+    <div class="card" style="padding:24px;border:1px solid var(--border);background:var(--bg-1);">
+      <div class="label" style="margin-bottom:16px;color:var(--text-2);font-weight:700;font-size:12px;letter-spacing:0.06em;">1. TARGET CAREER PREFERENCES & KEYWORDS</div>
+      <form action="/profile/targets" method="post" style="display:flex;flex-direction:column;gap:18px;">
         
         <div>
-          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Display Name</label>
-          <input type="text" name="display_name" value="{{ user.display_name or '' }}" placeholder="Your Name (e.g. Manshi / Prerna / Shourjya)" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-size:13px;">
+          <label>Display Name</label>
+          <input type="text" name="display_name" value="{{ user.display_name or '' }}" placeholder="Your Name (e.g. Manshi / Prerna / Shourjya)">
         </div>
 
         <div>
-          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Career Track & Role Focus</label>
-          <select name="track" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-size:13px;">
+          <label>Career Track & Role Focus</label>
+          <select name="track">
             <option value="tech" {% if answers.get('track', 'tech') == 'tech' %}selected{% endif %}>💻 Engineering, Tech & AI (Includes DSA Pattern Workbenches)</option>
             <option value="business" {% if answers.get('track') == 'business' %}selected{% endif %}>📊 Business, Operations & Analytics (Hides coding theory)</option>
           </select>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Customizes navigation and prioritizes relevant job roles.</div>
+          <div class="help-text">Customizes navigation tabs and prioritizes relevant job listings.</div>
         </div>
 
         <div>
-          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Target Job Titles (comma-separated)</label>
-          <input type="text" name="titles" value="{{ answers.get('titles', '') }}" placeholder="e.g. SDE, Backend Engineer, AI Engineer, Software Developer" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;">
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Positive matching: only jobs matching these target roles will be shortlisted.</div>
+          <label>Target Job Titles (comma-separated)</label>
+          <input type="text" name="titles" value="{{ answers.get('titles', '') }}" placeholder="e.g. SDE, Backend Engineer, AI Engineer, Software Developer" style="font-family:var(--mono);">
+          <div class="help-text">Positive title matching: only jobs matching these target roles will be shortlisted.</div>
         </div>
 
         <div>
-          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Excluded Roles & Seniorities to Avoid (comma-separated)</label>
-          <input type="text" name="avoid_titles" value="{{ answers.get('avoid_titles', '') }}" placeholder="e.g. SDE-2, Senior, Staff, Lead, Manager, Director, Business Analyst" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;">
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Roles containing these words are strictly filtered out (defaults to targets.yaml avoid list if empty).</div>
+          <label>Excluded Roles & Seniorities to Avoid</label>
+          <input type="text" name="avoid_titles" value="{{ answers.get('avoid_titles', '') }}" placeholder="e.g. SDE-2, Senior, Staff, Lead, Manager, Director, Business Analyst" style="font-family:var(--mono);">
+          <div class="help-text">Roles containing these keywords are strictly filtered out (defaults to targets.yaml avoid list if empty).</div>
         </div>
 
         <div>
-          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Target Skills & Keywords (comma-separated)</label>
-          <textarea name="keywords" rows="3" placeholder="Tech: Python, FastAPI, Docker, Kafka, React, SQL, PyTorch&#10;Non-Tech: SQL, Excel, Jira, Agile, Stakeholder Management, Tableau" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;line-height:1.5;">{{ answers.get('keywords', '') }}</textarea>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">BM25 matching weighs these keywords heavily against job descriptions.</div>
+          <label>Target Skills & Keywords (comma-separated)</label>
+          <textarea name="keywords" rows="3" placeholder="Tech: Python, FastAPI, Docker, Kafka, React, SQL, PyTorch&#10;Non-Tech: SQL, Excel, Jira, Agile, Stakeholder Management, Tableau" style="font-family:var(--mono);line-height:1.5;">{{ answers.get('keywords', '') }}</textarea>
+          <div class="help-text">Semantic search matches and weighs these keywords heavily against job descriptions.</div>
         </div>
 
-        <div class="grid g2" style="gap:12px;">
+        <div class="grid g2" style="gap:14px;">
           <div>
-            <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Preferred Locations</label>
-            <input type="text" name="locations" value="{{ answers.get('locations', 'Bengaluru, Mumbai, Remote, India') }}" placeholder="Bengaluru, Remote" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-size:13px;">
+            <label>Preferred Locations</label>
+            <input type="text" name="locations" value="{{ answers.get('locations', 'Bengaluru, Mumbai, Remote, India') }}" placeholder="Bengaluru, Remote">
           </div>
           <div>
-            <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Min Target CTC / Salary</label>
-            <input type="text" name="min_ctc" value="{{ answers.get('min_ctc', '18 LPA') }}" placeholder="18 LPA" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-size:13px;">
+            <label>Min Target CTC / Salary</label>
+            <input type="text" name="min_ctc" value="{{ answers.get('min_ctc', '18 LPA') }}" placeholder="18 LPA">
           </div>
         </div>
 
-        <div class="grid g2" style="gap:12px;">
+        <div class="grid g2" style="gap:14px;">
           <div>
-            <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Years of Experience</label>
-            <input type="number" name="experience_years" value="{{ answers.get('experience_years', '2') }}" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-size:13px;">
+            <label>Years of Experience</label>
+            <input type="number" name="experience_years" value="{{ answers.get('experience_years', '2') }}">
           </div>
           <div>
-            <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">LeetCode Username (optional)</label>
-            <input type="text" name="leetcode_user" value="{{ user.leetcode_user or '' }}" placeholder="e.g. shourjya001" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;">
+            <label>LeetCode Username (optional)</label>
+            <input type="text" name="leetcode_user" value="{{ user.leetcode_user or '' }}" placeholder="e.g. shourjya001" style="font-family:var(--mono);">
           </div>
         </div>
 
         <div style="margin-top:6px;">
-          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+          <button type="submit" class="btn btn-blue" style="width:100%;justify-content:center;font-weight:600;padding:11px;">
             💾 Save Career Preferences
           </button>
         </div>
@@ -102,13 +102,13 @@
     </div>
 
     {# On-Demand Matcher Card #}
-    <div class="card" style="padding:20px;border-color:var(--signal);">
-      <div class="label" style="color:var(--signal);margin-bottom:8px;">⚡ ON-DEMAND JOB MATCHER</div>
-      <p style="font-size:13px;color:var(--chalk);margin-bottom:12px;line-height:1.5;">
-        Evaluate active jobs in the database against your resume and target keywords using BM25 semantic scoring.
+    <div class="card" style="padding:22px;border:1px solid var(--border);background:var(--bg-1);">
+      <div class="label" style="color:var(--amber);margin-bottom:8px;font-weight:700;font-size:12px;letter-spacing:0.06em;">⚡ ON-DEMAND JOB MATCHER</div>
+      <p style="font-size:13px;color:var(--text-1);margin-bottom:14px;line-height:1.5;">
+        Evaluate active jobs in the database against your resume and target keywords using semantic scoring.
       </p>
       <form action="/a/matcher/run" method="post">
-        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;background:var(--signal);color:var(--ink);font-weight:600;border:none;">
+        <button type="submit" class="btn btn-fill" style="width:100%;justify-content:center;font-weight:700;padding:11px;">
           ⚡ Match Jobs for My Profile
         </button>
       </form>
@@ -117,34 +117,34 @@
 
   {# Right Column: Master Resume Uploader & Preview #}
   <div style="display:flex;flex-direction:column;gap:20px;">
-    <div class="card" style="padding:20px;">
-      <div class="label" style="margin-bottom:12px;">2. Master Resume (PDF or Text)</div>
+    <div class="card" style="padding:24px;border:1px solid var(--border);background:var(--bg-1);">
+      <div class="label" style="margin-bottom:16px;color:var(--text-2);font-weight:700;font-size:12px;letter-spacing:0.06em;">2. MASTER RESUME (PDF OR TEXT)</div>
       
-      <form action="/profile/resume" method="post" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:14px;">
+      <form action="/profile/resume" method="post" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:18px;">
         
         <div>
-          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;">Upload PDF Resume</label>
-          <input type="file" name="resume_file" accept=".pdf,.txt,.md" style="width:100%;background:var(--ink);border:1px dashed var(--rule);color:var(--chalk);padding:10px;border-radius:4px;font-size:12px;">
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Text is extracted automatically in-memory.</div>
+          <label>Upload PDF Resume</label>
+          <input type="file" name="resume_file" accept=".pdf,.txt,.md" style="background:var(--bg-2);border:1px dashed var(--border);color:var(--text-0);padding:14px;border-radius:var(--r-sm);font-size:13px;">
+          <div class="help-text">Text &amp; hyperlinks are extracted automatically in-memory.</div>
         </div>
 
-        <div style="text-align:center;font-size:11px;color:var(--muted);font-weight:bold;">— OR PASTE RESUME TEXT DIRECTLY —</div>
+        <div style="text-align:center;font-size:11px;color:var(--text-3);font-weight:700;letter-spacing:0.08em;">— OR PASTE RESUME TEXT DIRECTLY —</div>
 
         <div>
-          <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;">Resume Content</label>
-          <textarea name="resume_text" rows="12" placeholder="Paste your full resume text or experience bullet points here..." style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:10px;border-radius:4px;font-family:var(--mono);font-size:11.5px;line-height:1.5;">{{ master_resume.parsed_text if master_resume else '' }}</textarea>
+          <label>Resume Content</label>
+          <textarea name="resume_text" rows="12" placeholder="Paste your full resume text or experience bullet points here..." style="font-family:var(--mono);font-size:12px;line-height:1.5;">{{ master_resume.parsed_text if master_resume else '' }}</textarea>
         </div>
 
         <div>
-          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
-            📄 Upload & Save Master Resume
+          <button type="submit" class="btn btn-blue" style="width:100%;justify-content:center;font-weight:600;padding:11px;">
+            📄 Upload &amp; Save Master Resume
           </button>
         </div>
       </form>
 
       {% if master_resume %}
-      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);font-family:var(--mono);">
-        <span>Status: <b style="color:var(--live);">Active Master Resume ✓</b></span>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border-dim);display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--text-2);font-family:var(--mono);">
+        <span>Status: <b style="color:var(--green);">Active Master Resume ✓</b></span>
         <span>Updated: {{ master_resume.created_at | ist }}</span>
       </div>
       {% endif %}

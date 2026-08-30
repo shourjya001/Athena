@@ -153,19 +153,29 @@ def create_app() -> FastAPI:
                 items.append(d)
 
         if not items:
-            # Fallback: display freshest open jobs so candidate always sees the real live catalog
+            # Fallback: display freshest open jobs filtered strictly by avoid list (excluding Senior, Lead, Manager, SDE-2/3)
+            avoid_list = [
+                "senior", "sr.", "sr ", "sr-", "staff", "principal", "lead", "manager", "director",
+                "vp", "head of", "architect", "sde-2", "sde 2", "sde-ii", "sde ii", "sde2",
+                "sde-3", "sde 3", "sde-iii", "sde iii", "sde3", "2+", "3+", "4+", "5+", "6+"
+            ]
             rows = db.query(
                 "SELECT 0.0 as bm25_score, NULL as fit_score, NULL as verdict, NULL as reasoning, '[]' as gaps_json, '[]' as strengths_json, "
                 "j.*, 0 as match_id FROM jobs j WHERE j.closed_at IS NULL "
                 "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
-                "ORDER BY j.first_seen_at DESC LIMIT 40",
+                "ORDER BY j.first_seen_at DESC LIMIT 150",
                 (user["id"],)
             )
             for r in rows:
+                t = (r["title"] or "").lower()
+                if any(av in t for av in avoid_list):
+                    continue
                 d = dict(r)
                 d["gaps"] = []
                 d["strengths"] = []
                 items.append(d)
+                if len(items) >= 40:
+                    break
 
         total_open = db.query_one("SELECT COUNT(*) n FROM jobs WHERE closed_at IS NULL")["n"]
         applied = request.query_params.get("applied") == "1"
