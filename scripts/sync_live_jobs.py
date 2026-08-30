@@ -225,7 +225,6 @@ def main():
         ("inmobi", "InMobi"),
         ("slice", "Slice"),
         ("observeai", "Observe.AI"),
-        ("phonepe", "PhonePe"),
         ("urbancompany", "Urban Company"),
         ("browserstack", "BrowserStack"),
         ("anthropic", "Anthropic"),

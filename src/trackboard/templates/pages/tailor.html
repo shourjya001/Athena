@@ -71,17 +71,18 @@
 {% if data.recruiter_review %}
 {% set rev = data.recruiter_review %}
 <div class="recruiter-audit">
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
     <div style="display:flex;align-items:center;gap:10px;">
       <span class="recruiter-badge">👔 Lead Recruiter Audit</span>
       <span style="font-size:12px;color:var(--text-3);">Master Review &amp; Positioning for {{ job.company_name }}</span>
     </div>
-    {% if rev.attention_test and rev.attention_test.interview_verdict %}
-    <span class="pill" style="color:var(--green);background:rgba(63,185,80,0.1);font-weight:600;">
-      Verdict: {{ rev.attention_test.interview_verdict }}
-    </span>
-    {% endif %}
   </div>
+
+  {% if rev.attention_test and rev.attention_test.interview_verdict %}
+  <div style="margin-bottom:16px;padding:10px 14px;border-radius:6px;background:rgba(63,185,80,0.08);border:1px solid rgba(63,185,80,0.25);color:var(--green);font-size:13px;line-height:1.5;word-break:break-word;overflow-wrap:break-word;">
+    <strong>Verdict:</strong> {{ rev.attention_test.interview_verdict }}
+  </div>
+  {% endif %}
 
   <div class="pillar-grid">
     {# Pillar 1: Attention Test #}
