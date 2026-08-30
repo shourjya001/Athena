@@ -128,7 +128,7 @@ def _call_gemini(p: Provider, model: str, system: str, user: str) -> str:
                         "contents": [{"role": "user", "parts": [{"text": user}]}],
                         "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"},
                     },
-                    timeout=45,
+                    timeout=12,
                 )
                 if r.status_code == 429:
                     # Immediate switch to next model — don't waste retries
