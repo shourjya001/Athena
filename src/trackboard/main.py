@@ -143,14 +143,25 @@ def create_app() -> FastAPI:
                 "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
                 "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
                 "AND (m.fit_score IS NULL OR m.fit_score >= 40) "
-                "ORDER BY m.fit_score IS NULL, m.fit_score DESC, m.bm25_score DESC LIMIT 40",
+                "ORDER BY m.fit_score IS NULL, m.fit_score DESC, m.bm25_score DESC LIMIT 80",
                 (user["id"], user["id"]))
             import json as _json
+            from .matcher import load_avoid_titles, TECH_TRACK_EXCLUSIONS, BUSINESS_TRACK_EXCLUSIONS
+            user_track = answers.get("track", "tech")
+            user_avoids = [a.strip().lower() for a in answers.get("avoid_titles", "").split(",") if a.strip()]
+            full_avoids = load_avoid_titles(user_track) + user_avoids
+            track_exclusions = TECH_TRACK_EXCLUSIONS if user_track == "tech" else BUSINESS_TRACK_EXCLUSIONS
+
             for r in rows:
+                title_lower = (r.get("title") or "").lower()
+                if any(av in title_lower for av in full_avoids) or any(tx in title_lower for tx in track_exclusions):
+                    continue
                 d = dict(r)
                 d["gaps"] = _json.loads(d.get("gaps_json") or "[]")
                 d["strengths"] = _json.loads(d.get("strengths_json") or "[]")
                 items.append(d)
+                if len(items) >= 40:
+                    break
 
         if not items:
             # Fallback: display freshest open jobs filtered strictly by avoid list (excluding Senior, Lead, Manager, SDE-2/3)
