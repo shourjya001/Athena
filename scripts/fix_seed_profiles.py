@@ -23,9 +23,9 @@ def fix_db(db_path: Path):
             for k, v in shourjya_answers.items():
                 conn.execute("INSERT INTO profile_answers (user_id, key, value) VALUES (?, ?, ?) ON CONFLICT(user_id, key) DO UPDATE SET value=excluded.value", (uid1, k, v))
 
-        # 2. Fix User 2: Manshi (Tech & AI)
-        conn.execute("INSERT INTO users (email, display_name, leetcode_user, created_at, last_seen_at) VALUES ('manshi@gmail.com', 'Manshi', 'manshi_codes', datetime('now'), datetime('now')) ON CONFLICT(email) DO UPDATE SET display_name='Manshi', leetcode_user='manshi_codes'")
-        u2 = conn.execute("SELECT id FROM users WHERE email='manshi@gmail.com'").fetchone()
+        # 2. Fix User 2: Manshi Rohella (Tech & AI)
+        conn.execute("INSERT INTO users (email, display_name, leetcode_user, created_at, last_seen_at) VALUES ('manshirohella21@gmail.com', 'Manshi Rohella', 'manshi_codes', datetime('now'), datetime('now')) ON CONFLICT(email) DO UPDATE SET display_name='Manshi Rohella', leetcode_user='manshi_codes'")
+        u2 = conn.execute("SELECT id FROM users WHERE email='manshirohella21@gmail.com'").fetchone()
         if u2:
             uid2 = u2["id"]
             manshi_answers = {
