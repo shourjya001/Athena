@@ -235,6 +235,20 @@ def main():
         ("databricks", "Databricks"),
         ("scaleai", "Scale AI"),
         ("github", "GitHub"),
+        ("mongodb", "MongoDB"),
+        ("elastic", "Elastic"),
+        ("datadog", "Datadog"),
+        ("gitlab", "GitLab"),
+        ("twilio", "Twilio"),
+        ("brex", "Brex"),
+        ("coinbase", "Coinbase"),
+        ("robinhood", "Robinhood"),
+        ("pinterest", "Pinterest"),
+        ("airbnb", "Airbnb"),
+        ("reddit", "Reddit"),
+        ("instacart", "Instacart"),
+        ("gusto", "Gusto"),
+        ("duolingo", "Duolingo"),
     ]
     for token, name in greenhouse_boards:
         all_jobs.extend(fetch_live_greenhouse_jobs(token, name))

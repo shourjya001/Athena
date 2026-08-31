@@ -13,8 +13,9 @@ def fix_db(db_path: Path):
         if u1:
             uid1 = u1["id"]
             shourjya_answers = {
-                "titles": "Backend Engineer, SDE 2, Distributed Systems Engineer, Python Developer",
-                "keywords": "Python, FastAPI, Kafka, Go, PostgreSQL, Docker, Redis, Kubernetes, Distributed Systems",
+                "titles": "SDE, Backend Engineer, Software Engineer, Software Development Engineer, Distributed Systems Engineer, Python Developer, AI Engineer, Platform Engineer, Full Stack Developer, Member of Technical Staff",
+                "avoid_titles": "Senior, Staff, Principal, Lead, Engineering Manager, Director, VP, Business Analyst, Operations",
+                "keywords": "Python, FastAPI, Kafka, Go, PostgreSQL, Docker, Redis, Kubernetes, Distributed Systems, Microservices, REST APIs, LLM, System Design",
                 "locations": "Bengaluru, Mumbai, Remote, India",
                 "min_ctc": "25 LPA",
                 "experience_years": "2",
