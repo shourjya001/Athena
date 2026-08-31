@@ -85,25 +85,25 @@ class Provider:
 def default_providers() -> list[Provider]:
     s = get_settings()
     return [p for p in [
-        # Primary: Nvidia Nemotron 550B Ultra on OpenRouter (flagship reasoning)
+        # Primary: Gemini 3.5 Flash (ultra fast ~1.5s latency, high reliability, free tier)
+        Provider("gemini", "gemini", s.gemini_api_key,
+                 "https://generativelanguage.googleapis.com/v1beta",
+                 "gemini-3.5-flash", "gemini-3.5-flash"),
+        # Fallback 1: Nvidia Nemotron 550B Ultra on OpenRouter
         Provider("openrouter-nemotron", "openai", s.openrouter_api_key,
                  "https://openrouter.ai/api/v1",
                  "nvidia/nemotron-3-ultra-550b-a55b:free",
                  "nvidia/nemotron-3-ultra-550b-a55b:free"),
-        # Fallback 1: MiniMax M3 on OpenRouter (ultra fast, high context)
+        # Fallback 2: MiniMax M3 on OpenRouter
         Provider("openrouter-minimax", "openai", s.openrouter_api_key,
                  "https://openrouter.ai/api/v1",
                  "minimax/minimax-m3:free",
                  "minimax/minimax-m3:free"),
-        # Fallback 2: Poolside Laguna on OpenRouter
+        # Fallback 3: Poolside Laguna on OpenRouter
         Provider("openrouter-laguna", "openai", s.openrouter_api_key,
                  "https://openrouter.ai/api/v1",
                  "poolside/laguna-s-2.1:free",
                  "poolside/laguna-s-2.1:free"),
-        # Fallback 3: Gemini free tier
-        Provider("gemini", "gemini", s.gemini_api_key,
-                 "https://generativelanguage.googleapis.com/v1beta",
-                 "gemini-3.5-flash", "gemini-3.5-flash"),
     ] if p.key]
 
 
@@ -172,7 +172,7 @@ def _call_openai(p: Provider, model: str, system: str, user: str) -> str:
                     "messages": [{"role": "system", "content": system},
                                  {"role": "user", "content": user}],
                 },
-                timeout=45,
+                timeout=12,
             )
             if r.status_code == 429:
                 last_err = httpx.HTTPStatusError(f"HTTP 429", request=r.request, response=r)

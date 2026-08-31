@@ -59,7 +59,7 @@ def resume_text_for_user(user_id: int) -> str:
     return base_text
 
 
-def run_matcher_for_user(user: dict, dry_run: bool = False, force_bm25: bool = False) -> dict:
+def run_matcher_for_user(user: dict, dry_run: bool = False, force_bm25: bool = False, max_batches: int | None = None) -> dict:
     profile_text = resume_text_for_user(user["id"])
     with AgentRun("matcher", user_id=user["id"]) as run:
         if dry_run or force_bm25:
@@ -67,7 +67,7 @@ def run_matcher_for_user(user: dict, dry_run: bool = False, force_bm25: bool = F
         else:
             chain = llm.Chain()
 
-        res = matcher.run_for_user(user["id"], profile_text, chain=chain)
+        res = matcher.run_for_user(user["id"], profile_text, chain=chain, max_batches=max_batches)
         run.items_in = res["shortlisted"]
         run.items_out = res["scored"]
         run.llm_calls = res.get("llm_calls", 0)

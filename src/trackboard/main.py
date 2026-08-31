@@ -759,11 +759,11 @@ def create_app() -> FastAPI:
             err_msg = urllib.parse.quote_plus(f"Upload notice: {e}")
             return RedirectResponse(f"/profile?error={err_msg}", status_code=303)
 
-    @app.post("/a/matcher/run")
+    @app.api_route("/a/matcher/run", methods=["GET", "POST"])
     def run_matcher_on_demand(request: Request):
         user = users.current_user(request)
         from .agents.matcher import run_matcher_for_user
-        run_matcher_for_user(user, force_bm25=False)
+        run_matcher_for_user(user, force_bm25=False, max_batches=4)
         return RedirectResponse("/jobs?matched=1", status_code=303)
 
     @app.get("/api/cron/sync-and-match")
@@ -784,7 +784,8 @@ def create_app() -> FastAPI:
             u = dict(u)
             user_res = {"user": u["email"]}
             try:
-                m_res = run_matcher_for_user(u, force_bm25=False)
+                # Score top matches quickly per candidate to guarantee fast completion within Vercel timeout
+                m_res = run_matcher_for_user(u, force_bm25=False, max_batches=2)
                 user_res["matched"] = m_res
             except Exception as e:
                 user_res["matcher_error"] = str(e)[:200]

@@ -346,7 +346,7 @@ def score_batch(chain: Chain, user_id: int, profile_text: str, batch: list[dict]
     return parsed.results
 
 
-def run_for_user(user_id: int, profile_text: str, chain: Chain | None = None) -> dict:
+def run_for_user(user_id: int, profile_text: str, chain: Chain | None = None, max_batches: int | None = None) -> dict:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     cands = shortlist(user_id, profile_text)
 
@@ -366,11 +366,12 @@ def run_for_user(user_id: int, profile_text: str, chain: Chain | None = None) ->
 
     if chain is not None:
         import time
-        for i in range(0, len(cands), BATCH):
-            batch = cands[i:i + BATCH]
+        limit_cands = cands if max_batches is None else cands[:max_batches * BATCH]
+        for i in range(0, len(limit_cands), BATCH):
+            batch = limit_cands[i:i + BATCH]
             llm_calls += 1
             b_num = i // BATCH + 1
-            b_total = (len(cands) + BATCH - 1) // BATCH
+            b_total = (len(limit_cands) + BATCH - 1) // BATCH
             print(f"  scoring batch {b_num}/{b_total} ({len(batch)} jobs)...")
             try:
                 for item in score_batch(chain, user_id, profile_text, batch):
