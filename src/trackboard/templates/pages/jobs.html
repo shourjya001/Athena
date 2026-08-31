@@ -133,6 +133,7 @@
       <span class="company" style="color:var(--signal);font-weight:500;">{{ j.company_name }}</span>
     </div>
 
+    <div class="meta" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
       {% if (j.first_seen_at and j.first_seen_at.startswith(today_str)) or (j.posted_at and j.posted_at.startswith(today_str)) %}
         <span class="pill" style="background:rgba(63,185,80,0.15);color:var(--green);border-color:rgba(63,185,80,0.3);font-weight:600;">✨ Found Today</span>
       {% else %}

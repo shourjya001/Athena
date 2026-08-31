@@ -21,36 +21,45 @@
       {# Shourjya #}
       <form action="/login" method="post" style="margin:0;">
         <input type="hidden" name="email" value="shourjya001@gmail.com">
-        <button type="submit" class="btn {% if user and user.email == 'shourjya001@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;">
+        <button type="submit" class="btn {% if user and user.email == 'shourjya001@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:8px;">
           <div>
-            <div style="font-weight:600;font-size:14px;color:var(--chalk);">👤 Shourjya Hazra</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;">💻 Tech Track · Backend / Distributed Systems Engineer</div>
+            <div style="font-weight:600;font-size:14px;color:var(--chalk);display:flex;align-items:center;gap:8px;">
+              <span>Shourjya Hazra</span>
+              <span class="pill" style="font-size:10px;padding:1px 6px;background:rgba(56,139,253,0.15);color:var(--blue);border-color:rgba(56,139,253,0.3);">TECH</span>
+            </div>
+            <div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">Backend / Distributed Systems Engineer</div>
           </div>
-          {% if user and user.email == 'shourjya001@gmail.com' %}<span class="tick" style="color:var(--live);font-weight:bold;">Active ✓</span>{% else %}<span style="color:var(--muted);">Switch ➔</span>{% endif %}
+          {% if user and user.email == 'shourjya001@gmail.com' %}<span class="tick" style="color:var(--green);font-weight:600;font-size:12px;">Active ✓</span>{% else %}<span style="color:var(--text-3);font-size:12px;">Switch ➔</span>{% endif %}
         </button>
       </form>
 
       {# Manshi #}
       <form action="/login" method="post" style="margin:0;">
         <input type="hidden" name="email" value="manshirohella21@gmail.com">
-        <button type="submit" class="btn {% if user and user.email == 'manshirohella21@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;">
+        <button type="submit" class="btn {% if user and user.email == 'manshirohella21@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:8px;">
           <div>
-            <div style="font-weight:600;font-size:14px;color:var(--chalk);">👤 Manshi Rohella</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;">💻 Tech Track · SDE / Full Stack / AI Engineer</div>
+            <div style="font-weight:600;font-size:14px;color:var(--chalk);display:flex;align-items:center;gap:8px;">
+              <span>Manshi Rohella</span>
+              <span class="pill" style="font-size:10px;padding:1px 6px;background:rgba(56,139,253,0.15);color:var(--blue);border-color:rgba(56,139,253,0.3);">TECH</span>
+            </div>
+            <div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">SDE / Full Stack / AI Engineer</div>
           </div>
-          {% if user and user.email == 'manshirohella21@gmail.com' %}<span class="tick" style="color:var(--live);font-weight:bold;">Active ✓</span>{% else %}<span style="color:var(--muted);">Switch ➔</span>{% endif %}
+          {% if user and user.email == 'manshirohella21@gmail.com' %}<span class="tick" style="color:var(--green);font-weight:600;font-size:12px;">Active ✓</span>{% else %}<span style="color:var(--text-3);font-size:12px;">Switch ➔</span>{% endif %}
         </button>
       </form>
 
       {# Prerna #}
       <form action="/login" method="post" style="margin:0;">
         <input type="hidden" name="email" value="prernarohilla050802@gmail.com">
-        <button type="submit" class="btn {% if user and user.email == 'prernarohilla050802@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;">
+        <button type="submit" class="btn {% if user and user.email == 'prernarohilla050802@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:8px;">
           <div>
-            <div style="font-weight:600;font-size:14px;color:var(--chalk);">👤 Prerna Rohilla</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;">📊 Business Track · Banking Operations / Settlement / Operations Specialist</div>
+            <div style="font-weight:600;font-size:14px;color:var(--chalk);display:flex;align-items:center;gap:8px;">
+              <span>Prerna Rohilla</span>
+              <span class="pill" style="font-size:10px;padding:1px 6px;background:rgba(227,179,65,0.15);color:var(--signal);border-color:rgba(227,179,65,0.3);">BUSINESS</span>
+            </div>
+            <div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">Banking Operations / Settlement / Operations Specialist</div>
           </div>
-          {% if user and user.email == 'prernarohilla050802@gmail.com' %}<span class="tick" style="color:var(--live);font-weight:bold;">Active ✓</span>{% else %}<span style="color:var(--muted);">Switch ➔</span>{% endif %}
+          {% if user and user.email == 'prernarohilla050802@gmail.com' %}<span class="tick" style="color:var(--green);font-weight:600;font-size:12px;">Active ✓</span>{% else %}<span style="color:var(--text-3);font-size:12px;">Switch ➔</span>{% endif %}
         </button>
       </form>
 
