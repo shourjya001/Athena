@@ -4,7 +4,7 @@ import argparse
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -760,10 +760,13 @@ def create_app() -> FastAPI:
             return RedirectResponse(f"/profile?error={err_msg}", status_code=303)
 
     @app.api_route("/a/matcher/run", methods=["GET", "POST"])
-    def run_matcher_on_demand(request: Request):
+    def run_matcher_on_demand(request: Request, background_tasks: BackgroundTasks):
         user = users.current_user(request)
         from .agents.matcher import run_matcher_for_user
-        run_matcher_for_user(user, force_bm25=False, max_batches=4)
+        # Run instant BM25 matching so results load in sub-second time
+        run_matcher_for_user(user, force_bm25=True)
+        # Run LLM evaluation in background
+        background_tasks.add_task(run_matcher_for_user, user, False, False, 2)
         return RedirectResponse("/jobs?matched=1", status_code=303)
 
     @app.get("/api/cron/sync-and-match")
