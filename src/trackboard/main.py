@@ -210,6 +210,9 @@ def create_app() -> FastAPI:
         agent_busy = request.query_params.get("agent_busy") == "1"
         digest_sent = request.query_params.get("digest_sent") == "1"
 
+        from datetime import datetime, timezone
+        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
         return templates.TemplateResponse(
             request, "pages/jobs.html",
             {
@@ -217,6 +220,7 @@ def create_app() -> FastAPI:
                 "matched_count": len(items), "answers": answers,
                 "applied": applied, "matched": matched,
                 "has_resume": has_resume,
+                "today_str": today_str,
                 "agent_running": agent_running,
                 "agent_name": agent_name, "agent_started": agent_started,
                 "agent_stopped": agent_stopped, "agent_busy": agent_busy,
