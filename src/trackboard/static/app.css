@@ -597,12 +597,8 @@ h2::after {
 .jbody .reasoning {
   font-size: 13px;
   color: var(--text-2);
-  line-height: 1.5;
+  line-height: 1.6;
   margin-top: 8px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .jbody .actions {

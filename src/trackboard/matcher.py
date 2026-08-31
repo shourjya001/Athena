@@ -122,15 +122,44 @@ def _tok(text: str) -> list[str]:
     return re.findall(r"[a-z0-9+#.]+", (text or "").lower())
 
 
+AI_EXCLUSIVE_KEYWORDS = {
+    "ai", "agent", "genai", "generative ai", "machine learning", "ml", "data scientist", "deep learning", "nlp", "computer vision"
+}
+
+
+def is_ai_job(title_lower: str) -> bool:
+    tokens = set(re.findall(r"[a-z0-9+#.]+", title_lower))
+    if {"ai", "ml", "genai", "nlp"}.intersection(tokens):
+        return True
+    if any(k in title_lower for k in ["machine learning", "deep learning", "agent engineer", "data scientist", "generative ai", "computer vision"]):
+        return True
+    return False
+
+
+def candidate_wants_ai(user_titles: list[str]) -> bool:
+    for ut in user_titles:
+        ut_clean = ut.strip().lower()
+        tokens = set(re.findall(r"[a-z0-9+#.]+", ut_clean))
+        if {"ai", "ml", "genai", "nlp"}.intersection(tokens):
+            return True
+        if any(k in ut_clean for k in ["machine learning", "data scientist", "agent", "deep learning"]):
+            return True
+    return False
+
+
 def _title_matches_targets(title_lower: str, user_titles: list[str]) -> bool:
     """Positive match: does the job title match ANY of the user's target titles?"""
     if not user_titles:
-        return True  # no filter set => allow all
+        return True
+
+    # If job is an AI/ML specific role but candidate didn't request AI/ML, drop it
+    if is_ai_job(title_lower) and not candidate_wants_ai(user_titles):
+        return False
+
     anchors = {
-        "backend", "frontend", "fullstack", "full stack", "ai", "settlement",
+        "backend", "frontend", "fullstack", "full stack", "settlement",
         "clearing", "operations", "depository", "underwriting", "kyc", "payments",
-        "upi", "banking", "sde", "developer", "engineer", "analyst", "specialist",
-        "associate", "officer", "distributed", "platform", "machine learning", "data"
+        "upi", "banking", "sde", "developer", "distributed", "platform"
     }
     for ut in user_titles:
         ut_clean = ut.strip().lower()

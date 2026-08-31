@@ -29,8 +29,8 @@ def fix_db(db_path: Path):
         if u2:
             uid2 = u2["id"]
             manshi_answers = {
-                "titles": "SDE, Backend Engineer, Full Stack Developer, AI Engineer",
-                "keywords": "Python, FastAPI, PyTorch, Docker, PostgreSQL, LangChain, React, LLM",
+                "titles": "Software Development Engineer, SDE, Backend Engineer, Full Stack Developer, Python Developer, Software Engineer",
+                "keywords": "Python, FastAPI, Django, PostgreSQL, Docker, Redis, REST APIs, React, JavaScript, Microservices, SQL",
                 "locations": "Bengaluru, Mumbai, Remote, India",
                 "min_ctc": "20 LPA",
                 "experience_years": "2",
