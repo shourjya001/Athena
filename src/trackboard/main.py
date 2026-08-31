@@ -763,10 +763,10 @@ def create_app() -> FastAPI:
     def run_matcher_on_demand(request: Request, background_tasks: BackgroundTasks):
         user = users.current_user(request)
         from .agents.matcher import run_matcher_for_user
-        # Run instant BM25 matching so results load in sub-second time
+        # Instant BM25 match
         run_matcher_for_user(user, force_bm25=True)
-        # Run LLM evaluation in background
-        background_tasks.add_task(run_matcher_for_user, user, False, False, 2)
+        # Background score 1 batch (5 jobs) with Gemini in ~1.5s
+        background_tasks.add_task(run_matcher_for_user, user, False, False, 1)
         return RedirectResponse("/jobs?matched=1", status_code=303)
 
     @app.get("/api/cron/sync-and-match")
