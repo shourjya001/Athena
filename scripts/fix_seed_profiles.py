@@ -13,11 +13,11 @@ def fix_db(db_path: Path):
         if u1:
             uid1 = u1["id"]
             shourjya_answers = {
-                "titles": "SDE, Backend Engineer, Software Engineer, Software Development Engineer, Distributed Systems Engineer, Python Developer, AI Engineer, Platform Engineer, Full Stack Developer, Member of Technical Staff",
+                "titles": "SDE, Backend Engineer, Software Engineer, Software Development Engineer, Python Developer, AI Engineer, Full Stack Developer, Member of Technical Staff",
                 "avoid_titles": "Senior, Staff, Principal, Lead, Engineering Manager, Director, VP, Business Analyst, Operations",
                 "keywords": "Python, FastAPI, Kafka, Go, PostgreSQL, Docker, Redis, Kubernetes, Distributed Systems, Microservices, REST APIs, LLM, System Design",
                 "locations": "Bengaluru, Mumbai, Remote, India",
-                "min_ctc": "25 LPA",
+                "min_ctc": "15 LPA",
                 "experience_years": "2",
                 "track": "tech"
             }
@@ -33,7 +33,7 @@ def fix_db(db_path: Path):
                 "titles": "Software Development Engineer, SDE, Backend Engineer, Full Stack Developer, Python Developer, Software Engineer",
                 "keywords": "Python, FastAPI, Django, PostgreSQL, Docker, Redis, REST APIs, React, JavaScript, Microservices, SQL",
                 "locations": "Bengaluru, Mumbai, Remote, India",
-                "min_ctc": "20 LPA",
+                "min_ctc": "10 LPA",
                 "experience_years": "2",
                 "track": "tech"
             }
@@ -49,7 +49,7 @@ def fix_db(db_path: Path):
                 "titles": "Operations Associate, Banking Operations Specialist, Operations Analyst, Business Analyst",
                 "keywords": "Banking Operations, Settlement, Clearing, KYC, AML, Core Banking, Finacle, Operations, SQL, Excel",
                 "locations": "Bengaluru, Mumbai, Gurugram, India",
-                "min_ctc": "15 LPA",
+                "min_ctc": "10 LPA",
                 "experience_years": "2",
                 "track": "business"
             }
