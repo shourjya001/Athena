@@ -131,6 +131,54 @@ National Payments Corporation of India (NPCI) is an umbrella organisation for op
 - Familiarity with RTGS, NEFT, NACH, UPI settlement mechanisms.
 - Strong analytical skills, SQL/Excel reporting, and team collaboration.
 """
+    },
+    {
+        "company_name": "Amazon",
+        "title": "Operations Specialist - Payments & Fraud Risk Operations",
+        "location": "Bengaluru / Hyderabad, India",
+        "ats": "darwinbox",
+        "url": "https://www.amazon.jobs/en/jobs/10521778/payments-operations",
+        "description_md": "Manage high-volume merchant transaction reconciliations, payment chargeback disputes, fraud investigation workflows, and daily settlement batches across Amazon Pay India."
+    },
+    {
+        "company_name": "Google",
+        "title": "Operations Analyst - Google Pay Settlements & Merchant Compliance",
+        "location": "Bengaluru / Hyderabad, India",
+        "ats": "darwinbox",
+        "url": "https://www.google.com/about/careers/applications/jobs/results/",
+        "description_md": "Oversee payment switch reconciliations, merchant KYC compliance, UPI settlement batch audits, and cross-functional operations support for Google Pay India."
+    },
+    {
+        "company_name": "Mastercard",
+        "title": "Settlement & Clearing Operations Specialist",
+        "location": "Pune / Gurugram, India",
+        "ats": "darwinbox",
+        "url": "https://mastercard.wd1.myworkdayjobs.com/CorporateCareers",
+        "description_md": "Execute domestic and cross-border interchange clearing, net settlement transfers, chargeback discrepancy investigations, and payment network SLA audits."
+    },
+    {
+        "company_name": "Stripe",
+        "title": "Banking Operations Specialist - Payment Switch Settlements",
+        "location": "Bengaluru / Remote, India",
+        "ats": "darwinbox",
+        "url": "https://stripe.com/jobs",
+        "description_md": "Coordinate banking partner integrations, daily treasury fund movements, merchant payout reconciliations, and regulatory transaction filings."
+    },
+    {
+        "company_name": "Razorpay",
+        "title": "Operations Analyst - Banking Operations & Merchant Settlements",
+        "location": "Bengaluru, India",
+        "ats": "darwinbox",
+        "url": "https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited",
+        "description_md": "Audit automated nodal account settlements, resolve bank payment drops, monitor payout queues, and maintain KYC verification pipelines."
+    },
+    {
+        "company_name": "Paytm",
+        "title": "Operations Associate - UPI Clearing & Merchant Reconciliation",
+        "location": "Noida / Bengaluru, India",
+        "ats": "darwinbox",
+        "url": "https://jobs.lever.co/paytm",
+        "description_md": "Perform daily end-of-day bank reconciliations, manage NPCI dispute logs, monitor merchant settlement escalations, and generate statutory MIS compliance reports."
     }
 ]
 

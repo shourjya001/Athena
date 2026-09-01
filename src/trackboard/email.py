@@ -126,10 +126,36 @@ def render_digest_html(digest: dict, user_email: str) -> str:
 
 
 def send_email(to_email: str, subject: str, html_body: str) -> bool:
-    """Send an HTML email via SMTP, or save to disk if SMTP is unconfigured."""
+    """Send an HTML email via Resend API or SMTP, or save to disk if unconfigured."""
     settings = get_settings()
     from_email = settings.email_from or settings.smtp_user or "digest@trackboard.dev"
 
+    # 1. First priority: Resend HTTP API (works seamlessly in serverless without SMTP port blocks)
+    resend_api_key = os.getenv("RESEND_API_KEY", "").strip()
+    if resend_api_key:
+        try:
+            import httpx
+            sender = from_email if ("@" in from_email and "trackboard.dev" not in from_email) else "Trackboard <onboarding@resend.dev>"
+            res = httpx.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {resend_api_key}", "Content-Type": "application/json"},
+                json={
+                    "from": sender,
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_body,
+                },
+                timeout=12.0
+            )
+            if res.status_code in (200, 201):
+                print(f"✓ Digest email successfully delivered to {to_email} via Resend API")
+                return True
+            else:
+                print(f"Resend API returned status {res.status_code}: {res.text}")
+        except Exception as e:
+            print(f"Resend API dispatch failed: {e}")
+
+    # 2. Second priority: Standard SMTP
     if settings.smtp_host and settings.smtp_user:
         try:
             msg = MIMEMultipart("alternative")
@@ -150,7 +176,7 @@ def send_email(to_email: str, subject: str, html_body: str) -> bool:
                 server.login(clean_user, clean_pass)
             server.sendmail(from_email, [to_email], msg.as_string())
             server.quit()
-            print(f"✓ Digest email successfully delivered to {to_email}")
+            print(f"✓ Digest email successfully delivered to {to_email} via SMTP")
             return True
         except Exception as e:
             print(f"SMTP send failed: {e}. Falling back to disk digest archive.")
@@ -164,5 +190,5 @@ def send_email(to_email: str, subject: str, html_body: str) -> bool:
     if settings.smtp_host and settings.smtp_user:
         print(f"ℹ Digest HTML saved locally to {out_file} (SMTP delivery failed; check credentials).")
     else:
-        print(f"ℹ Digest HTML saved locally to {out_file} (SMTP not configured in .env).")
+        print(f"ℹ Digest HTML saved locally to {out_file} (SMTP / RESEND_API_KEY not configured in .env).")
     return False
