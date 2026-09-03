@@ -692,6 +692,35 @@
   background: rgba(56, 139, 253, 0.2);
   border-left: 3px solid #58a6ff;
 }
+
+.pt-lang-tabs {
+  display: inline-flex;
+  gap: 4px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 2px;
+}
+.pt-lang-btn {
+  background: transparent;
+  border: none;
+  color: #8b949e;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pt-lang-btn:hover {
+  color: #f0f6fc;
+}
+.pt-lang-btn.active {
+  color: #58a6ff;
+  background: rgba(56, 139, 253, 0.15);
+  font-weight: 700;
+}
+
 </style>
 
 <div class="pt-workbench" id="pt-workbench">
@@ -725,8 +754,12 @@
   <div class="pt-split">
     {# Left Pane: Code & Variables #}
     <div class="pt-pane">
-      <div class="pt-pane-header">
-        <span>Python Implementation</span>
+      <div class="pt-pane-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="pt-lang-tabs" id="pt-lang-tabs">
+          <button type="button" class="pt-lang-btn active" data-lang="python">🐍 Python</button>
+          <button type="button" class="pt-lang-btn" data-lang="cpp">⚡ C++</button>
+          <button type="button" class="pt-lang-btn" data-lang="java">☕ Java</button>
+        </div>
         <span class="pt-subtag" id="pt-active-func">main()</span>
       </div>
       <div class="pt-code-box" id="pt-code-box"></div>
@@ -901,6 +934,40 @@
         "headline": "Sum = 6 + 8 = 14 == Target 14! \ud83c\udfaf",
         "reason": "Exact match found! Return indices [3, 4] in O(N) single pass."
       }
+    ],
+    "code_cpp": [
+      "vector<int> twoSumSorted(vector<int>& arr, int target) {",
+      "    int left = 0;",
+      "    int right = arr.size() - 1;",
+      "    while (left < right) {",
+      "        int curr_sum = arr[left] + arr[right];",
+      "        if (curr_sum == target) {",
+      "            return {left, right};",
+      "        } else if (curr_sum > target) {",
+      "            right--;",
+      "        } else {",
+      "            left++;",
+      "        }",
+      "    }",
+      "    return {};",
+      "}"
+    ],
+    "code_java": [
+      "public int[] twoSumSorted(int[] arr, int target) {",
+      "    int left = 0;",
+      "    int right = arr.length - 1;",
+      "    while (left < right) {",
+      "        int curr_sum = arr[left] + arr[right];",
+      "        if (curr_sum == target) {",
+      "            return new int[]{left, right};",
+      "        } else if (curr_sum > target) {",
+      "            right--;",
+      "        } else {",
+      "            left++;",
+      "        }",
+      "    }",
+      "    return null;",
+      "}"
     ]
   },
   "sliding-window": {
@@ -983,6 +1050,36 @@
         "headline": "Array complete: Return max_sum = 15",
         "reason": "\ud83c\udfaf Global maximum subarray sum found in single linear O(N) pass."
       }
+    ],
+    "code_cpp": [
+      "int maxSubArrayOfSizeK(int k, vector<int>& arr) {",
+      "    int max_sum = 0, window_sum = 0;",
+      "    int window_start = 0;",
+      "    for (int window_end = 0; window_end < arr.size(); window_end++) {",
+      "        window_sum += arr[window_end];",
+      "        if (window_end >= k - 1) {",
+      "            max_sum = max(max_sum, window_sum);",
+      "            window_sum -= arr[window_start];",
+      "            window_start++;",
+      "        }",
+      "    }",
+      "    return max_sum;",
+      "}"
+    ],
+    "code_java": [
+      "public int maxSubArrayOfSizeK(int k, int[] arr) {",
+      "    int max_sum = 0, window_sum = 0;",
+      "    int window_start = 0;",
+      "    for (int window_end = 0; window_end < arr.length; window_end++) {",
+      "        window_sum += arr[window_end];",
+      "        if (window_end >= k - 1) {",
+      "            max_sum = Math.max(max_sum, window_sum);",
+      "            window_sum -= arr[window_start];",
+      "            window_start++;",
+      "        }",
+      "    }",
+      "    return max_sum;",
+      "}"
     ]
   },
   "fast-slow-pointers": {
@@ -1061,6 +1158,30 @@
         "headline": "\ud83c\udfaf COLLISION! Slow and Fast meet at Node 5!",
         "reason": "Because they met, a loop is 100% mathematically proven! Solved with 0 extra memory (O(1) space)."
       }
+    ],
+    "code_cpp": [
+      "bool hasCycle(ListNode* head) {",
+      "    ListNode* slow = head;",
+      "    ListNode* fast = head;",
+      "    while (fast && fast->next) {",
+      "        slow = slow->next;",
+      "        fast = fast->next->next;",
+      "        if (slow == fast) return true;",
+      "    }",
+      "    return false;",
+      "}"
+    ],
+    "code_java": [
+      "public boolean hasCycle(ListNode head) {",
+      "    ListNode slow = head;",
+      "    ListNode fast = head;",
+      "    while (fast != null && fast.next != null) {",
+      "        slow = slow.next;",
+      "        fast = fast.next.next;",
+      "        if (slow == fast) return true;",
+      "    }",
+      "    return false;",
+      "}"
     ]
   },
   "linked-list-reversal": {
@@ -1199,6 +1320,32 @@
         "headline": "\ud83c\udfaf Reversal complete! Return prev (Node 4 is new head)",
         "reason": "All links reversed in-place in O(N) time with O(1) extra space."
       }
+    ],
+    "code_cpp": [
+      "ListNode* reverseList(ListNode* head) {",
+      "    ListNode* prev = nullptr;",
+      "    ListNode* curr = head;",
+      "    while (curr != nullptr) {",
+      "        ListNode* nxt = curr->next;",
+      "        curr->next = prev;",
+      "        prev = curr;",
+      "        curr = nxt;",
+      "    }",
+      "    return prev;",
+      "}"
+    ],
+    "code_java": [
+      "public ListNode reverseList(ListNode head) {",
+      "    ListNode prev = null;",
+      "    ListNode curr = head;",
+      "    while (curr != null) {",
+      "        ListNode nxt = curr.next;",
+      "        curr.next = prev;",
+      "        prev = curr;",
+      "        curr = nxt;",
+      "    }",
+      "    return prev;",
+      "}"
     ]
   },
   "backtracking": {
@@ -1304,6 +1451,37 @@
         "headline": "\ud83c\udfaf All 2^N = 8 subsets enumerated!",
         "reason": "Backtracking avoids allocating 2^N separate arrays by reusing a single path buffer!"
       }
+    ],
+    "code_cpp": [
+      "vector<vector<int>> subsets(vector<int>& nums) {",
+      "    vector<vector<int>> res;",
+      "    vector<int> path;",
+      "    auto backtrack = [&](auto& self, int start) -> void {",
+      "        res.push_back(path);",
+      "        for (int i = start; i < nums.size(); i++) {",
+      "            path.push_back(nums[i]);",
+      "            self(self, i + 1);",
+      "            path.pop_back();",
+      "        }",
+      "    };",
+      "    backtrack(backtrack, 0);",
+      "    return res;",
+      "}"
+    ],
+    "code_java": [
+      "public List<List<Integer>> subsets(int[] nums) {",
+      "    List<List<Integer>> res = new ArrayList<>();",
+      "    backtrack(0, nums, new ArrayList<>(), res);",
+      "    return res;",
+      "}",
+      "private void backtrack(int start, int[] nums, List<Integer> path, List<List<Integer>> res) {",
+      "    res.add(new ArrayList<>(path));",
+      "    for (int i = start; i < nums.length; i++) {",
+      "        path.add(nums[i]);",
+      "        backtrack(i + 1, nums, path, res);",
+      "        path.remove(path.size() - 1);",
+      "    }",
+      "}"
     ]
   },
   "union-find": {
@@ -1401,6 +1579,28 @@
         "headline": "\ud83c\udfaf Cycle Check: find(0) == find(2) == 0 (Same Root!)",
         "reason": "Both endpoints already belong to the same component. Adding edge (0, 2) creates a cycle! O(\u03b1(N)) near-instant query."
       }
+    ],
+    "code_cpp": [
+      "int find(int i, vector<int>& parent) {",
+      "    if (parent[i] == i) return i;",
+      "    return parent[i] = find(parent[i], parent);",
+      "}",
+      "void unionNodes(int u, int v, vector<int>& parent) {",
+      "    int root_u = find(u, parent);",
+      "    int root_v = find(v, parent);",
+      "    if (root_u != root_v) parent[root_v] = root_u;",
+      "}"
+    ],
+    "code_java": [
+      "public int find(int i, int[] parent) {",
+      "    if (parent[i] == i) return i;",
+      "    return parent[i] = find(parent[i], parent);",
+      "}",
+      "public void union(int u, int v, int[] parent) {",
+      "    int root_u = find(u, parent);",
+      "    int root_v = find(v, parent);",
+      "    if (root_u != root_v) parent[root_v] = root_u;",
+      "}"
     ]
   },
   "topological-sort": {
@@ -1513,6 +1713,36 @@
         "headline": "\ud83c\udfaf Valid Topological Order: [0, 1, 2, 3]",
         "reason": "All tasks sequenced without circular dependencies in O(V + E) time."
       }
+    ],
+    "code_cpp": [
+      "vector<int> topologicalSort(int n, vector<pair<int,int>>& edges) {",
+      "    vector<int> in_degree(n, 0);",
+      "    for (auto& [u, v] : edges) in_degree[v]++;",
+      "    queue<int> q;",
+      "    for (int i = 0; i < n; i++) if (in_degree[i] == 0) q.push(i);",
+      "    vector<int> order;",
+      "    while (!q.empty()) {",
+      "        int u = q.front(); q.pop();",
+      "        order.push_back(u);",
+      "        for (int v : adj[u]) if (--in_degree[v] == 0) q.push(v);",
+      "    }",
+      "    return order;",
+      "}"
+    ],
+    "code_java": [
+      "public List<Integer> topologicalSort(int n, int[][] edges) {",
+      "    int[] in_degree = new int[n];",
+      "    for (int[] e : edges) in_degree[e[1]]++;",
+      "    Queue<Integer> queue = new LinkedList<>();",
+      "    for (int i = 0; i < n; i++) if (in_degree[i] == 0) queue.offer(i);",
+      "    List<Integer> order = new ArrayList<>();",
+      "    while (!queue.isEmpty()) {",
+      "        int u = queue.poll();",
+      "        order.add(u);",
+      "        for (int v : adj.get(u)) if (--in_degree[v] == 0) queue.offer(v);",
+      "    }",
+      "    return order;",
+      "}"
     ]
   },
   "shortest-path": {
@@ -1601,6 +1831,47 @@
         "headline": "\ud83c\udfaf Pop C (d=2) \u2794 Relax C-B (wt 1): dist['B'] drops 4 \u2794 3!",
         "reason": "Going through C (2 + 1 = 3) is strictly faster than direct edge A-B (4)! Optimal path found."
       }
+    ],
+    "code_cpp": [
+      "vector<int> dijkstra(int n, vector<vector<pair<int,int>>>& graph, int start) {",
+      "    vector<int> dist(n, 1e9);",
+      "    dist[start] = 0;",
+      "    priority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;",
+      "    pq.push({0, start});",
+      "    while (!pq.empty()) {",
+      "        auto [d, u] = pq.top(); pq.pop();",
+      "        if (d > dist[u]) continue;",
+      "        for (auto& [v, weight] : graph[u]) {",
+      "            if (dist[u] + weight < dist[v]) {",
+      "                dist[v] = dist[u] + weight;",
+      "                pq.push({dist[v], v});",
+      "            }",
+      "        }",
+      "    }",
+      "    return dist;",
+      "}"
+    ],
+    "code_java": [
+      "public int[] dijkstra(int n, List<List<int[]>> graph, int start) {",
+      "    int[] dist = new int[n];",
+      "    Arrays.fill(dist, Integer.MAX_VALUE);",
+      "    dist[start] = 0;",
+      "    PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[0] - b[0]);",
+      "    pq.offer(new int[]{0, start});",
+      "    while (!pq.isEmpty()) {",
+      "        int[] curr = pq.poll();",
+      "        int d = curr[0], u = curr[1];",
+      "        if (d > dist[u]) continue;",
+      "        for (int[] edge : graph.get(u)) {",
+      "            int v = edge[0], weight = edge[1];",
+      "            if (dist[u] + weight < dist[v]) {",
+      "                dist[v] = dist[u] + weight;",
+      "                pq.offer(new int[]{dist[v], v});",
+      "            }",
+      "        }",
+      "    }",
+      "    return dist;",
+      "}"
     ]
   },
   "dp-knapsack": {
@@ -1658,6 +1929,34 @@
         "headline": "\ud83c\udfaf Optimal Answer: dp[3][7] = 12",
         "reason": "Global maximum capacity 7 value is 12! Reused subproblem answers in O(N * W) polynomial time."
       }
+    ],
+    "code_cpp": [
+      "int knapsack(vector<int>& weights, vector<int>& values, int W) {",
+      "    int N = weights.size();",
+      "    vector<vector<int>> dp(N + 1, vector<int>(W + 1, 0));",
+      "    for (int i = 1; i <= N; i++) {",
+      "        int wt = weights[i-1], val = values[i-1];",
+      "        for (int w = 1; w <= W; w++) {",
+      "            if (wt <= w) dp[i][w] = max(dp[i-1][w], val + dp[i-1][w-wt]);",
+      "            else dp[i][w] = dp[i-1][w];",
+      "        }",
+      "    }",
+      "    return dp[N][W];",
+      "}"
+    ],
+    "code_java": [
+      "public int knapsack(int[] weights, int[] values, int W) {",
+      "    int N = weights.length;",
+      "    int[][] dp = new int[N + 1][W + 1];",
+      "    for (int i = 1; i <= N; i++) {",
+      "        int wt = weights[i-1], val = values[i-1];",
+      "        for (int w = 1; w <= W; w++) {",
+      "            if (wt <= w) dp[i][w] = Math.max(dp[i-1][w], val + dp[i-1][w-wt]);",
+      "            else dp[i][w] = dp[i-1][w];",
+      "        }",
+      "    }",
+      "    return dp[N][W];",
+      "}"
     ]
   },
   "dp-1d": {
@@ -1712,6 +2011,28 @@
         "headline": "\ud83c\udfaf Step 4: dp[4] = 5 ways",
         "reason": "O(N) time with no exponential Fibonacci recursion."
       }
+    ],
+    "code_cpp": [
+      "int climbStairs(int n) {",
+      "    if (n <= 2) return n;",
+      "    vector<int> dp(n + 1, 0);",
+      "    dp[1] = 1; dp[2] = 2;",
+      "    for (int i = 3; i <= n; i++) {",
+      "        dp[i] = dp[i-1] + dp[i-2];",
+      "    }",
+      "    return dp[n];",
+      "}"
+    ],
+    "code_java": [
+      "public int climbStairs(int n) {",
+      "    if (n <= 2) return n;",
+      "    int[] dp = new int[n + 1];",
+      "    dp[1] = 1; dp[2] = 2;",
+      "    for (int i = 3; i <= n; i++) {",
+      "        dp[i] = dp[i-1] + dp[i-2];",
+      "    }",
+      "    return dp[n];",
+      "}"
     ]
   },
   "dp-2d": {
@@ -1767,6 +2088,29 @@
         "headline": "\ud83c\udfaf Bottom-right reached: 6 unique paths!",
         "reason": "Solved in O(M * N) time with zero recursion stack."
       }
+    ],
+    "code_cpp": [
+      "int uniquePaths(int m, int n) {",
+      "    vector<vector<int>> dp(m, vector<int>(n, 1));",
+      "    for (int r = 1; r < m; r++) {",
+      "        for (int c = 1; c < n; c++) {",
+      "            dp[r][c] = dp[r-1][c] + dp[r][c-1];",
+      "        }",
+      "    }",
+      "    return dp[m-1][n-1];",
+      "}"
+    ],
+    "code_java": [
+      "public int uniquePaths(int m, int n) {",
+      "    int[][] dp = new int[m][n];",
+      "    for (int[] row : dp) Arrays.fill(row, 1);",
+      "    for (int r = 1; r < m; r++) {",
+      "        for (int c = 1; c < n; c++) {",
+      "            dp[r][c] = dp[r-1][c] + dp[r][c-1];",
+      "        }",
+      "    }",
+      "    return dp[m-1][n-1];",
+      "}"
     ]
   },
   "dp-subsequence": {
@@ -1823,6 +2167,32 @@
         "headline": "\ud83c\udfaf LCS Length = 3 ('ace')",
         "reason": "Optimal subsequence alignment computed in O(M * N) time."
       }
+    ],
+    "code_cpp": [
+      "int longestCommonSubsequence(string s1, string s2) {",
+      "    int m = s1.size(), n = s2.size();",
+      "    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));",
+      "    for (int i = 1; i <= m; i++) {",
+      "        for (int j = 1; j <= n; j++) {",
+      "            if (s1[i-1] == s2[j-1]) dp[i][j] = 1 + dp[i-1][j-1];",
+      "            else dp[i][j] = max(dp[i-1][j], dp[i][j-1]);",
+      "        }",
+      "    }",
+      "    return dp[m][n];",
+      "}"
+    ],
+    "code_java": [
+      "public int longestCommonSubsequence(String s1, String s2) {",
+      "    int m = s1.length(), n = s2.length();",
+      "    int[][] dp = new int[m + 1][n + 1];",
+      "    for (int i = 1; i <= m; i++) {",
+      "        for (int j = 1; j <= n; j++) {",
+      "            if (s1.charAt(i-1) == s2.charAt(j-1)) dp[i][j] = 1 + dp[i-1][j-1];",
+      "            else dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);",
+      "        }",
+      "    }",
+      "    return dp[m][n];",
+      "}"
     ]
   },
   "prefix-sum": {
@@ -1892,6 +2262,31 @@
         "headline": "\ud83c\udfaf MATCH! (3 - 3 = 0) in seen! count += 1",
         "reason": "Subarray [1, 2] sums to 3! Found in O(1) hash map lookup instead of O(N^2) double loop."
       }
+    ],
+    "code_cpp": [
+      "int subarraySum(vector<int>& nums, int k) {",
+      "    int count = 0, curr_sum = 0;",
+      "    unordered_map<int, int> seen = {{0, 1}};",
+      "    for (int x : nums) {",
+      "        curr_sum += x;",
+      "        if (seen.count(curr_sum - k)) count += seen[curr_sum - k];",
+      "        seen[curr_sum]++;",
+      "    }",
+      "    return count;",
+      "}"
+    ],
+    "code_java": [
+      "public int subarraySum(int[] nums, int k) {",
+      "    int count = 0, curr_sum = 0;",
+      "    Map<Integer, Integer> seen = new HashMap<>();",
+      "    seen.put(0, 1);",
+      "    for (int x : nums) {",
+      "        curr_sum += x;",
+      "        if (seen.containsKey(curr_sum - k)) count += seen.get(curr_sum - k);",
+      "        seen.put(curr_sum, seen.getOrDefault(curr_sum, 0) + 1);",
+      "    }",
+      "    return count;",
+      "}"
     ]
   },
   "sorting-greedy": {
@@ -1956,6 +2351,37 @@
         "headline": "\ud83c\udfaf Meeting at 15 reuses freed room! Total rooms = 2",
         "reason": "Room 2 was vacated at 10. Max concurrent rooms needed is 2."
       }
+    ],
+    "code_cpp": [
+      "int minMeetingRooms(vector<vector<int>>& intervals) {",
+      "    vector<int> starts, ends;",
+      "    for (auto& i : intervals) { starts.push_back(i[0]); ends.push_back(i[1]); }",
+      "    sort(starts.begin(), starts.end());",
+      "    sort(ends.begin(), ends.end());",
+      "    int s = 0, e = 0, rooms = 0;",
+      "    while (s < intervals.size()) {",
+      "        if (starts[s] < ends[e]) rooms++;",
+      "        else e++;",
+      "        s++;",
+      "    }",
+      "    return rooms;",
+      "}"
+    ],
+    "code_java": [
+      "public int minMeetingRooms(int[][] intervals) {",
+      "    int[] starts = new int[intervals.length];",
+      "    int[] ends = new int[intervals.length];",
+      "    for (int i = 0; i < intervals.length; i++) { starts[i] = intervals[i][0]; ends[i] = intervals[i][1]; }",
+      "    Arrays.sort(starts);",
+      "    Arrays.sort(ends);",
+      "    int s = 0, e = 0, rooms = 0;",
+      "    while (s < intervals.length) {",
+      "        if (starts[s] < ends[e]) rooms++;",
+      "        else e++;",
+      "        s++;",
+      "    }",
+      "    return rooms;",
+      "}"
     ]
   },
   "merge-intervals": {
@@ -2018,6 +2444,31 @@
         "headline": "\ud83c\udfaf 8 > 6 \u2794 Disjoint! Append [8, 10] separately",
         "reason": "Final result: [[1, 6], [8, 10]]. Solved in O(N log N) sort + O(N) linear pass."
       }
+    ],
+    "code_cpp": [
+      "vector<vector<int>> merge(vector<vector<int>>& intervals) {",
+      "    sort(intervals.begin(), intervals.end());",
+      "    vector<vector<int>> merged = {intervals[0]};",
+      "    for (int i = 1; i < intervals.size(); i++) {",
+      "        auto& prev = merged.back();",
+      "        if (intervals[i][0] <= prev[1]) prev[1] = max(prev[1], intervals[i][1]);",
+      "        else merged.push_back(intervals[i]);",
+      "    }",
+      "    return merged;",
+      "}"
+    ],
+    "code_java": [
+      "public int[][] merge(int[][] intervals) {",
+      "    Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));",
+      "    List<int[]> merged = new ArrayList<>();",
+      "    merged.add(intervals[0]);",
+      "    for (int i = 1; i < intervals.length; i++) {",
+      "        int[] prev = merged.get(merged.size() - 1);",
+      "        if (intervals[i][0] <= prev[1]) prev[1] = Math.max(prev[1], intervals[i][1]);",
+      "        else merged.add(intervals[i]);",
+      "    }",
+      "    return merged.toArray(new int[merged.size()][]);",
+      "}"
     ]
   },
   "cyclic-sort": {
@@ -2110,6 +2561,29 @@
         "headline": "\ud83c\udfaf All numbers settled into home indices [1, 2, 3, 4, 5]!",
         "reason": "Sorted in-place in O(N) time with O(1) extra space."
       }
+    ],
+    "code_cpp": [
+      "vector<int> cyclicSort(vector<int>& nums) {",
+      "    int i = 0;",
+      "    while (i < nums.size()) {",
+      "        int correct_idx = nums[i] - 1;",
+      "        if (nums[i] != nums[correct_idx]) swap(nums[i], nums[correct_idx]);",
+      "        else i++;",
+      "    }",
+      "    return nums;",
+      "}"
+    ],
+    "code_java": [
+      "public int[] cyclicSort(int[] nums) {",
+      "    int i = 0;",
+      "    while (i < nums.length) {",
+      "        int correct_idx = nums[i] - 1;",
+      "        if (nums[i] != nums[correct_idx]) {",
+      "            int tmp = nums[i]; nums[i] = nums[correct_idx]; nums[correct_idx] = tmp;",
+      "        } else i++;",
+      "    }",
+      "    return nums;",
+      "}"
     ]
   },
   "monotonic-stack": {
@@ -2184,6 +2658,32 @@
         "headline": "\ud83c\udfaf Monotonic Decreasing Stack maintained",
         "reason": "Every item is pushed once and popped at most once: total O(N) linear time."
       }
+    ],
+    "code_cpp": [
+      "vector<int> nextGreater(vector<int>& nums) {",
+      "    stack<int> st;",
+      "    vector<int> res(nums.size(), -1);",
+      "    for (int i = 0; i < nums.size(); i++) {",
+      "        while (!st.empty() && nums[st.top()] < nums[i]) {",
+      "            res[st.top()] = nums[i];",
+      "            st.pop();",
+      "        }",
+      "        st.push(i);",
+      "    }",
+      "    return res;",
+      "}"
+    ],
+    "code_java": [
+      "public int[] nextGreater(int[] nums) {",
+      "    Stack<Integer> stack = new Stack<>();",
+      "    int[] res = new int[nums.length];",
+      "    Arrays.fill(res, -1);",
+      "    for (int i = 0; i < nums.length; i++) {",
+      "        while (!stack.isEmpty() && nums[stack.peek()] < nums[i]) res[stack.pop()] = nums[i];",
+      "        stack.push(i);",
+      "    }",
+      "    return res;",
+      "}"
     ]
   },
   "monotonic-deque": {
@@ -2241,6 +2741,33 @@
         "headline": "\ud83c\udfaf Sliding window maximums in O(N) time",
         "reason": "Deque front is always the true window maximum."
       }
+    ],
+    "code_cpp": [
+      "vector<int> maxSlidingWindow(vector<int>& nums, int k) {",
+      "    deque<int> q;",
+      "    vector<int> res;",
+      "    for (int i = 0; i < nums.size(); i++) {",
+      "        while (!q.empty() && nums[q.back()] < nums[i]) q.pop_back();",
+      "        q.push_back(i);",
+      "        if (q.front() <= i - k) q.pop_front();",
+      "        if (i >= k - 1) res.push_back(nums[q.front()]);",
+      "    }",
+      "    return res;",
+      "}"
+    ],
+    "code_java": [
+      "public int[] maxSlidingWindow(int[] nums, int k) {",
+      "    Deque<Integer> q = new ArrayDeque<>();",
+      "    int[] res = new int[nums.length - k + 1];",
+      "    int idx = 0;",
+      "    for (int i = 0; i < nums.length; i++) {",
+      "        while (!q.isEmpty() && nums[q.peekLast()] < nums[i]) q.pollLast();",
+      "        q.offerLast(i);",
+      "        if (q.peekFirst() <= i - k) q.pollFirst();",
+      "        if (i >= k - 1) res[idx++] = nums[q.peekFirst()];",
+      "    }",
+      "    return res;",
+      "}"
     ]
   },
   "binary-search": {
@@ -2336,6 +2863,30 @@
         "headline": "\ud83c\udfaf Target 23 found at index 5!",
         "reason": "Located in only 3 comparisons out of 10 elements! O(log N) logarithmic efficiency."
       }
+    ],
+    "code_cpp": [
+      "int binarySearch(vector<int>& arr, int target) {",
+      "    int low = 0, high = arr.size() - 1;",
+      "    while (low <= high) {",
+      "        int mid = low + (high - low) / 2;",
+      "        if (arr[mid] == target) return mid;",
+      "        else if (arr[mid] < target) low = mid + 1;",
+      "        else high = mid - 1;",
+      "    }",
+      "    return -1;",
+      "}"
+    ],
+    "code_java": [
+      "public int binarySearch(int[] arr, int target) {",
+      "    int low = 0, high = arr.length - 1;",
+      "    while (low <= high) {",
+      "        int mid = low + (high - low) / 2;",
+      "        if (arr[mid] == target) return mid;",
+      "        else if (arr[mid] < target) low = mid + 1;",
+      "        else high = mid - 1;",
+      "    }",
+      "    return -1;",
+      "}"
     ]
   },
   "binary-search-answer": {
@@ -2417,6 +2968,31 @@
         "headline": "\ud83c\udfaf Optimal minimum speed = 10",
         "reason": "Binary search on monotonic answer space reduces time from O(max_val) to O(log(max_val))."
       }
+    ],
+    "code_cpp": [
+      "int minEatingSpeed(vector<int>& piles, int h) {",
+      "    int low = 1, high = *max_element(piles.begin(), piles.end());",
+      "    int ans = high;",
+      "    while (low <= high) {",
+      "        int mid = low + (high - low) / 2;",
+      "        if (canFinish(piles, mid, h)) { ans = mid; high = mid - 1; }",
+      "        else low = mid + 1;",
+      "    }",
+      "    return ans;",
+      "}"
+    ],
+    "code_java": [
+      "public int minEatingSpeed(int[] piles, int h) {",
+      "    int low = 1, high = 1000000000;",
+      "    for (int p : piles) high = Math.max(high, p);",
+      "    int ans = high;",
+      "    while (low <= high) {",
+      "        int mid = low + (high - low) / 2;",
+      "        if (canFinish(piles, mid, h)) { ans = mid; high = mid - 1; }",
+      "        else low = mid + 1;",
+      "    }",
+      "    return ans;",
+      "}"
     ]
   },
   "top-k-heap": {
@@ -2489,6 +3065,26 @@
         "headline": "\ud83c\udfaf Return min_heap[0] = 5 (2nd largest)",
         "reason": "In a Min-Heap of size K, the root is always the K-th largest element! O(N log K) time."
       }
+    ],
+    "code_cpp": [
+      "int findKthLargest(vector<int>& nums, int k) {",
+      "    priority_queue<int, vector<int>, greater<int>> min_heap;",
+      "    for (int x : nums) {",
+      "        min_heap.push(x);",
+      "        if (min_heap.size() > k) min_heap.pop();",
+      "    }",
+      "    return min_heap.top();",
+      "}"
+    ],
+    "code_java": [
+      "public int findKthLargest(int[] nums, int k) {",
+      "    PriorityQueue<Integer> minHeap = new PriorityQueue<>();",
+      "    for (int x : nums) {",
+      "        minHeap.offer(x);",
+      "        if (minHeap.size() > k) minHeap.poll();",
+      "    }",
+      "    return minHeap.peek();",
+      "}"
     ]
   },
   "tree-dfs": {
@@ -2570,6 +3166,22 @@
         "headline": "\ud83c\udfaf Complete: [3, 5, 7, 10, 15, 18] (Sorted!)",
         "reason": "In-order traversal on a BST produces strictly sorted output in O(N) time."
       }
+    ],
+    "code_cpp": [
+      "void inorder(TreeNode* node, vector<int>& res) {",
+      "    if (!node) return;",
+      "    inorder(node->left, res);",
+      "    res.push_back(node->val);",
+      "    inorder(node->right, res);",
+      "}"
+    ],
+    "code_java": [
+      "public void inorder(TreeNode node, List<Integer> res) {",
+      "    if (node == null) return;",
+      "    inorder(node.left, res);",
+      "    res.add(node.val);",
+      "    inorder(node.right, res);",
+      "}"
     ]
   },
   "tree-bfs": {
@@ -2633,6 +3245,45 @@
         "headline": "\ud83c\udfaf Level-order result: [[10], [5, 15], [3, 7, 18]]",
         "reason": "Tree scanned tier-by-tier in O(N) time."
       }
+    ],
+    "code_cpp": [
+      "vector<vector<int>> levelOrder(TreeNode* root) {",
+      "    if (!root) return {};",
+      "    queue<TreeNode*> q; q.push(root);",
+      "    vector<vector<int>> res;",
+      "    while (!q.empty()) {",
+      "        int sz = q.size();",
+      "        vector<int> level;",
+      "        while (sz--) {",
+      "            TreeNode* node = q.front(); q.pop();",
+      "            level.push_back(node->val);",
+      "            if (node->left) q.push(node->left);",
+      "            if (node->right) q.push(node->right);",
+      "        }",
+      "        res.push_back(level);",
+      "    }",
+      "    return res;",
+      "}"
+    ],
+    "code_java": [
+      "public List<List<Integer>> levelOrder(TreeNode root) {",
+      "    if (root == null) return new ArrayList<>();",
+      "    Queue<TreeNode> queue = new LinkedList<>();",
+      "    queue.offer(root);",
+      "    List<List<Integer>> res = new ArrayList<>();",
+      "    while (!queue.isEmpty()) {",
+      "        int size = queue.size();",
+      "        List<Integer> level = new ArrayList<>();",
+      "        for (int i = 0; i < size; i++) {",
+      "            TreeNode node = queue.poll();",
+      "            level.add(node.val);",
+      "            if (node.left != null) queue.offer(node.left);",
+      "            if (node.right != null) queue.offer(node.right);",
+      "        }",
+      "        res.add(level);",
+      "    }",
+      "    return res;",
+      "}"
     ]
   },
   "trie": {
@@ -2701,6 +3352,26 @@
         "headline": "\ud83c\udfaf Prefix confirmed! Return True",
         "reason": "Prefix search completes in O(L) time where L is prefix length, independent of dictionary size!"
       }
+    ],
+    "code_cpp": [
+      "bool startsWith(TrieNode* root, string prefix) {",
+      "    TrieNode* curr = root;",
+      "    for (char c : prefix) {",
+      "        if (!curr->children.count(c)) return false;",
+      "        curr = curr->children[c];",
+      "    }",
+      "    return true;",
+      "}"
+    ],
+    "code_java": [
+      "public boolean startsWith(TrieNode root, String prefix) {",
+      "    TrieNode curr = root;",
+      "    for (char c : prefix.toCharArray()) {",
+      "        if (!curr.children.containsKey(c)) return false;",
+      "        curr = curr.children.get(c);",
+      "    }",
+      "    return true;",
+      "}"
     ]
   },
   "graph-traversal": {
@@ -2792,6 +3463,38 @@
         "headline": "\ud83c\udfaf All 5 nodes visited in O(V + E) linear time",
         "reason": "Queue empty. Every vertex and edge explored without duplicate visits."
       }
+    ],
+    "code_cpp": [
+      "void bfs(unordered_map<int, vector<int>>& graph, int start) {",
+      "    queue<int> q; unordered_set<int> visited = {start};",
+      "    q.push(start);",
+      "    while (!q.empty()) {",
+      "        int curr = q.front(); q.pop();",
+      "        for (int neighbor : graph[curr]) {",
+      "            if (!visited.count(neighbor)) {",
+      "                visited.insert(neighbor);",
+      "                q.push(neighbor);",
+      "            }",
+      "        }",
+      "    }",
+      "}"
+    ],
+    "code_java": [
+      "public void bfs(Map<Integer, List<Integer>> graph, int start) {",
+      "    Queue<Integer> queue = new LinkedList<>();",
+      "    Set<Integer> visited = new HashSet<>();",
+      "    visited.add(start);",
+      "    queue.offer(start);",
+      "    while (!queue.isEmpty()) {",
+      "        int curr = queue.poll();",
+      "        for (int neighbor : graph.getOrDefault(curr, new ArrayList<>())) {",
+      "            if (!visited.contains(neighbor)) {",
+      "                visited.add(neighbor);",
+      "                queue.offer(neighbor);",
+      "            }",
+      "        }",
+      "    }",
+      "}"
     ]
   },
   "bit-manipulation": {
@@ -2944,6 +3647,22 @@
         "headline": "\ud83c\udfaf Test n = 8: 8 & 7 == 0 \u2794 Power of 2: YES!",
         "reason": "Guaranteed power of 2 test: n > 0 and (n & (n - 1)) == 0."
       }
+    ],
+    "code_cpp": [
+      "bool isPowerOfTwo(int n) {",
+      "    if (n <= 0) return false;",
+      "    // n & (n - 1) clears lowest 1-bit",
+      "    int cleared = n & (n - 1);",
+      "    return cleared == 0;",
+      "}"
+    ],
+    "code_java": [
+      "public boolean isPowerOfTwo(int n) {",
+      "    if (n <= 0) return false;",
+      "    // n & (n - 1) clears lowest 1-bit",
+      "    int cleared = n & (n - 1);",
+      "    return cleared == 0;",
+      "}"
     ]
   }
 };
@@ -2951,6 +3670,7 @@
   // Resolve matching pattern model
   let model = DB[slug] || DB["two-pointers"];
   let currentStep = 0;
+  let activeLang = 'python'; // 'python' | 'cpp' | 'java'
 
   // DOM Elements
   const codeBox = document.getElementById("pt-code-box");
@@ -2983,17 +3703,20 @@
       .replace(/('[^']*')/g, '<span class="pt-str">$1</span>');
   }
 
-  // Render Full Code Block Once
+  // Render Full Code Block Once per Selected Language
   function renderCodeBox(activeLine) {
     let html = '';
-    model.code.forEach((lineText, idx) => {
+    const codeLines = (activeLang === 'cpp' && model.code_cpp) ? model.code_cpp : 
+                      (activeLang === 'java' && model.code_java) ? model.code_java : 
+                      model.code;
+    codeLines.forEach((lineText, idx) => {
       const lineNum = idx + 1;
       const isExec = lineNum === activeLine;
       html += `
         <div class="pt-code-line ${isExec ? 'active-line' : ''}" id="code-line-${lineNum}">
           <span class="pt-line-num">${lineNum}</span>
           <span class="pt-exec-marker">${isExec ? '▶' : ''}</span>
-          <span class="pt-code-content">${highlightCode(lineText)}</span>
+          <span class="pt-code-content">${highlightCode(lineText, activeLang)}</span>
         </div>
       `;
     });
@@ -3378,6 +4101,23 @@
       render();
     }
   };
+
+  // Language Tab Toggles
+  const langTabs = document.querySelectorAll('.pt-lang-btn');
+  langTabs.forEach(btn => {
+    btn.onclick = function() {
+      langTabs.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      activeLang = this.getAttribute('data-lang');
+      const lines = (activeLang === 'cpp' && model.code_cpp) ? model.code_cpp : 
+                    (activeLang === 'java' && model.code_java) ? model.code_java : 
+                    model.code;
+      if (activeFunc && lines.length > 0) {
+        activeFunc.textContent = lines[0].replace(/\s*\{.*$/, '');
+      }
+      render();
+    };
+  });
 
   btnFirst.onclick = function() {
     currentStep = 0;
