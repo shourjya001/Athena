@@ -1,11 +1,15 @@
-import json
 import sys
 from pathlib import Path
 
 # Add scripts directory to sys.path
 sys.path.insert(0, str(Path(__file__).parent))
-from generate_all_patterns import PATTERNS, TEMPLATE
-from update_pattern_languages import CPP_CODES, JAVA_CODES
+
+try:
+    from scripts.generate_all_patterns import PATTERNS
+    from scripts.update_pattern_languages import CPP_CODES, JAVA_CODES
+except ImportError:
+    from generate_all_patterns import PATTERNS
+    from update_pattern_languages import CPP_CODES, JAVA_CODES
 
 def generate_brute_approach(slug: str, base: dict) -> dict:
     func_name = base.get("func", "solve()")

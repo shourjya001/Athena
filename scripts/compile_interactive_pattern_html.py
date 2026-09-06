@@ -1,11 +1,14 @@
 import json
-import re
 import sys
 from pathlib import Path
 
 # Add scripts directory to sys.path
 sys.path.insert(0, str(Path(__file__).parent))
-from build_pattern_approaches import main as get_multi_approach_patterns
+
+try:
+    from scripts.build_pattern_approaches import main as get_multi_approach_patterns
+except ImportError:
+    from build_pattern_approaches import main as get_multi_approach_patterns
 
 patterns_data = get_multi_approach_patterns()
 

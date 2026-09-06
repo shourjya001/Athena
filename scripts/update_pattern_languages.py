@@ -1,6 +1,9 @@
 import json
-import re
+import sys
 from pathlib import Path
+
+# Add scripts directory to sys.path
+sys.path.insert(0, str(Path(__file__).parent))
 
 # Complete C++ implementations for all 26 patterns
 CPP_CODES = {
@@ -697,7 +700,10 @@ JAVA_CODES = {
 }
 
 # Attach C++ and Java to each pattern
-from generate_all_patterns import PATTERNS, TEMPLATE
+try:
+    from scripts.generate_all_patterns import PATTERNS, TEMPLATE
+except ImportError:
+    from generate_all_patterns import PATTERNS, TEMPLATE
 
 for k in PATTERNS:
     PATTERNS[k]["code_cpp"] = CPP_CODES.get(k, PATTERNS[k]["code"])
@@ -769,7 +775,7 @@ new_js_start = """  // Resolve matching pattern model
 
 updated_template = updated_template.replace(old_js_start, new_js_start)
 
-old_highlight = """  // Helper syntax highlighter
+old_highlight = r"""  // Helper syntax highlighter
   function highlightCode(raw) {
     return raw
       .replace(/ (def|for|while|if|elif|else|return|in|not|and|or) /g, '<span class="pt-kw">$1</span>')
