@@ -5,9 +5,10 @@ already takes a user_id.
 """
 from __future__ import annotations
 
+from typing import Any
+
 from . import db
 from .settings import get_settings
-
 
 ALIAS_MAP = {
     "shourjya": "shourjya001@gmail.com",
@@ -45,10 +46,10 @@ def ensure_user(email: str, display_name: str | None = None) -> int:
     )
 
 
-def current_user(request: any = None) -> dict:
+def current_user(request: Any = None) -> dict:
     s = get_settings()
     email = None
-    if request:
+    if request is not None:
         cookie_email = request.cookies.get("trackboard_user")
         if cookie_email:
             clean = resolve_email(cookie_email)

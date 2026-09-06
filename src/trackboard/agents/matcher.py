@@ -24,7 +24,9 @@ def resume_text_for_user(user_id: int) -> str:
         base_text = row["parsed_text"]
     else:
         from pathlib import Path
+
         import yaml
+
         from .. import tailor
 
         p = Path("config/resume.yaml")
@@ -34,7 +36,7 @@ def resume_text_for_user(user_id: int) -> str:
                 txt = tailor.bank_to_text(bank)
                 if txt:
                     base_text = txt
-            except Exception:
+            except (OSError, yaml.YAMLError):
                 pass
 
     if not base_text:

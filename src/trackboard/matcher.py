@@ -5,14 +5,12 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, timezone
-
-from pydantic import BaseModel, Field, field_validator
-from rank_bm25 import BM25Okapi
-
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
+from pydantic import BaseModel, Field, field_validator
+from rank_bm25 import BM25Okapi
 
 from . import db
 from .llm import Chain, parse_json_reply, wrap_untrusted
@@ -60,7 +58,7 @@ def load_avoid_titles(track: str = "tech") -> list[str]:
                 val = str(item).lower().strip()
                 if val and val not in avoids:
                     avoids.append(val)
-        except Exception:
+        except (OSError, yaml.YAMLError):
             pass
     return avoids
 
@@ -156,21 +154,22 @@ def is_ai_job(title_lower: str, company_lower: str = "", desc_lower: str = "") -
         "tensorflow", "large language model", "llm", "fine-tuning", "prompt engineering",
         "langchain", "transformer model", "diffusion model", "siri ml", "neural network"
     ] if k in desc_lower)
-    if ai_desc_count >= 2 or "machine learning" in desc_lower or "deep learning" in desc_lower or "siri ml" in desc_lower:
-        return True
-
-    return False
+    return bool(
+        ai_desc_count >= 2
+        or "machine learning" in desc_lower
+        or "deep learning" in desc_lower
+        or "siri ml" in desc_lower
+    )
 
 
 def candidate_wants_ai(user_titles: list[str], user_keywords: str = "") -> bool:
     all_text = " ".join(user_titles) + " " + (user_keywords or "")
     all_clean = all_text.lower()
     tokens = set(re.findall(r"[a-z0-9+#.]+", all_clean))
-    if AI_TOKENS.intersection(tokens):
-        return True
-    if any(k in all_clean for k in ["machine learning", "data scientist", "deep learning", "generative ai", "ai engineer"]):
-        return True
-    return False
+    return bool(
+        AI_TOKENS.intersection(tokens)
+        or any(k in all_clean for k in ["machine learning", "data scientist", "deep learning", "generative ai", "ai engineer"])
+    )
 
 
 def _title_matches_targets(title_lower: str, user_titles: list[str]) -> bool:
@@ -216,7 +215,7 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
         try:
             t = yaml.safe_load(TARGETS_PATH.read_text()) or {}
             user_titles = [str(item).strip().lower() for item in t.get("target_titles", []) if str(item).strip()]
-        except Exception:
+        except (OSError, yaml.YAMLError):
             pass
 
     user_exp = int(answers.get("experience_years", "2") or "2")
@@ -244,7 +243,7 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
         "italy", "calgary", "canada", "israel", "sweden", "netherlands",
         "united kingdom", "germany", "france", "japan", "australia",
         "brazil", "ireland", "spain", "poland", "nordics", "emea", "latam",
-        "toronto", "austin", "tel aviv",
+        "toronto", "tel aviv",
     }
     overseas_tokens = {
         "us", "usa", "canada", "toronto", "calgary", "ontario", "israel",
@@ -259,9 +258,8 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
         title_lower = (r.get("title") or "").lower()
 
         # ── 3a. Seniority & Avoid blocklist (excludes SDE-2, Senior, Manager, etc.) ──
-        if user_exp <= 3 or user_avoids:
-            if any(ex in title_lower for ex in all_avoids):
-                continue
+        if (user_exp <= 3 or user_avoids) and any(ex in title_lower for ex in all_avoids):
+            continue
 
         # ── 3b. Experience check: strictly scan BOTH title and JD description ──
         desc_lower = (r.get("description_md") or "").lower()
@@ -296,12 +294,8 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
                 continue
 
         # ── 3c. Track-based filtering ──
-        if user_track == "tech":
-            if any(ex in title_lower for ex in TECH_TRACK_EXCLUSIONS):
-                continue
-        elif user_track == "business":
-            if any(tk in title_lower for tk in BUSINESS_TRACK_EXCLUSIONS):
-                continue
+        if user_track == "tech" and any(ex in title_lower for ex in TECH_TRACK_EXCLUSIONS) or user_track == "business" and any(tk in title_lower for tk in BUSINESS_TRACK_EXCLUSIONS):
+            continue
 
         # ── 3c2. Strict AI/ML Exclusion if candidate did not request AI ──
         user_wants_ai = candidate_wants_ai(user_titles, answers.get("keywords", ""))
@@ -407,7 +401,7 @@ def score_batch(chain: Chain, user_id: int, profile_text: str, batch: list[dict]
 
 
 def run_for_user(user_id: int, profile_text: str, chain: Chain | None = None, max_batches: int | None = None) -> dict:
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
     cands = shortlist(user_id, profile_text)
 
     # Clear stale unscored matches before re-inserting (prevents phantom scores)

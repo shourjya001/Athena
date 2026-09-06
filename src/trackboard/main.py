@@ -2,15 +2,13 @@ from __future__ import annotations
 
 import argparse
 import os
+from datetime import UTC
 from pathlib import Path
 
-from fastapi import FastAPI, Request, BackgroundTasks
-from fastapi.responses import HTMLResponse
+from fastapi import BackgroundTasks, FastAPI, File, Form, Request, UploadFile
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-
-from fastapi import Form, File, UploadFile
-from fastapi.responses import RedirectResponse
 
 from . import content, db, drill, llm, practice, users
 from .settings import get_settings
@@ -24,12 +22,12 @@ def format_ist(val: any) -> str:
     if not val:
         return ""
     try:
-        from datetime import datetime, timezone
+        from datetime import datetime
         from zoneinfo import ZoneInfo
         s = str(val).strip()
         dt = datetime.fromisoformat(s.replace(" ", "T"))
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         ist_dt = dt.astimezone(ZoneInfo("Asia/Kolkata"))
         return ist_dt.strftime("%d %b %Y, %I:%M %p IST")
     except Exception:
@@ -150,7 +148,8 @@ def create_app() -> FastAPI:
                 "ORDER BY m.fit_score IS NULL, m.fit_score DESC, m.bm25_score DESC LIMIT 80",
                 (user["id"], user["id"]))
             import json as _json
-            from .matcher import load_avoid_titles, TECH_TRACK_EXCLUSIONS, BUSINESS_TRACK_EXCLUSIONS
+
+            from .matcher import BUSINESS_TRACK_EXCLUSIONS, TECH_TRACK_EXCLUSIONS, load_avoid_titles
             user_track = answers.get("track", "tech")
             user_avoids = [a.strip().lower() for a in answers.get("avoid_titles", "").split(",") if a.strip()]
             full_avoids = load_avoid_titles(user_track) + user_avoids
@@ -216,8 +215,8 @@ def create_app() -> FastAPI:
         closed_notice = request.query_params.get("closed_notice") == "1"
         expired_company = request.query_params.get("expired_company") or "Company"
 
-        from datetime import datetime, timezone
-        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        from datetime import datetime
+        today_str = datetime.now(UTC).strftime("%Y-%m-%d")
 
         return templates.TemplateResponse(
             request, "pages/jobs.html",
@@ -237,7 +236,8 @@ def create_app() -> FastAPI:
 
     @app.post("/a/agent/run")
     def run_agent(agent: str = Form("matcher")):
-        import subprocess, sys
+        import subprocess
+        import sys
         if agent == "matcher":
             # Direct in-process run for reliability
             user = users.current_user()
@@ -272,8 +272,9 @@ def create_app() -> FastAPI:
                 return RedirectResponse("/jobs", status_code=303)
             job = dict(job)
 
-            from . import tailor
             import yaml
+
+            from . import tailor
             
             # Locate resume.yaml in project root or current working dir
             candidate_paths = [
@@ -361,8 +362,9 @@ def create_app() -> FastAPI:
             return RedirectResponse("/jobs", status_code=303)
         job = dict(job)
 
-        from . import tailor
         import yaml
+
+        from . import tailor
         bank_path = Path("config/resume.yaml")
         bank = yaml.safe_load(bank_path.read_text()) if bank_path.exists() else {}
 
@@ -446,7 +448,8 @@ def create_app() -> FastAPI:
         # 3. If running locally on desktop, spawn Playwright headed browser
         if not os.getenv("VERCEL"):
             try:
-                import subprocess, sys
+                import subprocess
+                import sys
                 subprocess.Popen([
                     sys.executable, "-m", "trackboard.agents.applier",
                     str(job_id), "--user", user["email"]
@@ -707,6 +710,7 @@ def create_app() -> FastAPI:
                         if fname.lower().endswith(".pdf"):
                             try:
                                 import io
+
                                 from pdfminer.high_level import extract_text as pdf_extract
                                 pdf_txt = pdf_extract(io.BytesIO(content_bytes)).strip()
                                 if pdf_txt:
@@ -717,9 +721,10 @@ def create_app() -> FastAPI:
                             # Extract hyperlinks (LinkedIn, GitHub, email) from PDF annotations
                             try:
                                 import io
-                                from pdfminer.pdfparser import PDFParser
+
                                 from pdfminer.pdfdocument import PDFDocument
                                 from pdfminer.pdfpage import PDFPage
+                                from pdfminer.pdfparser import PDFParser
                                 from pdfminer.psparser import PSLiteral
 
                                 hyperlinks: list[str] = []
@@ -795,7 +800,8 @@ def create_app() -> FastAPI:
         background_tasks.add_task(run_matcher_for_user, user, False, False, 6)
         return RedirectResponse("/jobs?matched=1", status_code=303)
 
-    @app.get("/api/cron/sync-and-match")
+    @app.api_route("/api/cron/sync-and-match", methods=["GET", "POST"])
+    @app.api_route("/api/cron/daily", methods=["GET", "POST"])
     def cron_sync_and_match(request: Request):
         """Vercel cron endpoint for automated syncing, matching & digest dispatch."""
         import os
@@ -805,21 +811,24 @@ def create_app() -> FastAPI:
             from fastapi.responses import JSONResponse
             return JSONResponse({"error": "unauthorized"}, status_code=401)
 
-        from .agents.matcher import run_matcher_for_user
         from . import email
+        from .agents.matcher import run_matcher_for_user
         results = []
         all_users = db.query("SELECT * FROM users ORDER BY id")
+        do_match = request.query_params.get("match") == "1"
+
         for u in all_users:
             u = dict(u)
             user_res = {"user": u["email"]}
-            try:
-                # Score top matches quickly per candidate to guarantee fast completion within Vercel timeout
-                m_res = run_matcher_for_user(u, force_bm25=False, max_batches=2)
-                user_res["matched"] = m_res
-            except Exception as e:
-                user_res["matcher_error"] = str(e)[:200]
-            
-            # Auto-dispatch daily HTML digest
+
+            if do_match:
+                try:
+                    m_res = run_matcher_for_user(u, force_bm25=False, max_batches=1)
+                    user_res["matched"] = m_res
+                except Exception as e:
+                    user_res["matcher_error"] = str(e)[:200]
+
+            # Auto-dispatch daily HTML digest to registered email
             try:
                 top_matches = db.query(
                     "SELECT j.title, j.company_name, j.location, j.apply_url, m.fit_score, m.verdict, m.reasoning, m.bm25_score "
@@ -843,6 +852,10 @@ def create_app() -> FastAPI:
                         html_body=html
                     )
                     user_res["digest_dispatched"] = sent
+                    user_res["jobs_sent"] = len(top_matches)
+                else:
+                    user_res["digest_dispatched"] = False
+                    user_res["notice"] = "No open matched jobs found"
             except Exception as e:
                 user_res["digest_error"] = str(e)[:200]
 
@@ -893,7 +906,6 @@ def create_app() -> FastAPI:
 
     @app.post("/login")
     def do_login(email: str = Form(...)):
-        s = get_settings()
         clean = users.resolve_email(email.strip().lower())
         if "@" not in clean:
             return RedirectResponse(

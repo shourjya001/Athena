@@ -41,6 +41,10 @@ packages = ["src/trackboard"]
 line-length = 100
 target-version = "py312"
 
+[tool.ruff.lint]
+ignore = ["BLE001", "B008", "S110", "RUF013"]
+
 [tool.pyright]
 extraPaths = ["src", "scripts"]
+
 

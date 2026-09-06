@@ -14,6 +14,7 @@ from typing import Any
 
 from .settings import get_settings
 
+
 def get_migrations_dir() -> Path:
     base = Path(__file__).resolve().parents[2] / "migrations"
     if base.exists():
@@ -31,10 +32,10 @@ def connect() -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     try:
         conn.execute("PRAGMA journal_mode = WAL")
-    except Exception:
+    except sqlite3.OperationalError:
         try:
             conn.execute("PRAGMA journal_mode = DELETE")
-        except Exception:
+        except sqlite3.OperationalError:
             pass
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA busy_timeout = 5000")
