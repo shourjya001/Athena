@@ -85,7 +85,9 @@ BUSINESS_TRACK_EXCLUSIONS = [
     "engineering manager", "sde", "backend engineer", "frontend engineer",
     "full stack developer", "software engineer", "devops", "cloud network",
     "embedded infrastructure", "lead engineer", "platform engineer",
-    "site reliability", "machine learning engineer",
+    "site reliability", "machine learning engineer", "engineer", "developer",
+    "architect", "programmer", "infrastructure", "technical staff", "hardware",
+    "data engineer", "systems engineer",
 ]
 
 
@@ -123,27 +125,51 @@ def _tok(text: str) -> list[str]:
 
 
 AI_EXCLUSIVE_KEYWORDS = {
-    "ai", "agent", "genai", "generative ai", "machine learning", "ml", "data scientist", "deep learning", "nlp", "computer vision"
+    "machine learning", "deep learning", "machine intelligence", "artificial intelligence",
+    "data science", "data scientist", "generative ai", "gen ai", "genai", "computer vision",
+    "natural language", "prompt engineer", "voice ai", "speech ai", "mlops", "ml ops",
+    "llm ops", "model training", "siri ml", "profit intelligence", "alexa"
 }
 
+AI_TOKENS = {"ai", "ml", "genai", "nlp", "llm", "llms", "cv", "alexa"}
 
-def is_ai_job(title_lower: str) -> bool:
+AI_COMPANIES = {"sarvam ai", "openai", "anthropic", "cohere", "mistral", "scale ai", "hugging face"}
+
+
+def is_ai_job(title_lower: str, company_lower: str = "", desc_lower: str = "") -> bool:
+    # 1. AI company check
+    if any(ac in company_lower for ac in AI_COMPANIES):
+        return True
+
+    # 2. Title tokens check
     tokens = set(re.findall(r"[a-z0-9+#.]+", title_lower))
-    if {"ai", "ml", "genai", "nlp"}.intersection(tokens):
+    if AI_TOKENS.intersection(tokens):
         return True
-    if any(k in title_lower for k in ["machine learning", "deep learning", "agent engineer", "data scientist", "generative ai", "computer vision"]):
+
+    # 3. Title phrases check
+    if any(k in title_lower for k in AI_EXCLUSIVE_KEYWORDS):
         return True
+
+    # 4. Description check for core AI requirements
+    ai_desc_count = sum(1 for k in [
+        "machine learning", "deep learning", "machine intelligence", "pytorch",
+        "tensorflow", "large language model", "llm", "fine-tuning", "prompt engineering",
+        "langchain", "transformer model", "diffusion model", "siri ml", "neural network"
+    ] if k in desc_lower)
+    if ai_desc_count >= 2 or "machine learning" in desc_lower or "deep learning" in desc_lower or "siri ml" in desc_lower:
+        return True
+
     return False
 
 
-def candidate_wants_ai(user_titles: list[str]) -> bool:
-    for ut in user_titles:
-        ut_clean = ut.strip().lower()
-        tokens = set(re.findall(r"[a-z0-9+#.]+", ut_clean))
-        if {"ai", "ml", "genai", "nlp"}.intersection(tokens):
-            return True
-        if any(k in ut_clean for k in ["machine learning", "data scientist", "agent", "deep learning"]):
-            return True
+def candidate_wants_ai(user_titles: list[str], user_keywords: str = "") -> bool:
+    all_text = " ".join(user_titles) + " " + (user_keywords or "")
+    all_clean = all_text.lower()
+    tokens = set(re.findall(r"[a-z0-9+#.]+", all_clean))
+    if AI_TOKENS.intersection(tokens):
+        return True
+    if any(k in all_clean for k in ["machine learning", "data scientist", "deep learning", "generative ai", "ai engineer"]):
+        return True
     return False
 
 
@@ -151,10 +177,6 @@ def _title_matches_targets(title_lower: str, user_titles: list[str]) -> bool:
     """Positive match: does the job title match ANY of the user's target titles?"""
     if not user_titles:
         return True
-
-    # If job is an AI/ML specific role but candidate didn't request AI/ML, drop it
-    if is_ai_job(title_lower) and not candidate_wants_ai(user_titles):
-        return False
 
     anchors = {
         "backend", "frontend", "fullstack", "full stack", "settlement",
@@ -281,6 +303,12 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
             if any(tk in title_lower for tk in BUSINESS_TRACK_EXCLUSIONS):
                 continue
 
+        # ── 3c2. Strict AI/ML Exclusion if candidate did not request AI ──
+        user_wants_ai = candidate_wants_ai(user_titles, answers.get("keywords", ""))
+        company_lower = (r.get("company_name") or "").lower()
+        if not user_wants_ai and is_ai_job(title_lower, company_lower, desc_lower):
+            continue
+
         # ── 3d. Positive title matching — only keep jobs matching user targets ──
         if user_titles and not _title_matches_targets(title_lower, user_titles):
             continue
@@ -349,11 +377,14 @@ def build_system_prompt(user_id: int) -> str:
         "2. ROLE RELEVANCE: Score HIGH only if the role closely matches the candidate's target roles and skills. "
         "A 'Software Engineer' candidate should NOT score high on 'Business Analyst' roles.\n"
         "3. LOCATION: Accept preferred locations or Remote roles. Reject on-site non-India roles.\n"
-        "4. SCORING: Score 0-100 for fit against the candidate's profile AS WRITTEN.\n"
+        "4. AI/ML EXCLUSION: If the candidate profile does NOT explicitly list AI/ML or LLM in target roles or keywords, "
+        "you MUST REJECT (verdict: 'skip', fit_score < 30) any role requiring Machine Learning, model training, "
+        "PyTorch/TensorFlow, LLMs, or AI development.\n"
+        "5. SCORING: Score 0-100 for fit against the candidate's profile AS WRITTEN.\n"
         "   - strong (80-100): role matches target titles, skills align, experience fits\n"
         "   - worth_a_shot (60-79): partial match, some skill overlap\n"
         "   - stretch (40-59): tangential fit, significant skill gaps\n"
-        "   - skip (<40): wrong domain, wrong seniority, or wrong location\n\n"
+        "   - skip (<40): wrong domain, wrong seniority, wrong location, or unwanted AI/ML requirements\n\n"
         "Respond ONLY with valid JSON matching:\n"
         '{"results": [{"job_ref": str, "fit_score": int, "verdict": str, "reasoning": str, "strengths": [str], "gaps": [str]}]}'
     )

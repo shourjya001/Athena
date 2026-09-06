@@ -42,9 +42,12 @@ def render_digest_html(digest: dict, user_email: str) -> str:
     if top_matches:
         items = ""
         for m in top_matches:
-            score = m.get("fit_score", 0)
-            score_color = "#3fb950" if score >= 85 else "#e3b341"
-            apply_url = m.get("apply_url") or "http://localhost:8000/jobs"
+            raw_score = m.get("fit_score")
+            score = int(raw_score) if raw_score is not None else int(m.get("bm25_score") or 0)
+            score_color = "#3fb950" if score >= 80 else ("#e3b341" if score >= 50 else "#8b949e")
+            score_label = f"{score}% {str(m.get('verdict') or 'MATCH').upper()}" if raw_score is not None else f"BM25: {score}"
+            apply_url = m.get("apply_url") or "https://trackboard.dev/jobs"
+            reasoning = m.get("reasoning") or "Verified ATS active opening matched against your candidate track and target preferences."
             items += f"""
             <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:12px;">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
@@ -54,11 +57,11 @@ def render_digest_html(digest: dict, user_email: str) -> str:
                   <span style="font-size:14px;color:#e3b341;font-weight:600;">{m.get('company_name','Company')}</span>
                 </div>
                 <span style="font-family:monospace;font-size:13px;font-weight:700;color:{score_color};background:rgba(255,255,255,0.06);padding:2px 8px;border-radius:4px;">
-                  {score}% {m.get('verdict','MATCH').upper()}
+                  {score_label}
                 </span>
               </div>
               <div style="font-size:12px;color:#8b949e;margin-bottom:10px;">
-                {m.get('reasoning','Matched against your digital payment switch and backend architecture experience.')}
+                {reasoning}
               </div>
               <div>
                 <a href="{apply_url}" style="display:inline-block;background:#238636;color:#ffffff;font-size:12px;font-weight:600;text-decoration:none;padding:6px 14px;border-radius:6px;">
@@ -113,11 +116,9 @@ def render_digest_html(digest: dict, user_email: str) -> str:
 
     {failure_html}
     {matches_html}
-    {pipeline_html}
-
-    <div style="background:#161b22;border-radius:8px;padding:12px 16px;font-size:12px;color:#8b949e;display:flex;justify-content:space-between;">
-      <span>DSA Practice today: <strong style="color:#f0f6fc;">{practiced} problems</strong></span>
-      <a href="http://localhost:8000" style="color:#58a6ff;text-decoration:none;">Open Trackboard Web ↗</a>
+    <div style="background:#161b22;border-radius:8px;padding:12px 16px;font-size:12px;color:#8b949e;display:flex;justify-content:space-between;align-items:center;">
+      <span>Athena Trackboard &bull; Verified ATS Live Openings</span>
+      <a href="https://trackboard.dev/jobs" style="color:#58a6ff;text-decoration:none;font-weight:600;">Open Trackboard Web &rarr;</a>
     </div>
   </div>
 </body>

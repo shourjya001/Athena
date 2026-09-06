@@ -20,13 +20,11 @@ def build(user_id: int) -> dict:
     top = [dict(r) for r in db.query(
         "SELECT m.fit_score, m.verdict, m.reasoning, j.company_name, j.title, j.apply_url, j.location "
         "FROM matches m JOIN jobs j ON j.id = m.job_id WHERE m.user_id=? AND m.dismissed_at IS NULL "
-        "AND m.fit_score >= 70 ORDER BY m.fit_score DESC LIMIT 8",
+        "AND j.closed_at IS NULL "
+        "ORDER BY COALESCE(m.fit_score, m.bm25_score) DESC",
         (user_id,))]
-    practiced = db.query_one(
-        "SELECT COUNT(*) n FROM attempts WHERE user_id=? AND occurred_at > datetime('now','-1 day')",
-        (user_id,))["n"]
     return {"source_failures": failures, "pipeline_moves": moved,
-            "top_matches": top, "problems_practiced": practiced}
+            "top_matches": top, "problems_practiced": 0}
 
 
 def send_digest_email(user_id: int) -> bool:

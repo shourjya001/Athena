@@ -769,8 +769,8 @@ def create_app() -> FastAPI:
         from .agents.matcher import run_matcher_for_user
         # Instant BM25 match
         run_matcher_for_user(user, force_bm25=True)
-        # Background score 1 batch (5 jobs) with Gemini in ~1.5s
-        background_tasks.add_task(run_matcher_for_user, user, False, False, 1)
+        # Background score up to 6 batches (30 jobs) with multi-provider LLM cascade
+        background_tasks.add_task(run_matcher_for_user, user, False, False, 6)
         return RedirectResponse("/jobs?matched=1", status_code=303)
 
     @app.get("/api/cron/sync-and-match")
@@ -800,11 +800,10 @@ def create_app() -> FastAPI:
             # Auto-dispatch daily HTML digest
             try:
                 top_matches = db.query(
-                    "SELECT j.title, j.company_name, j.location, j.apply_url, m.fit_score, m.verdict, m.reasoning "
+                    "SELECT j.title, j.company_name, j.location, j.apply_url, m.fit_score, m.verdict, m.reasoning, m.bm25_score "
                     "FROM matches m JOIN jobs j ON j.id=m.job_id "
                     "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
-                    "AND (m.fit_score IS NULL OR m.fit_score >= 50) "
-                    "ORDER BY m.fit_score DESC LIMIT 6",
+                    "ORDER BY COALESCE(m.fit_score, m.bm25_score) DESC",
                     (u["id"],)
                 )
                 top_matches = [dict(r) for r in top_matches]
@@ -812,13 +811,13 @@ def create_app() -> FastAPI:
                     digest_payload = {
                         "top_matches": top_matches,
                         "pipeline_moves": [],
-                        "problems_practiced": db.query_one("SELECT COUNT(*) n FROM practice_attempts WHERE user_id=? AND date(occurred_at)=date('now')", (u["id"],))["n"],
+                        "problems_practiced": 0,
                         "source_failures": []
                     }
                     html = email.render_digest_html(digest_payload, u["email"])
                     sent = email.send_email(
                         to_email=u["email"],
-                        subject=f"⚡ Trackboard Digest: {len(top_matches)} High-Fit Job Matches for {u.get('display_name') or 'You'}",
+                        subject=f"⚡ Trackboard Digest: {len(top_matches)} Verified Job Recommendations for {u.get('display_name') or 'You'}",
                         html_body=html
                     )
                     user_res["digest_dispatched"] = sent
@@ -829,6 +828,32 @@ def create_app() -> FastAPI:
 
         from fastapi.responses import JSONResponse
         return JSONResponse({"ok": True, "users_processed": len(results), "results": results})
+
+    @app.post("/a/digest/send-test")
+    def send_test_digest_route(request: Request):
+        user = users.current_user(request)
+        from . import email
+        top_matches = db.query(
+            "SELECT j.title, j.company_name, j.location, j.apply_url, m.fit_score, m.verdict, m.reasoning, m.bm25_score "
+            "FROM matches m JOIN jobs j ON j.id=m.job_id "
+            "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
+            "ORDER BY COALESCE(m.fit_score, m.bm25_score) DESC",
+            (user["id"],)
+        )
+        top_matches = [dict(r) for r in top_matches]
+        digest_payload = {
+            "top_matches": top_matches,
+            "pipeline_moves": [],
+            "problems_practiced": 0,
+            "source_failures": []
+        }
+        html = email.render_digest_html(digest_payload, user["email"])
+        sent = email.send_email(
+            to_email=user["email"],
+            subject=f"⚡ Trackboard Digest: {len(top_matches)} Verified Job Recommendations for {user.get('display_name') or 'You'}",
+            html_body=html
+        )
+        return RedirectResponse(f"/jobs?digest_sent={'1' if sent else 'error'}", status_code=303)
 
     @app.get("/login", response_class=HTMLResponse)
     def login_page(request: Request, error: str | None = None):

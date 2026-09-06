@@ -29,19 +29,81 @@
   </form>
 </div>
 
-{# ── 1-Click Browser Auto-Fill Bookmarklet ── #}
-<div class="banner banner-blue" style="margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-  <div style="max-width:580px;">
-    <strong>⚡ Instant 1-Click Web Auto-Filler</strong>
-    <small style="display:block;margin-top:2px;">Drag the button on the right to your browser's Bookmarks Bar. When opening any Lever, Greenhouse, or Ashby application form on the web, click it to auto-fill all 15+ candidate fields in 0.1s!</small>
+{# ── 1-Click Safari & Chrome Application Autofill Suite ── #}
+<div class="card" style="margin-bottom:20px;padding:16px 20px;border-left:3px solid var(--signal);background:linear-gradient(135deg, rgba(227,179,65,0.08) 0%, rgba(13,17,23,0.95) 100%);">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">⚡</span>
+        <strong style="font-size:14px;color:var(--chalk);">Universal 1-Click Application Autofill Suite (Safari &amp; Chrome)</strong>
+        <span class="pill" style="color:var(--green);border-color:rgba(63,185,80,0.3);font-size:10px;font-weight:700;">NO BOOKMARK DRAGGING NEEDED</span>
+      </div>
+      <p style="color:var(--muted);font-size:12.5px;margin:4px 0 0 0;line-height:1.4;">
+        Apply to Greenhouse, Lever, Ashby, Workday, and corporate ATS portals in <b>seconds</b> instead of 40-50 minutes.
+      </p>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="btn btn-fill" id="btn-copy-script" onclick="copySafariAutofillScript()" style="font-weight:700;box-shadow:0 0 10px rgba(242,201,76,0.3);">
+        📋 Copy Safari Autofill Script
+      </button>
+      <button type="button" class="btn btn-blue" onclick="toggleQuickFillDrawer()">
+        ⚡ Quick-Fill Candidate Palette
+      </button>
+      <form method="post" action="/a/digest/send" style="margin:0;">
+        <button type="submit" class="btn btn-green" title="Send all visible recommended jobs directly to your inbox now">
+          ✉️ Send Digest to Email Now
+        </button>
+      </form>
+    </div>
   </div>
-  <a href="javascript:(function(){try{const d={name:'{{ user.display_name or 'Shourjya Hazra' }}',first_name:'{{ (user.display_name or 'Shourjya').split(' ')[0] }}',last_name:'{{ (user.display_name or 'Shourjya Hazra').split(' ')[-1] }}',email:'{{ user.email or '' }}',phone:'{{ answers.get('phone', '+91-7679530903') }}',linkedin:'{{ answers.get('linkedin_url', 'https://www.linkedin.com/in/shourjya-hazra-683128200/') }}',github:'{{ answers.get('github_url', 'https://github.com/shourjya01') }}',location:'{{ answers.get('locations', 'Bengaluru, India') }}',company:'National Payments Corporation of India (NPCI)',title:'Software Developer',notice:'30',experience:'2'};let count=0;document.querySelectorAll('input, textarea, select').forEach(function(el){const label=((el.getAttribute('aria-label')||'')+' '+(el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')+' '+(el.labels&&el.labels[0]?el.labels[0].innerText:'')).toLowerCase();let val=null;if(/first.*name|given.*name/.test(label))val=d.first_name;else if(/last.*name|surname|family/.test(label))val=d.last_name;else if(/full.*name|^name$/.test(label))val=d.name;else if(/email|e-mail/.test(label))val=d.email;else if(/phone|mobile|contact|cell/.test(label))val=d.phone;else if(/linkedin/.test(label))val=d.linkedin;else if(/github|portfolio|website/.test(label))val=d.github;else if(/location|city|current.*city/.test(label))val=d.location;else if(/company|employer|organization/.test(label))val=d.company;else if(/title|designation|role/.test(label))val=d.title;else if(/notice/.test(label))val=d.notice;else if(/experience|years/.test(label))val=d.experience;if(val!==null){el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));count++;}});alert(count>0?'✓ Athena: '+count+' candidate fields auto-filled! Attach your tailored resume and submit.':'⚡ Athena Auto-Fill is ready! Open any job application page (Lever, Greenhouse, Ashby) and click this bookmark to fill it instantly.');}catch(err){alert('Athena Auto-Fill notice: '+err.message);}})();void(0);" 
-     class="btn btn-fill" 
-     style="cursor:grab;font-weight:700;padding:8px 16px;box-shadow:0 0 12px rgba(242,201,76,0.5);"
-     title="Drag me to your browser Bookmarks Bar!">
-    ⭐ Drag to Bookmarks: ⚡ Athena Auto-Fill
-  </a>
+
+  {# Slide-out Candidate Quick-Fill Drawer #}
+  <div id="quickfill-drawer" style="display:none;margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);">
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--signal);letter-spacing:0.04em;margin-bottom:10px;">
+      ⚡ 1-Click Field Chips (Click any chip to copy instantly to clipboard):
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <button type="button" class="qchip" onclick="copyText('{{ user.display_name or 'Candidate' }}', this)"><strong>Name:</strong> {{ user.display_name or 'Candidate' }} 📋</button>
+      <button type="button" class="qchip" onclick="copyText('{{ (user.display_name or 'Candidate').split(' ')[0] }}', this)"><strong>First:</strong> {{ (user.display_name or 'Candidate').split(' ')[0] }} 📋</button>
+      <button type="button" class="qchip" onclick="copyText('{{ (user.display_name or 'Candidate').split(' ')[-1] }}', this)"><strong>Last:</strong> {{ (user.display_name or 'Candidate').split(' ')[-1] }} 📋</button>
+      <button type="button" class="qchip" onclick="copyText('{{ user.email }}', this)"><strong>Email:</strong> {{ user.email }} 📋</button>
+      <button type="button" class="qchip" onclick="copyText('{{ answers.get('phone', '+91-7679530903') }}', this)"><strong>Phone:</strong> {{ answers.get('phone', '+91-7679530903') }} 📋</button>
+      <button type="button" class="qchip" onclick="copyText('{{ answers.get('linkedin_url', 'https://linkedin.com') }}', this)"><strong>LinkedIn 📋</strong></button>
+      <button type="button" class="qchip" onclick="copyText('{{ answers.get('github_url', 'https://github.com') }}', this)"><strong>GitHub 📋</strong></button>
+      <button type="button" class="qchip" onclick="copyText('{{ answers.get('locations', 'Bengaluru, India') }}', this)"><strong>Location:</strong> {{ answers.get('locations', 'Bengaluru, India') }} 📋</button>
+      <button type="button" class="qchip" onclick="copyText('{{ answers.get('experience_years', '2') }} Years', this)"><strong>Exp:</strong> {{ answers.get('experience_years', '2') }} Yrs 📋</button>
+      <button type="button" class="qchip" onclick="copyText('30 Days', this)"><strong>Notice:</strong> 30 Days 📋</button>
+      <button type="button" class="qchip" onclick="copyText('Indian Citizen', this)"><strong>Work Auth:</strong> Indian Citizen 📋</button>
+    </div>
+    <div style="margin-top:12px;font-size:12px;color:var(--muted);">
+      💡 <b>Safari Pro-Tip:</b> On any job application page in Safari, press <kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Cmd + Option + C</kbd> to open Console, then press <kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Cmd + V</kbd> &amp; <kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Enter</kbd> to fill all form fields automatically!
+    </div>
+  </div>
 </div>
+
+<style>
+.qchip {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--rule);
+  color: var(--chalk);
+  font-size: 11.5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.qchip:hover {
+  background: rgba(242,201,76,0.15);
+  border-color: var(--signal);
+  color: var(--signal);
+}
+.qchip.copied {
+  background: rgba(63,185,80,0.2) !important;
+  border-color: var(--green) !important;
+  color: var(--green) !important;
+}
+</style>
 
 {# ── Banners ── #}
 {% if digest_sent %}
@@ -49,7 +111,7 @@
   <span class="bi">✓</span>
   <div class="bt">
     <strong>Daily Digest Dispatched.</strong>
-    <small>Top high-fit job recommendations delivered to {{ user.email }} from shourjya.h@gmail.com.</small>
+    <small>All {{ matched_count }} recommended job openings delivered directly to {{ user.email }}.</small>
   </div>
 </div>
 {% endif %}
@@ -64,49 +126,18 @@
 </div>
 {% endif %}
 
-{% if applied %}
-<div class="banner banner-amber">
-  <span class="bi">⚡</span>
-  <div class="bt">
-    <strong>Playwright auto-fill launched.</strong>
-    <small>Chromium opened on your desktop. Fields pre-filled, tailored resume attached. Review and submit.</small>
-  </div>
-</div>
-{% endif %}
-
-{% if agent_started %}
-<div class="banner banner-blue">
-  <span class="bi">↻</span>
-  <div class="bt">
-    <strong>Agent started.</strong>
-    <small>Processing job queue.</small>
-  </div>
-</div>
-{% endif %}
-
-{% if agent_stopped %}
-<div class="banner banner-amber">
-  <span class="bi">⏹</span>
-  <div class="bt"><strong>Agent stopped.</strong></div>
-</div>
-{% endif %}
-
 {# ── Dynamic Filter Pills ── #}
 <div class="filters" style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:8px;">
   {% if answers.get('titles') %}
     <span class="fpill on" title="Active target title filter">🎯 {{ answers.get('titles') }}</span>
   {% else %}
-    <span class="fpill on">🎯 SDE · Backend · AI Engineer</span>
+    <span class="fpill on">🎯 Target Roles Configured</span>
   {% endif %}
-
-  {% if answers.get('track') == 'business' %}
-    <span class="fpill on" style="border-color:var(--signal);color:var(--signal);">📊 Business &amp; Operations Track</span>
-  {% else %}
-    <span class="fpill on">💻 Engineering &amp; AI Track</span>
+  {% if answers.get('track') %}
+    <span class="fpill" style="border-color:rgba(56,139,253,0.3);color:var(--blue);background:rgba(56,139,253,0.08);">
+      Track: {{ answers.get('track')|upper }}
+    </span>
   {% endif %}
-
-  <span class="fpill">📍 {{ answers.get('locations', 'India + Remote') }}</span>
-  <span class="fpill" title="Excluded from results" style="color:var(--muted);border-style:dashed;">🚫 Excluded: SDE-2/3, Senior, Lead, Manager, Director</span>
 </div>
 
 {# ── Job cards ── #}
@@ -123,7 +154,7 @@
       <div class="score-ring score-stretch" title="AI Recruiter Score: {{ j.fit_score }}/100">{{ j.fit_score }}</div>
     {% endif %}
   {% else %}
-    <div class="score-ring score-none" title="BM25 Semantic Rank: {{ '%.1f'|format(j.bm25_score) }}">{{ '%.0f'|format(j.bm25_score) }}</div>
+    <div class="score-ring score-none" title="Semantic Match: BM25 {{ '%.1f'|format(j.bm25_score) }} — AI Recruiter evaluation in queue" style="font-size:11px;font-weight:700;color:var(--text-3);border-color:var(--rule);background:rgba(255,255,255,0.03);">NEW</div>
   {% endif %}
 
   <div class="jbody">
@@ -155,7 +186,7 @@
         {% endif %}
         <span class="tag" style="font-family:var(--mono);font-size:11px;" title="BM25 Keyword Alignment Score">BM25: {{ '%.1f'|format(j.bm25_score) }}</span>
       {% else %}
-        <span class="tag" style="font-family:var(--mono);font-size:11px;">BM25 Score: {{ '%.1f'|format(j.bm25_score) }}</span>
+        <span class="pill" style="color:var(--blue);border-color:rgba(88,166,255,0.3);background:rgba(88,166,255,0.08);" title="Matched on core skills. Queued for 5-pillar evaluation.">⚡ Semantic Match (BM25: {{ '%.1f'|format(j.bm25_score) }})</span>
       {% endif %}
     </div>
 
@@ -193,6 +224,7 @@
 
     <div class="actions" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
       <a href="{{ j.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-fill" title="Open official job application form in new tab">⚡ Apply on Company Site ↗</a>
+      <button type="button" class="btn btn-ghost" onclick="toggleQuickFillDrawer()" title="View &amp; copy candidate application details in 1 click">📋 Quick-Fill</button>
       <a href="/jobs/{{ j.id }}/tailor" class="btn btn-blue">✏️ Tailor Resume</a>
       <form method="post" action="/a/jobs/{{ j.id }}/mark-applied" style="margin:0;">
         <button type="submit" class="btn btn-green" title="Move this job to your Pipeline after applying">✓ Mark Applied</button>
@@ -227,5 +259,58 @@
   </div>
 </div>
 {% endif %}
+
+<script>
+function toggleQuickFillDrawer() {
+  const el = document.getElementById('quickfill-drawer');
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function copyText(val, btn) {
+  navigator.clipboard.writeText(val).then(() => {
+    const originalText = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.innerHTML = '✓ Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = originalText;
+    }, 1500);
+  });
+}
+
+function copySafariAutofillScript() {
+  const d = {
+    name: "{{ user.display_name or 'Candidate' }}",
+    first_name: "{{ (user.display_name or 'Candidate').split(' ')[0] }}",
+    last_name: "{{ (user.display_name or 'Candidate').split(' ')[-1] }}",
+    email: "{{ user.email or '' }}",
+    phone: "{{ answers.get('phone', '+91-7679530903') }}",
+    linkedin: "{{ answers.get('linkedin_url', 'https://linkedin.com') }}",
+    github: "{{ answers.get('github_url', 'https://github.com') }}",
+    location: "{{ answers.get('locations', 'Bengaluru, India') }}",
+    company: "National Payments Corporation of India (NPCI)",
+    title: "Software Developer",
+    notice: "30",
+    experience: "{{ answers.get('experience_years', '2') }}"
+  };
+
+  const script = "(function(){try{const d=" + JSON.stringify(d) + ";let count=0;document.querySelectorAll('input, textarea, select').forEach(function(el){const label=((el.getAttribute('aria-label')||'')+' '+(el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')+' '+(el.labels&&el.labels[0]?el.labels[0].innerText:'')).toLowerCase();let val=null;if(/first.*name|given.*name/.test(label))val=d.first_name;else if(/last.*name|surname|family/.test(label))val=d.last_name;else if(/full.*name|^name$/.test(label))val=d.name;else if(/email|e-mail/.test(label))val=d.email;else if(/phone|mobile|contact|cell/.test(label))val=d.phone;else if(/linkedin/.test(label))val=d.linkedin;else if(/github|portfolio|website/.test(label))val=d.github;else if(/location|city|current.*city/.test(label))val=d.location;else if(/company|employer|organization/.test(label))val=d.company;else if(/title|designation|role/.test(label))val=d.title;else if(/notice/.test(label))val=d.notice;else if(/experience|years/.test(label))val=d.experience;if(val!==null){el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));count++;}});alert(count>0?'✓ Athena: '+count+' candidate fields auto-filled! Attach your tailored resume and submit.':'⚡ Athena Auto-Fill ran! Verify the form fields.');}catch(err){alert('Athena notice: '+err.message);}})();void(0);";
+
+  navigator.clipboard.writeText(script).then(() => {
+    const btn = document.getElementById('btn-copy-script');
+    if (btn) {
+      const oldText = btn.innerHTML;
+      btn.innerHTML = '✓ Script Copied to Clipboard!';
+      btn.style.background = '#238636';
+      setTimeout(() => {
+        btn.innerHTML = oldText;
+        btn.style.background = '';
+      }, 3000);
+    }
+    alert('📋 Safari Autofill Script Copied to Clipboard!\n\n1. In Safari, open any job application page (Greenhouse, Lever, Ashby, Workday).\n2. Press Cmd + Option + C (or Inspect -> Console).\n3. Press Cmd + V and hit Enter.\n\nAll candidate fields will be filled instantly in 0.1s!');
+  });
+}
+</script>
 
 {% endblock %}

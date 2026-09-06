@@ -2,7 +2,7 @@ name: digest
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: "30 15 * * *"   # 21:00 IST
+    - cron: "0 3 * * *"   # 08:30 AM IST (03:00 UTC)
 jobs:
   run:
     runs-on: ubuntu-latest
