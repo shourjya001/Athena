@@ -107,3 +107,72 @@ def apply_strikes(source: str, seen_fingerprints: set[str],
             else:
                 conn.execute("UPDATE jobs SET strikes=? WHERE id=?", (strikes, r["id"]))
     return closed
+
+
+def is_job_url_closed(url: str) -> bool:
+    """Verify whether a job apply URL is live or expired."""
+    if not url or not url.startswith("http"):
+        return False
+    try:
+        import httpx
+        r = httpx.get(
+            url,
+            follow_redirects=True,
+            timeout=5.0,
+            headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
+        )
+        if r.status_code in (404, 410):
+            return True
+        final_url = str(r.url)
+        if "error=true" in final_url:
+            return True
+        if "/jobs/" in url and "/jobs/" not in final_url and not final_url.endswith("/apply"):
+            return True
+        closure_phrases = [
+            "no longer open", "no longer accepting applications", "job is closed",
+            "position has been filled", "opening is closed", "job not found", "job expired",
+            "this job has expired", "job is no longer available"
+        ]
+        text_lower = r.text.lower()
+        if any(p in text_lower for p in closure_phrases):
+            return True
+        return False
+    except Exception:
+        return False
+
+
+def verify_and_close_job(job_id: int) -> bool:
+    """Check a single job; if closed, mark closed_at and return True."""
+    row = db.query_one("SELECT id, apply_url, closed_at FROM jobs WHERE id=?", (job_id,))
+    if not row or row["closed_at"] is not None:
+        return True
+    if is_job_url_closed(row["apply_url"]):
+        db.execute("UPDATE jobs SET closed_at=datetime('now') WHERE id=?", (job_id,))
+        return True
+    return False
+
+
+def clean_expired_matched_jobs(user_id: int | None = None, limit: int = 30) -> int:
+    """Background task to continuously verify active matches and auto-close dead jobs."""
+    if user_id:
+        rows = db.query(
+            "SELECT DISTINCT j.id, j.apply_url FROM jobs j "
+            "JOIN matches m ON m.job_id=j.id "
+            "WHERE j.closed_at IS NULL AND m.user_id=? AND m.dismissed_at IS NULL "
+            "ORDER BY COALESCE(m.fit_score, m.bm25_score) DESC LIMIT ?",
+            (user_id, limit)
+        )
+    else:
+        rows = db.query(
+            "SELECT DISTINCT j.id, j.apply_url FROM jobs j "
+            "JOIN matches m ON m.job_id=j.id "
+            "WHERE j.closed_at IS NULL AND m.dismissed_at IS NULL "
+            "ORDER BY j.id DESC LIMIT ?",
+            (limit,)
+        )
+    closed = 0
+    for r in rows:
+        if is_job_url_closed(r["apply_url"]):
+            db.execute("UPDATE jobs SET closed_at=datetime('now') WHERE id=?", (r["id"],))
+            closed += 1
+    return closed

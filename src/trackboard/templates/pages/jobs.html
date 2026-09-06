@@ -64,6 +64,7 @@
       ⚡ 1-Click Field Chips (Click any chip to copy instantly to clipboard):
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <button type="button" class="qchip" onclick="copyAllFieldsText(this)" style="background:rgba(56,139,253,0.15);border-color:#58a6ff;color:#58a6ff;font-weight:700;">📋 Copy All Fields (One Block)</button>
       <button type="button" class="qchip" onclick="copyText('{{ user.display_name or 'Candidate' }}', this)"><strong>Name:</strong> {{ user.display_name or 'Candidate' }} 📋</button>
       <button type="button" class="qchip" onclick="copyText('{{ (user.display_name or 'Candidate').split(' ')[0] }}', this)"><strong>First:</strong> {{ (user.display_name or 'Candidate').split(' ')[0] }} 📋</button>
       <button type="button" class="qchip" onclick="copyText('{{ (user.display_name or 'Candidate').split(' ')[-1] }}', this)"><strong>Last:</strong> {{ (user.display_name or 'Candidate').split(' ')[-1] }} 📋</button>
@@ -76,8 +77,9 @@
       <button type="button" class="qchip" onclick="copyText('30 Days', this)"><strong>Notice:</strong> 30 Days 📋</button>
       <button type="button" class="qchip" onclick="copyText('Indian Citizen', this)"><strong>Work Auth:</strong> Indian Citizen 📋</button>
     </div>
-    <div style="margin-top:12px;font-size:12px;color:var(--muted);">
-      💡 <b>Safari Pro-Tip:</b> On any job application page in Safari, press <kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Cmd + Option + C</kbd> to open Console, then press <kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Cmd + V</kbd> &amp; <kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Enter</kbd> to fill all form fields automatically!
+    <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.5;">
+      💡 <b>Console Auto-Fill Instructions:</b> On any job page (Greenhouse, Lever, Ashby, Workday), click <b>"📋 Copy Safari Autofill Script"</b> above &rarr; open Console (<kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Cmd + Option + C</kbd>) &rarr; paste (<kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Cmd + V</kbd>) &amp; press <kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Enter</kbd>.<br>
+      <span style="color:var(--amber);">⚠️ <b>Safari Note:</b> If <kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Cmd + Option + C</kbd> does not open the console, enable it once in Safari: <b>Safari &rarr; Settings &rarr; Advanced &rarr; Check "Show features for web developers"</b>.</span>
     </div>
   </div>
 </div>
@@ -106,8 +108,25 @@
 </style>
 
 {# ── Banners ── #}
+{% if closed_notice %}
+<div class="banner banner-amber" style="background:#2a1f00;border:1px solid rgba(227,179,65,0.4);color:#f2c94c;padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+  <span class="bi">⚠️</span>
+  <div class="bt">
+    <strong>Expired Opening Automatically Removed.</strong>
+    <small style="display:block;margin-top:2px;">The job posting at {{ expired_company }} was closed on their portal. Trackboard verified it and removed it from your queue so you never waste time on dead links.</small>
+  </div>
+</div>
+{% endif %}
+
 {% if digest_sent %}
 <div class="banner banner-green">
+  <span class="bi">✓</span>
+  <div class="bt">
+    <strong>Daily Digest Dispatched.</strong>
+    <small>All {{ matched_count }} recommended job openings delivered directly to {{ user.email }}.</small>
+  </div>
+</div>
+{% endif %}
   <span class="bi">✓</span>
   <div class="bt">
     <strong>Daily Digest Dispatched.</strong>
@@ -223,7 +242,10 @@
     {% endif %}
 
     <div class="actions" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-      <a href="{{ j.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-fill" title="Open official job application form in new tab">⚡ Apply on Company Site ↗</a>
+      <a href="/a/jobs/{{ j.id }}/go" target="_blank" rel="noopener noreferrer" class="btn btn-fill" title="Verify liveness and open official application form in new tab">⚡ Apply on Company Site ↗</a>
+      <form method="post" action="/a/jobs/{{ j.id }}/apply" style="margin:0;">
+        <button type="submit" class="btn btn-amber" title="Launch desktop Chromium on your Mac to automatically fill all fields and attach tailored resume">🤖 Desktop Auto-Fill</button>
+      </form>
       <button type="button" class="btn btn-ghost" onclick="toggleQuickFillDrawer()" title="View &amp; copy candidate application details in 1 click">📋 Quick-Fill</button>
       <a href="/jobs/{{ j.id }}/tailor" class="btn btn-blue">✏️ Tailor Resume</a>
       <form method="post" action="/a/jobs/{{ j.id }}/mark-applied" style="margin:0;">
@@ -279,6 +301,30 @@ function copyText(val, btn) {
   });
 }
 
+function copyAllFieldsText(btn) {
+  const text = `Full Name: {{ user.display_name or 'Candidate' }}
+First Name: {{ (user.display_name or 'Candidate').split(' ')[0] }}
+Last Name: {{ (user.display_name or 'Candidate').split(' ')[-1] }}
+Email: {{ user.email or '' }}
+Phone: {{ answers.get('phone', '+91-7679530903') }}
+LinkedIn: {{ answers.get('linkedin_url', 'https://linkedin.com') }}
+GitHub: {{ answers.get('github_url', 'https://github.com') }}
+Location: {{ answers.get('locations', 'Bengaluru, India') }}
+Total Experience: {{ answers.get('experience_years', '2') }} Years
+Notice Period: 30 Days
+Work Authorization: Indian Citizen`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '✓ All Fields Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = oldText;
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
 function copySafariAutofillScript() {
   const d = {
     name: "{{ user.display_name or 'Candidate' }}",
@@ -295,7 +341,7 @@ function copySafariAutofillScript() {
     experience: "{{ answers.get('experience_years', '2') }}"
   };
 
-  const script = "(function(){try{const d=" + JSON.stringify(d) + ";let count=0;document.querySelectorAll('input, textarea, select').forEach(function(el){const label=((el.getAttribute('aria-label')||'')+' '+(el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')+' '+(el.labels&&el.labels[0]?el.labels[0].innerText:'')).toLowerCase();let val=null;if(/first.*name|given.*name/.test(label))val=d.first_name;else if(/last.*name|surname|family/.test(label))val=d.last_name;else if(/full.*name|^name$/.test(label))val=d.name;else if(/email|e-mail/.test(label))val=d.email;else if(/phone|mobile|contact|cell/.test(label))val=d.phone;else if(/linkedin/.test(label))val=d.linkedin;else if(/github|portfolio|website/.test(label))val=d.github;else if(/location|city|current.*city/.test(label))val=d.location;else if(/company|employer|organization/.test(label))val=d.company;else if(/title|designation|role/.test(label))val=d.title;else if(/notice/.test(label))val=d.notice;else if(/experience|years/.test(label))val=d.experience;if(val!==null){el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));count++;}});alert(count>0?'✓ Athena: '+count+' candidate fields auto-filled! Attach your tailored resume and submit.':'⚡ Athena Auto-Fill ran! Verify the form fields.');}catch(err){alert('Athena notice: '+err.message);}})();void(0);";
+  const script = "(function(){try{const d=" + JSON.stringify(d) + ";function setVal(el,val){try{const proto=el instanceof HTMLTextAreaElement?window.HTMLTextAreaElement.prototype:window.HTMLInputElement.prototype;const desc=Object.getOwnPropertyDescriptor(proto,'value');if(desc&&desc.set){desc.set.call(el,val);}else{el.value=val;}}catch(e){el.value=val;}el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));el.dispatchEvent(new Event('blur',{bubbles:true}));}let count=0;const docs=[document];document.querySelectorAll('iframe').forEach(function(f){try{if(f.contentDocument)docs.push(f.contentDocument);}catch(e){}});docs.forEach(function(doc){doc.querySelectorAll('input, textarea, select').forEach(function(el){const label=((el.getAttribute('aria-label')||'')+' '+(el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')+' '+(el.labels&&el.labels[0]?el.labels[0].innerText:'')).toLowerCase();let val=null;if(/first.*name|given.*name/.test(label))val=d.first_name;else if(/last.*name|surname|family/.test(label))val=d.last_name;else if(/full.*name|^name$/.test(label))val=d.name;else if(/email|e-mail/.test(label))val=d.email;else if(/phone|mobile|contact|cell/.test(label))val=d.phone;else if(/linkedin/.test(label))val=d.linkedin;else if(/github|portfolio|website/.test(label))val=d.github;else if(/location|city|current.*city/.test(label))val=d.location;else if(/company|employer|organization/.test(label))val=d.company;else if(/title|designation|role/.test(label))val=d.title;else if(/notice/.test(label))val=d.notice;else if(/experience|years/.test(label))val=d.experience;if(val!==null){setVal(el,val);count++;}});});alert(count>0?'✓ Athena Auto-Fill: '+count+' candidate fields filled across the page!':'⚡ Athena: 0 open form inputs found on this page. If the form is in an iframe, click inside the form and run again.');}catch(err){alert('Athena notice: '+err.message);}})();void(0);";
 
   navigator.clipboard.writeText(script).then(() => {
     const btn = document.getElementById('btn-copy-script');
@@ -308,7 +354,7 @@ function copySafariAutofillScript() {
         btn.style.background = '';
       }, 3000);
     }
-    alert('📋 Safari Autofill Script Copied to Clipboard!\n\n1. In Safari, open any job application page (Greenhouse, Lever, Ashby, Workday).\n2. Press Cmd + Option + C (or Inspect -> Console).\n3. Press Cmd + V and hit Enter.\n\nAll candidate fields will be filled instantly in 0.1s!');
+    alert('📋 Safari Autofill Script Copied to Clipboard!\n\n1. Open any job application page (Greenhouse, Lever, Ashby, Workday).\n2. Press Cmd + Option + C (or right-click -> Inspect -> Console).\n3. Press Cmd + V and hit Enter.\n\nAll candidate fields will be filled automatically in 0.1s!');
   });
 }
 </script>

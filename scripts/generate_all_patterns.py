@@ -1995,9 +1995,9 @@ TEMPLATE = """{% extends "base.html" %}{% set nav='patterns' %}
   // Helper syntax highlighter
   function highlightCode(raw) {
     return raw
-      .replace(/\b(def|for|while|if|elif|else|return|in|not|and|or)\b/g, '<span class="pt-kw">$1</span>')
-      .replace(/\b(two_sum_sorted|max_sub_array_of_size_k|has_cycle|reverse_list|subsets|find_and_union|topological_sort|dijkstra|knapsack|climb_stairs|unique_paths|longest_common_subsequence|subarray_sum|min_meeting_rooms|merge|cyclic_sort|next_greater|max_sliding_window|binary_search|min_eating_speed|find_kth_largest|inorder|level_order|starts_with|bfs|is_power_of_two)\b/g, '<span class="pt-fn">$1</span>')
-      .replace(/\b(\d+)\b/g, '<span class="pt-num">$1</span>')
+      .replace(/\\b(def|for|while|if|elif|else|return|in|not|and|or)\\b/g, '<span class="pt-kw">$1</span>')
+      .replace(/\\b(two_sum_sorted|max_sub_array_of_size_k|has_cycle|reverse_list|subsets|find_and_union|topological_sort|dijkstra|knapsack|climb_stairs|unique_paths|longest_common_subsequence|subarray_sum|min_meeting_rooms|merge|cyclic_sort|next_greater|max_sliding_window|binary_search|min_eating_speed|find_kth_largest|inorder|level_order|starts_with|bfs|is_power_of_two)\\b/g, '<span class="pt-fn">$1</span>')
+      .replace(/\\b(\\d+)\\b/g, '<span class="pt-num">$1</span>')
       .replace(/(#.*$)/g, '<span class="pt-cm">$1</span>')
       .replace(/('[^']*')/g, '<span class="pt-str">$1</span>');
   }

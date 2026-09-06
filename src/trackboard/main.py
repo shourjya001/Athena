@@ -111,7 +111,7 @@ def create_app() -> FastAPI:
             return RedirectResponse("/patterns", status_code=303)
 
     @app.get("/jobs", response_class=HTMLResponse)
-    def jobs_page(request: Request):
+    def jobs_page(request: Request, background_tasks: BackgroundTasks):
         user = users.current_user(request)
         answers = {
             r["key"]: r["value"]
@@ -123,6 +123,10 @@ def create_app() -> FastAPI:
             "SELECT COUNT(*) n FROM resumes WHERE user_id=? AND is_master=1",
             (user["id"],),
         )["n"] > 0
+
+        # Non-blocking background pass: automatically verify liveness and remove expired jobs
+        from . import jobs as jobs_mod
+        background_tasks.add_task(jobs_mod.clean_expired_matched_jobs, user["id"], 25)
 
         items = []
         if has_resume:
@@ -209,6 +213,8 @@ def create_app() -> FastAPI:
         agent_stopped = request.query_params.get("agent_stopped") == "1"
         agent_busy = request.query_params.get("agent_busy") == "1"
         digest_sent = request.query_params.get("digest_sent") == "1"
+        closed_notice = request.query_params.get("closed_notice") == "1"
+        expired_company = request.query_params.get("expired_company") or "Company"
 
         from datetime import datetime, timezone
         today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -225,6 +231,8 @@ def create_app() -> FastAPI:
                 "agent_name": agent_name, "agent_started": agent_started,
                 "agent_stopped": agent_stopped, "agent_busy": agent_busy,
                 "digest_sent": digest_sent,
+                "closed_notice": closed_notice,
+                "expired_company": expired_company,
             })
 
     @app.post("/a/agent/run")
@@ -451,6 +459,20 @@ def create_app() -> FastAPI:
         if job and job["apply_url"] and job["apply_url"].startswith("http"):
             return RedirectResponse(job["apply_url"], status_code=303)
         return RedirectResponse("/pipeline", status_code=303)
+
+    @app.get("/a/jobs/{job_id}/go")
+    def apply_go_route(request: Request, job_id: int):
+        job = db.query_one("SELECT * FROM jobs WHERE id=?", (job_id,))
+        if not job or not job.get("apply_url"):
+            return RedirectResponse("/jobs?error=Job+not+found", status_code=303)
+
+        from . import jobs as jobs_mod
+        if jobs_mod.is_job_url_closed(job["apply_url"]):
+            db.execute("UPDATE jobs SET closed_at=datetime('now') WHERE id=?", (job_id,))
+            company = job.get("company_name") or "the company"
+            return RedirectResponse(f"/jobs?closed_notice=1&expired_company={company}", status_code=303)
+
+        return RedirectResponse(job["apply_url"], status_code=303)
 
     @app.post("/a/jobs/{job_id}/mark-applied")
     def mark_applied_route(request: Request, job_id: int):
