@@ -529,6 +529,7 @@ def create_app() -> FastAPI:
     def launch_applier(request: Request, job_id: int):
         user = users.current_user(request)
         job = db.query_one("SELECT * FROM jobs WHERE id=?", (job_id,))
+        job = dict(job) if job else None
         
         # 1. Update application status
         db.execute(
@@ -566,23 +567,33 @@ def create_app() -> FastAPI:
                 print(f"Notice on applier process spawn: {e}", file=sys.stderr)
 
         # 4. Redirect directly to official apply URL or to pipeline
-        if job and job["apply_url"] and job["apply_url"].startswith("http"):
+        if job and job.get("apply_url") and job["apply_url"].startswith("http"):
             return RedirectResponse(job["apply_url"], status_code=303)
         return RedirectResponse("/pipeline", status_code=303)
 
     @app.get("/a/jobs/{job_id}/go")
     def apply_go_route(request: Request, job_id: int):
         job = db.query_one("SELECT * FROM jobs WHERE id=?", (job_id,))
-        if not job or not job.get("apply_url"):
+        if not job:
+            return RedirectResponse("/jobs?error=Job+not+found", status_code=303)
+        job = dict(job)
+        apply_url = job.get("apply_url")
+        if not apply_url or not apply_url.startswith("http"):
             return RedirectResponse("/jobs?error=Job+not+found", status_code=303)
 
-        from . import jobs as jobs_mod
-        if jobs_mod.is_job_url_closed(job["apply_url"]):
-            db.execute("UPDATE jobs SET closed_at=datetime('now') WHERE id=?", (job_id,))
-            company = job.get("company_name") or "the company"
-            return RedirectResponse(f"/jobs?closed_notice=1&expired_company={company}", status_code=303)
+        try:
+            from . import jobs as jobs_mod
+            if jobs_mod.is_job_url_closed(apply_url):
+                try:
+                    db.execute("UPDATE jobs SET closed_at=datetime('now') WHERE id=?", (job_id,))
+                except Exception:
+                    pass
+                company = job.get("company_name") or "the company"
+                return RedirectResponse(f"/jobs?closed_notice=1&expired_company={company}", status_code=303)
+        except Exception as e:
+            print("Notice on job liveness verification:", e)
 
-        return RedirectResponse(job["apply_url"], status_code=303)
+        return RedirectResponse(apply_url, status_code=303)
 
     @app.post("/a/jobs/{job_id}/mark-applied")
     def mark_applied_route(request: Request, job_id: int):

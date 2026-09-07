@@ -124,3 +124,21 @@ def test_strikes_scoped_per_company_not_per_source():
     b = db.query_one("SELECT closed_at, strikes FROM jobs WHERE company_name='B'")
     assert a["closed_at"] is not None            # A's vanished job closes
     assert b["closed_at"] is None and b["strikes"] == 0   # B untouched
+
+
+def test_apply_go_route_redirects_safely(monkeypatch):
+    from starlette.testclient import TestClient
+    from trackboard import db, jobs
+    from trackboard.main import app
+
+    monkeypatch.setattr(jobs, "is_job_url_closed", lambda url: False)
+
+    jobs.upsert(_job(company_name="GoCorp", title="Go Engineer", apply_url="https://gocorp.com/apply"))
+    row = db.query_one("SELECT id FROM jobs WHERE company_name='GoCorp'")
+
+    client = TestClient(app, follow_redirects=False)
+    resp = client.get(f"/a/jobs/{row['id']}/go")
+    assert resp.status_code == 303
+    assert resp.headers.get("location") == "https://gocorp.com/apply"
+
+

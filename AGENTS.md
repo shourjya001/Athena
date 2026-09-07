@@ -6,7 +6,7 @@ and `README.md` (current repo state) before doing anything.
 
 ## Current position — update this block whenever a task completes
 
-- DONE (all modules written, 34 tests pass): M1-M3 core AND the M4-M6 code:
+- DONE (all modules written, 35 tests pass): M1-M3 core AND the M4-M6 code:
   ATS fetchers + aggregators + alert-email parsers, Scout with dedupe and
   closure strikes, two-stage Matcher with BM25 degradation, Analyst parse
   simulator, Tailor (bullet bank -> PDF with the §8.4.3 regression gate),
@@ -30,7 +30,7 @@ and `README.md` (current repo state) before doing anything.
   2. Real alert emails: save 1-2 per portal to a folder, run scout --alerts-dir.
   3. Hosted libSQL / Turso sync if multi-region persistent writes are required.
 - Follow LIVE_RUNBOOK.md strictly in order; it defines pass criteria per step.
-  34 mocked tests pass; live runs are the acceptance tests now.
+  35 mocked tests pass; live runs are the acceptance tests now.
 
 ## Before writing any code, every session
 
@@ -38,7 +38,7 @@ and `README.md` (current repo state) before doing anything.
 2. `cp .env.example .env` if missing; set DEV_USER_EMAIL
 3. `uv run trackboard migrate && uv run python scripts/seed_patterns.py &&
    uv run python scripts/seed_problems.py`
-4. `uv run pytest -q tests/` — expect 34 passed. If not, fixing that IS the task.
+4. `uv run pytest -q tests/` — expect 35 passed. If not, fixing that IS the task.
 5. Serve and open `/`, `/practice`, `/drill` — confirm 200s.
 
 ## Standing rules
