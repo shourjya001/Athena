@@ -156,7 +156,10 @@
               <strong style="color:var(--text-0);">{{ kw.term }}</strong>
               {% if kw.injection_hint %}<span style="color:var(--text-2);margin-left:6px;font-size:11.5px;">→ {{ kw.injection_hint }}</span>{% endif %}
             </div>
-            <button type="button" class="btn btn-ghost" style="padding:2px 8px;font-size:11px;color:var(--signal);border:1px solid rgba(88,166,255,0.3);background:rgba(88,166,255,0.06);" onclick="addSkill('{{ kw.term }}')">+ Add to Skills</button>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button type="button" class="btn btn-ghost" style="padding:2px 8px;font-size:11px;color:var(--signal);border:1px solid rgba(88,166,255,0.3);background:rgba(88,166,255,0.06);" onclick="addSkill('{{ kw.term }}')">+ Add to Skills</button>
+              <button type="button" class="btn btn-ghost" style="padding:2px 8px;font-size:11px;color:var(--green);border:1px solid rgba(63,185,80,0.3);background:rgba(63,185,80,0.06);" onclick="openDiscovery('{{ kw.term }}')">🧭 Discover Experience</button>
+            </div>
           </div>
           {% endfor %}
         </div>
@@ -192,6 +195,144 @@
   </div>
 </div>
 {% endif %}
+
+{# ── 4-Pillar Transparent Confidence Matrix ── #}
+{% if data.multi_factor %}
+<div class="card" style="margin-bottom:24px;border-color:rgba(88,166,255,0.3);background:rgba(22,27,34,0.7);">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+    <div>
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--blue);">Transparent 4-Pillar Match Confidence</span>
+      <h3 style="font-size:15px;margin:2px 0 0 0;color:var(--chalk);">
+        Overall Fit: <span style="color:var(--signal);">{{ data.multi_factor.overall }}% ({{ data.multi_factor.confidence_tier }})</span>
+      </h3>
+    </div>
+    <span style="font-size:11.5px;color:var(--text-3);">Weighted: Direct (40%) + Transferable (30%) + Adjacent (20%) + Impact (10%)</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;">
+    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px;">
+        <span style="color:var(--text-2);" title="Exact matches on core stack and explicit keywords">🎯 Direct Match (40%)</span>
+        <strong style="color:var(--signal);">{{ data.multi_factor.direct }}%</strong>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+        <div style="width:{{ data.multi_factor.direct }}%;height:100%;background:var(--signal);"></div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px;">
+        <span style="color:var(--text-2);" title="Architecture, system design, testing & problem solving capabilities">🔄 Transferable (30%)</span>
+        <strong style="color:var(--blue);">{{ data.multi_factor.transferable }}%</strong>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+        <div style="width:{{ data.multi_factor.transferable }}%;height:100%;background:var(--blue);"></div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px;">
+        <span style="color:var(--text-2);" title="Related ecosystem tools & complementary stacks">🧩 Adjacent Stack (20%)</span>
+        <strong style="color:var(--green);">{{ data.multi_factor.adjacent }}%</strong>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+        <div style="width:{{ data.multi_factor.adjacent }}%;height:100%;background:var(--green);"></div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px;">
+        <span style="color:var(--text-2);" title="Presence of quantified metrics and business scale proof">📈 Impact &amp; Metrics (10%)</span>
+        <strong style="color:var(--chalk);">{{ data.multi_factor.impact }}%</strong>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+        <div style="width:{{ data.multi_factor.impact }}%;height:100%;background:#8b949e;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ── Interactive Branching Experience Discovery ── #}
+<div class="card" id="discovery-panel" style="margin-bottom:28px;border-color:rgba(63,185,80,0.3);background:rgba(13,17,23,0.9);box-shadow:0 0 16px rgba(0,0,0,0.4);">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="pill" style="background:rgba(63,185,80,0.15);color:var(--green);border-color:rgba(63,185,80,0.3);font-weight:700;">🧭 Experience Discovery Interview</span>
+        <span style="font-size:11.5px;color:var(--text-3);">Surface real, undocumented experiences without fabricating lies</span>
+      </div>
+      <h3 style="font-size:15px;margin:6px 0 2px 0;color:var(--chalk);">
+        Skill Gap: <span id="discovery-skill-name" style="color:var(--signal);font-family:var(--mono);">Redis / Caching</span>
+      </h3>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;" id="skill-preset-buttons">
+      <button type="button" class="qchip" onclick="openDiscovery('Redis')">Redis</button>
+      <button type="button" class="qchip" onclick="openDiscovery('Kafka')">Kafka</button>
+      <button type="button" class="qchip" onclick="openDiscovery('Docker')">Docker</button>
+      <button type="button" class="qchip" onclick="openDiscovery('Kubernetes')">Kubernetes</button>
+      <button type="button" class="qchip" onclick="openDiscovery('Microservices')">Microservices</button>
+      <button type="button" class="qchip" onclick="openDiscovery('System Design')">System Design</button>
+    </div>
+  </div>
+
+  <p style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;line-height:1.5;">
+    Recruiters don't require you to have used a tool for 5 years — they want proof of <b>direct engineering ownership</b>, <b>transferable architecture</b>, or <b>adjacent integration</b>. Choose your relationship to this requirement and answer 1 brief prompt:
+  </p>
+
+  {# Branch Selector #}
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+    <button type="button" class="btn branch-btn on" id="branch-direct" onclick="setBranch('direct')">
+      🎯 Direct Hands-on Work
+    </button>
+    <button type="button" class="btn branch-btn" id="branch-transferable" onclick="setBranch('transferable')">
+      🔄 Transferable / Equivalent Stack
+    </button>
+    <button type="button" class="btn branch-btn" id="branch-adjacent" onclick="setBranch('adjacent')">
+      🧩 Adjacent / Consumer Role
+    </button>
+    <button type="button" class="btn branch-btn" id="branch-project" onclick="setBranch('project')">
+      🚀 Personal Project / Lab
+    </button>
+  </div>
+
+  {# Conversational Follow-up Prompt #}
+  <div style="background:rgba(255,255,255,0.03);padding:12px 14px;border-radius:6px;border-left:3px solid var(--signal);margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--signal);margin-bottom:4px;">Lead Recruiter Probe:</div>
+    <div id="discovery-probe-text" style="font-size:13px;color:var(--chalk);line-height:1.5;">
+      What specific service or subsystem did you build or operate using Redis? What scale (requests/sec, latency reduction, throughput, or memory size) did you achieve?
+    </div>
+  </div>
+
+  {# Candidate Raw Input #}
+  <div style="margin-bottom:12px;">
+    <textarea id="discovery-user-notes" rows="2" class="diff-edit" style="width:100%;font-size:13px;padding:8px 12px;border-radius:6px;box-sizing:border-box;" placeholder="e.g. Implemented Redis caching for product search catalog, reduced database query load by 60% and dropped p95 latency from 280ms to 35ms under 4k rps."></textarea>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+    <button type="button" class="btn btn-green" id="btn-synthesize" onclick="synthesizeBullet()" style="padding:7px 14px;font-weight:600;">
+      ✨ Synthesize Quantified Bullet
+    </button>
+    <span id="discovery-status" style="font-size:12px;color:var(--text-3);"></span>
+  </div>
+
+  {# Discovered Bullet Result Box (Hidden by default) #}
+  <div id="discovery-result-box" style="display:none;margin-top:16px;background:rgba(63,185,80,0.05);border:1px solid rgba(63,185,80,0.3);border-radius:8px;padding:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="pill" style="background:rgba(63,185,80,0.2);color:var(--green);font-weight:600;font-size:11px;">✓ Synthesized Bullet</span>
+        <span id="res-metric-badge" class="tag" style="color:var(--amber);font-size:11px;">Quantified Metric</span>
+      </div>
+      <span id="res-boost-badge" style="font-size:11px;color:var(--signal);font-weight:600;">+15% ATS Keyword Alignment</span>
+    </div>
+    <div id="res-bullet-text" style="font-size:13.5px;color:#f0f6fc;line-height:1.6;font-weight:500;margin-bottom:10px;background:#0d1117;padding:10px 12px;border-radius:6px;border:1px solid #30363d;">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="btn btn-fill" onclick="insertBulletToResume()" style="font-size:12px;">
+        ➕ Insert into Tailored Resume
+      </button>
+      <button type="button" class="btn" onclick="saveBulletToLibrary()" style="font-size:12px;border-color:rgba(88,166,255,0.4);color:var(--blue);">
+        💾 Save to Master Library
+      </button>
+      <span id="library-save-status" style="font-size:12px;color:var(--green);display:flex;align-items:center;margin-left:4px;"></span>
+    </div>
+  </div>
+</div>
 
 {# ── Bullet comparison ── #}
 <form method="post" action="/jobs/{{ job.id }}/tailor/approve">
@@ -251,6 +392,146 @@
 </form>
 
 <script>
+let activeSkill = 'Redis';
+let activeBranch = 'direct';
+let currentDiscoveredBullet = '';
+
+const PROBES = {
+  direct: (skill) => `What specific service or subsystem did you build or scale using ${skill}? What scale (requests/sec, latency reduction, throughput, or memory size) did you achieve?`,
+  transferable: (skill) => `How did you achieve a similar architectural goal using an equivalent technology or design pattern? What were the technical trade-offs and performance results?`,
+  adjacent: (skill) => `Did you collaborate with, integrate against, or consume APIs from a system powered by ${skill}? How did you test or monitor that integration?`,
+  project: (skill) => `What production-grade application or lab project did you build with ${skill}? What architecture, data models, or concurrency patterns did you implement?`
+};
+
+function updateProbe() {
+  const probeEl = document.getElementById('discovery-probe-text');
+  if (probeEl && PROBES[activeBranch]) {
+    probeEl.textContent = PROBES[activeBranch](activeSkill);
+  }
+}
+
+function openDiscovery(term) {
+  activeSkill = term;
+  const nameEl = document.getElementById('discovery-skill-name');
+  if (nameEl) nameEl.textContent = term;
+  updateProbe();
+  const panel = document.getElementById('discovery-panel');
+  if (panel) {
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    panel.style.borderColor = 'var(--signal)';
+    setTimeout(() => { panel.style.borderColor = 'rgba(63,185,80,0.3)'; }, 1400);
+  }
+  const inputEl = document.getElementById('discovery-user-notes');
+  if (inputEl) inputEl.focus();
+}
+
+function setBranch(branch) {
+  activeBranch = branch;
+  document.querySelectorAll('.branch-btn').forEach(btn => btn.classList.remove('on'));
+  const activeBtn = document.getElementById('branch-' + branch);
+  if (activeBtn) activeBtn.classList.add('on');
+  updateProbe();
+}
+
+async function synthesizeBullet() {
+  const notesEl = document.getElementById('discovery-user-notes');
+  const statusEl = document.getElementById('discovery-status');
+  const btn = document.getElementById('btn-synthesize');
+  const notes = (notesEl ? notesEl.value : '').trim();
+
+  if (!notes) {
+    if (statusEl) {
+      statusEl.textContent = '⚠️ Please enter 1 quick sentence about your work or metrics.';
+      statusEl.style.color = 'var(--amber)';
+    }
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+  if (statusEl) {
+    statusEl.textContent = '⚡ Synthesizing verified bullet with Recruiter AI...';
+    statusEl.style.color = 'var(--signal)';
+  }
+
+  try {
+    const res = await fetch('/a/jobs/{{ job.id }}/discover-bullet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        skill_gap: activeSkill,
+        experience_type: activeBranch,
+        user_notes: notes
+      })
+    });
+    const json = await res.json();
+    if (json.ok && json.data) {
+      currentDiscoveredBullet = json.data.bullet;
+      document.getElementById('res-bullet-text').textContent = json.data.bullet;
+      document.getElementById('res-metric-badge').textContent = json.data.metric_highlight || 'Quantified Metric';
+      document.getElementById('res-boost-badge').textContent = json.data.confidence_boost || '+15% ATS Keyword Alignment';
+      document.getElementById('discovery-result-box').style.display = 'block';
+      if (statusEl) {
+        statusEl.textContent = '✓ Bullet synthesized successfully!';
+        statusEl.style.color = 'var(--green)';
+      }
+    } else {
+      if (statusEl) {
+        statusEl.textContent = 'Notice: Generation fallback applied.';
+        statusEl.style.color = 'var(--text-2)';
+      }
+    }
+  } catch (err) {
+    console.error('Synthesis error:', err);
+    if (statusEl) {
+      statusEl.textContent = 'Error contacting recruiter engine.';
+      statusEl.style.color = 'var(--red)';
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function insertBulletToResume() {
+  if (!currentDiscoveredBullet) return;
+  const firstTextArea = document.querySelector('textarea.diff-edit');
+  if (firstTextArea) {
+    firstTextArea.value = firstTextArea.value + '\n- ' + currentDiscoveredBullet;
+    firstTextArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    firstTextArea.style.borderColor = 'var(--green)';
+    setTimeout(() => { firstTextArea.style.borderColor = ''; }, 1500);
+  }
+  addSkill(activeSkill);
+  const statusEl = document.getElementById('discovery-status');
+  if (statusEl) {
+    statusEl.textContent = '✓ Bullet inserted into your tailored resume!';
+    statusEl.style.color = 'var(--green)';
+  }
+}
+
+async function saveBulletToLibrary() {
+  if (!currentDiscoveredBullet) return;
+  const statusEl = document.getElementById('library-save-status');
+  if (statusEl) statusEl.textContent = 'Saving...';
+
+  try {
+    const res = await fetch('/a/jobs/{{ job.id }}/save-bullet-to-bank', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bullet: currentDiscoveredBullet,
+        skill: activeSkill
+      })
+    });
+    const json = await res.json();
+    if (json.ok) {
+      if (statusEl) statusEl.textContent = '✓ Saved to Master Library!';
+      setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+    }
+  } catch (e) {
+    if (statusEl) statusEl.textContent = 'Error saving.';
+  }
+}
+
 function addSkill(term) {
   const el = document.getElementById('custom_skills');
   if (!el) return;

@@ -201,6 +201,49 @@ def create_app() -> FastAPI:
                 if len(items) >= 40:
                     break
 
+        # Compute transparent multi-factor breakdown and high-leverage skills across top items
+        from .tailor import calculate_multi_factor_fit
+        master_resume_row = db.query_one("SELECT parsed_text FROM resumes WHERE user_id=? AND is_master=1 LIMIT 1", (user["id"],))
+        master_text = master_resume_row["parsed_text"] if master_resume_row and master_resume_row["parsed_text"] else ""
+        
+        skill_occurrences: dict[str, int] = {}
+        tracked_core_skills = [
+            ("Microservices & Distributed Systems", ["microservices", "distributed", "grpc"]),
+            ("Redis & In-Memory Caching", ["redis", "cache", "memcached"]),
+            ("Docker & Containerization", ["docker", "container", "kubernetes"]),
+            ("Kafka & Event Streaming", ["kafka", "rabbitmq", "event-driven", "streaming"]),
+            ("PostgreSQL & Relational Architecture", ["postgresql", "postgres", "sql", "mysql"]),
+            ("System Design & High Concurrency", ["system design", "high concurrency", "tps", "scale", "latency"]),
+            ("FastAPI & Async Python", ["fastapi", "asyncio", "python"]),
+            ("API Security & Cloud Infra", ["jwt", "oauth", "security", "aws", "gcp"]),
+        ]
+
+        for item in items:
+            jd_t = f"{item.get('title', '')}\n{item.get('description_md', '')}".lower()
+            if master_text:
+                item["multi_factor"] = calculate_multi_factor_fit(master_text, jd_t)
+            else:
+                score = item.get("fit_score") or 80
+                item["multi_factor"] = {
+                    "direct": score, "transferable": min(100, score + 5),
+                    "adjacent": min(100, score + 2), "impact": max(50, score - 5),
+                    "overall": score, "confidence_tier": "STRONG" if score >= 80 else "TRANSFERABLE"
+                }
+            for skill_name, skill_aliases in tracked_core_skills:
+                if any(al in jd_t for al in skill_aliases):
+                    skill_occurrences[skill_name] = skill_occurrences.get(skill_name, 0) + 1
+
+        top_jobs_count = max(1, min(len(items), 25))
+        high_leverage_skills = [
+            {
+                "name": name,
+                "count": count,
+                "pct": int((count / top_jobs_count) * 100)
+            }
+            for name, count in sorted(skill_occurrences.items(), key=lambda x: x[1], reverse=True)[:4]
+            if count >= 2
+        ]
+
         total_open = db.query_one("SELECT COUNT(*) n FROM jobs WHERE closed_at IS NULL")["n"]
         applied = request.query_params.get("applied") == "1"
         matched = request.query_params.get("matched") == "1"
@@ -232,6 +275,7 @@ def create_app() -> FastAPI:
                 "digest_sent": digest_sent,
                 "closed_notice": closed_notice,
                 "expired_company": expired_company,
+                "high_leverage_skills": high_leverage_skills,
             })
 
     @app.post("/a/agent/run")
@@ -417,6 +461,69 @@ def create_app() -> FastAPI:
                 (user["id"], job_id, res_id),
             )
         return RedirectResponse(f"/jobs/{job_id}/tailor?saved=1", status_code=303)
+
+    @app.post("/a/jobs/{job_id}/discover-bullet")
+    async def discover_bullet(job_id: int, request: Request):
+        """Interactive experience discovery: turns raw user context into a tailored, quantified bullet."""
+        _ = users.current_user(request)
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        skill_gap = body.get("skill_gap", "Core Technology")
+        experience_type = body.get("experience_type", "direct")
+        user_notes = body.get("user_notes", "")
+
+        from . import llm, tailor
+        chain = None
+        try:
+            chain = llm.Chain()
+        except Exception:
+            pass
+
+        result = tailor.synthesize_discovered_bullet(skill_gap, user_notes, experience_type, chain)
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"ok": True, "data": result})
+
+    @app.post("/a/jobs/{job_id}/save-bullet-to-bank")
+    async def save_bullet_to_bank(job_id: int, request: Request):
+        """Append approved tailored bullet into the candidate's permanent master resume/library."""
+        user = users.current_user(request)
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        bullet = (body.get("bullet") or "").strip()
+        skill = (body.get("skill") or "Technical Skills").strip()
+        if not bullet:
+            from fastapi.responses import JSONResponse
+            return JSONResponse({"ok": False, "error": "Bullet text is required"}, status_code=400)
+
+        # Append to user's master resume in SQLite
+        master_resume = db.query_one(
+            "SELECT id, parsed_text FROM resumes WHERE user_id=? AND is_master=1 LIMIT 1",
+            (user["id"],),
+        )
+        new_entry = f"\n- {bullet} (Skills: {skill})"
+        if master_resume:
+            existing = master_resume["parsed_text"] or ""
+            if "DISCOVERED EXPERIENCES & BULLETS:" not in existing:
+                updated_text = existing + "\n\nDISCOVERED EXPERIENCES & BULLETS:" + new_entry
+            else:
+                updated_text = existing + new_entry
+            db.execute("UPDATE resumes SET parsed_text=? WHERE id=?", (updated_text, master_resume["id"]))
+        else:
+            db.execute(
+                "INSERT INTO resumes (user_id, label, file_path, parsed_text, is_master, created_at) "
+                "VALUES (?, 'master_bullet_bank', 'internal/bank', ?, 1, datetime('now'))",
+                (user["id"], f"DISCOVERED EXPERIENCES & BULLETS:{new_entry}"),
+            )
+
+        from fastapi.responses import JSONResponse
+        return JSONResponse({
+            "ok": True,
+            "message": f"Successfully saved bullet to your Master Library for {skill}!"
+        })
 
     @app.post("/a/jobs/{job_id}/apply")
     def launch_applier(request: Request, job_id: int):

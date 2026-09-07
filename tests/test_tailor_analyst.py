@@ -82,3 +82,33 @@ def test_applier_field_matching():
     assert match_field("Notice Period") == "notice_period_days"
     assert match_field("", autocomplete="email") == "email"
     assert match_field("Favourite colour") is None
+
+
+def test_calculate_multi_factor_fit():
+    from trackboard.tailor import calculate_multi_factor_fit
+    resume = "Senior Python engineer with PostgreSQL, Redis, Docker, and AWS experience. Reduced latency by 40%."
+    jd = "Looking for a Python backend engineer proficient with PostgreSQL, Redis, Kubernetes, and high-scale systems."
+    res = calculate_multi_factor_fit(resume, jd)
+    assert "overall" in res
+    assert "direct" in res
+    assert "transferable" in res
+    assert "adjacent" in res
+    assert "impact" in res
+    assert res["overall"] > 0
+    assert res["confidence_tier"] in ["DIRECT MATCH", "TRANSFERABLE", "ADJACENT", "GROWTH / STRETCH"]
+
+
+
+def test_synthesize_discovered_bullet_offline_fallback():
+    from trackboard.tailor import synthesize_discovered_bullet
+    res = synthesize_discovered_bullet(
+        skill_gap="Redis",
+        user_notes="Implemented Redis cluster caching for session storage, improving throughput by 3x.",
+        experience_type="direct",
+        chain=None,
+    )
+    assert "bullet" in res
+    assert "Redis" in res["bullet"]
+    assert len(res["bullet"]) > 20
+
+

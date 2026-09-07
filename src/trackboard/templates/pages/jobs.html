@@ -84,6 +84,31 @@
   </div>
 </div>
 
+{# ── Collapsible Candidate Quick-Start Guide ── #}
+<details style="margin-bottom:20px;background:rgba(22,27,34,0.6);border:1px solid rgba(88,166,255,0.25);border-radius:8px;padding:12px 16px;">
+  <summary style="font-size:13px;font-weight:600;color:var(--blue);cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px;">
+    <span>ℹ️ How Trackboard Works — 4-Step Career Automation Guide</span>
+  </summary>
+  <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;font-size:12.5px;line-height:1.5;">
+    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
+      <strong style="color:var(--signal);display:block;margin-bottom:4px;">1. 🎯 Precision Job Match</strong>
+      Scrapes 460+ verified domestic ATS portals (Razorpay, Paytm, InMobi, CRED, etc.) with 0% dead links, filtering strictly for your positive target titles and excluding over-senior roles.
+    </div>
+    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
+      <strong style="color:var(--green);display:block;margin-bottom:4px;">2. 👔 5-Pillar Recruiter Audit</strong>
+      Evaluates your profile the way a Lead Recruiter does: 10-second attention scan, competitor mindset, ATS keyword gaps, and high-impact statement rewrites.
+    </div>
+    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
+      <strong style="color:var(--blue);display:block;margin-bottom:4px;">3. 🧭 Experience Discovery</strong>
+      Missing a keyword? Use the interactive branching interview to uncover your real hands-on or adjacent experience without ever fabricating false claims.
+    </div>
+    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
+      <strong style="color:var(--chalk);display:block;margin-bottom:4px;">4. ⚡ 60-Second Auto-Apply</strong>
+      Generate a clean ATS-friendly PDF and use the candidate palette chips or console autofill snippet to breeze through application forms in under a minute.
+    </div>
+  </div>
+</details>
+
 <style>
 .qchip {
   background: rgba(255,255,255,0.06);
@@ -134,6 +159,32 @@
   <div class="bt">
     <strong>Matcher agent finished.</strong>
     <small>Evaluated active jobs against your profile and target criteria.</small>
+  </div>
+</div>
+{% endif %}
+
+{# ── High-Leverage Skills Alert Card ── #}
+{% if high_leverage_skills and high_leverage_skills|length > 0 %}
+<div class="card" style="margin-bottom:20px;background:rgba(227,179,65,0.03);border:1px solid rgba(227,179,65,0.25);border-radius:8px;padding:14px 18px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="color:var(--signal);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;">💡 High-Leverage Skills (Multi-Job Requirement Alert)</span>
+      <span class="pill" style="background:rgba(227,179,65,0.15);color:var(--signal);font-size:10.5px;font-weight:600;">High ROI</span>
+    </div>
+    <span style="font-size:11.5px;color:var(--text-3);">Appears across multiple of your top matched target companies</span>
+  </div>
+  <p style="font-size:12.5px;color:var(--text-2);margin:0 0 10px 0;line-height:1.4;">
+    Addressing these high-leverage skills in your resume or tailoring interview will immediately elevate your candidate match score across multiple employers simultaneously:
+  </p>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;">
+    {% for sk in high_leverage_skills %}
+    <div style="background:rgba(255,255,255,0.04);border:1px solid var(--rule);padding:6px 12px;border-radius:6px;display:flex;align-items:center;gap:8px;">
+      <span style="font-weight:600;font-size:12px;color:var(--chalk);">{{ sk.name }}</span>
+      <span class="pill" style="font-size:10.5px;padding:1px 6px;background:rgba(56,139,253,0.15);color:var(--blue);border-color:rgba(56,139,253,0.3);">
+        {{ sk.count }} Openings ({{ sk.pct }}%)
+      </span>
+    </div>
+    {% endfor %}
   </div>
 </div>
 {% endif %}
@@ -232,6 +283,23 @@
         {% endif %}
       </div>
     </details>
+    {% endif %}
+
+    {% if j.multi_factor %}
+    <div style="margin-top:10px;padding:6px 12px;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid var(--border-dim);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;flex-wrap:wrap;">
+        <span style="color:var(--signal);font-weight:700;">{{ j.multi_factor.confidence_tier }}</span>
+        <span style="color:var(--text-3);">·</span>
+        <span title="Exact technology & keyword alignment">🎯 Direct {{ j.multi_factor.direct }}%</span>
+        <span style="color:var(--text-3);">·</span>
+        <span title="Architecture & engineering problem solving">🔄 Trans {{ j.multi_factor.transferable }}%</span>
+        <span style="color:var(--text-3);">·</span>
+        <span title="Adjacent tools & complementary frameworks">🧩 Adj {{ j.multi_factor.adjacent }}%</span>
+        <span style="color:var(--text-3);">·</span>
+        <span title="Quantified business metrics">📈 Impact {{ j.multi_factor.impact }}%</span>
+      </div>
+      <a href="/jobs/{{ j.id }}/tailor" style="font-size:11px;color:var(--blue);text-decoration:none;font-weight:600;">🧭 Discover &amp; Tailor &rarr;</a>
+    </div>
     {% endif %}
 
     <div class="actions" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">

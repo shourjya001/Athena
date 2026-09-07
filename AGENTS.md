@@ -6,7 +6,7 @@ and `README.md` (current repo state) before doing anything.
 
 ## Current position — update this block whenever a task completes
 
-- DONE (all modules written, 32 tests pass): M1-M3 core AND the M4-M6 code:
+- DONE (all modules written, 34 tests pass): M1-M3 core AND the M4-M6 code:
   ATS fetchers + aggregators + alert-email parsers, Scout with dedupe and
   closure strikes, two-stage Matcher with BM25 degradation, Analyst parse
   simulator, Tailor (bullet bank -> PDF with the §8.4.3 regression gate),
@@ -24,12 +24,13 @@ and `README.md` (current repo state) before doing anything.
   8. Pipeline Synchronization: Applied jobs auto-hidden from /jobs queue upon marking applied and tracked exclusively in /pipeline.
   9. Scheduled Automation: Nightly cron at 02:00 AM IST (20:30 UTC) in vercel.json during peak model success and low traffic.
   10. Pattern Detail & Practice Routing: Fixed get_pattern function calls and template context, verifying 200 OK across all 26 interactive pattern workbenches.
+  11. Advanced Resume Tailoring & Branching Discovery Workbench: Integrated skills/resume-tailoring/SKILL.md, transparent 4-pillar match confidence breakdown (Direct 40%, Transferable 30%, Adjacent 20%, Impact 10%), interactive candidate experience discovery interview with 1-click bullet synthesis, self-improving master bullet bank persistence, multi-job high-leverage skills analysis, and 4-step candidate onboarding guide.
 - NOT DONE — next steps:
   1. Google OAuth login (spec §12) replacing users.current_user() cookie context if strict OAuth 2.0 PKCE is desired.
   2. Real alert emails: save 1-2 per portal to a folder, run scout --alerts-dir.
   3. Hosted libSQL / Turso sync if multi-region persistent writes are required.
 - Follow LIVE_RUNBOOK.md strictly in order; it defines pass criteria per step.
-  32 mocked tests pass; live runs are the acceptance tests now.
+  34 mocked tests pass; live runs are the acceptance tests now.
 
 ## Before writing any code, every session
 
@@ -37,7 +38,7 @@ and `README.md` (current repo state) before doing anything.
 2. `cp .env.example .env` if missing; set DEV_USER_EMAIL
 3. `uv run trackboard migrate && uv run python scripts/seed_patterns.py &&
    uv run python scripts/seed_problems.py`
-4. `uv run pytest -q tests/` — expect 32 passed. If not, fixing that IS the task.
+4. `uv run pytest -q tests/` — expect 34 passed. If not, fixing that IS the task.
 5. Serve and open `/`, `/practice`, `/drill` — confirm 200s.
 
 ## Standing rules

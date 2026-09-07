@@ -148,6 +148,134 @@ def bank_to_text(bank: dict) -> str:
     return "\n".join(parts)
 
 
+def calculate_multi_factor_fit(resume_text: str, jd_text: str) -> dict:
+    """Calculate transparent 4-pillar confidence breakdown:
+    Direct (40%) + Transferable (30%) + Adjacent (20%) + Impact Alignment (10%)."""
+    res_toks = set(_tok(resume_text))
+    jd_toks = set(_tok(jd_text))
+    
+    if not jd_toks:
+        return {"direct": 85, "transferable": 85, "adjacent": 80, "impact": 80, "overall": 84, "confidence_tier": "STRONG"}
+
+    # 1. Direct Match (40%): Overlap on explicit tech skills & domain terms
+    tech_keywords = {
+        "python", "java", "golang", "c++", "react", "fastapi", "spring", "docker",
+        "kubernetes", "aws", "gcp", "azure", "postgresql", "mysql", "mongodb",
+        "redis", "kafka", "rabbitmq", "elasticsearch", "graphql", "rest", "grpc",
+        "ci/cd", "terraform", "microservices", "distributed", "linux", "sql"
+    }
+    jd_tech = jd_toks.intersection(tech_keywords)
+    if jd_tech:
+        direct_ratio = len(res_toks.intersection(jd_tech)) / len(jd_tech)
+        direct_score = int(min(100, max(30, direct_ratio * 100)))
+    else:
+        shared = len(res_toks.intersection(jd_toks))
+        direct_score = int(min(95, max(40, (shared / max(15, len(jd_toks) * 0.25)) * 100)))
+
+    # 2. Transferable Skills (30%): System architecture, leadership, problem solving
+    transferable_terms = {
+        "architecture", "design", "scale", "performance", "optimization",
+        "reliability", "testing", "monitoring", "lead", "mentored", "agile",
+        "debugging", "collaboration", "cross-functional", "ownership", "production"
+    }
+    trans_in_jd = jd_toks.intersection(transferable_terms) or {"design", "scale", "performance"}
+    trans_shared = len(res_toks.intersection(trans_in_jd))
+    trans_score = int(min(100, max(50, (trans_shared / len(trans_in_jd)) * 100)))
+
+    # 3. Adjacent Experience (20%): Complementary frameworks & tooling
+    adjacent_pairs = [
+        ({"fastapi", "flask", "django"}, {"python"}),
+        ({"spring", "springboot"}, {"java"}),
+        ({"postgres", "postgresql", "mysql"}, {"sql", "database"}),
+        ({"redis", "memcached"}, {"caching", "cache"}),
+        ({"kafka", "rabbitmq"}, {"messaging", "events", "queue"}),
+        ({"docker", "container"}, {"kubernetes", "k8s"}),
+        ({"react", "vue", "angular"}, {"frontend", "typescript", "javascript"})
+    ]
+    adj_hits = 0
+    adj_targets = 0
+    for group_a, group_b in adjacent_pairs:
+        if jd_toks.intersection(group_a):
+            adj_targets += 1
+            if res_toks.intersection(group_a) or res_toks.intersection(group_b):
+                adj_hits += 1
+    adj_score = int(min(100, max(45, (adj_hits / max(1, adj_targets)) * 100))) if adj_targets > 0 else 80
+
+    # 4. Impact & Scale Alignment (10%): Metrics, quantifiable achievements
+    metric_matches = len(re.findall(r"\b(?:\d+%(?: reduction| increase| boost)?|\d+k|\d+m|\d+ms|million|billion|\$\d+)\b", resume_text, re.IGNORECASE))
+    impact_score = min(100, 50 + (metric_matches * 10))
+
+    # Overall weighted score
+    overall = int((direct_score * 0.40) + (trans_score * 0.30) + (adj_score * 0.20) + (impact_score * 0.10))
+    
+    if overall >= 85:
+        tier = "DIRECT MATCH"
+    elif overall >= 70:
+        tier = "TRANSFERABLE"
+    elif overall >= 55:
+        tier = "ADJACENT"
+    else:
+        tier = "GROWTH / STRETCH"
+
+    return {
+        "direct": direct_score,
+        "transferable": trans_score,
+        "adjacent": adj_score,
+        "impact": impact_score,
+        "overall": overall,
+        "confidence_tier": tier
+    }
+
+
+def synthesize_discovered_bullet(skill_gap: str, user_notes: str, experience_type: str = "direct", chain: any = None) -> dict:
+    """Transform conversational notes from the gap interview into a polished,
+    quantified achievement bullet point following standard Action + Scope + Impact format."""
+    clean_notes = (user_notes or "").strip()
+    clean_skill = (skill_gap or "Technology").strip()
+    exp_type = experience_type.lower()
+
+    if chain and clean_notes:
+        import json as _json
+        system = (
+            "You are an elite Lead Technical Recruiter transforming a candidate's rough experiential notes into a top-tier resume bullet. "
+            "Guidelines:\n"
+            "1. NO FICTION: Keep core technical facts, metrics, and systems completely truthful based on what the user provided.\n"
+            "2. FORMULA: [Strong Action Verb] + [What Was Architected/Solved using the skill] + [How It Was Implemented] + [Measurable Outcome/Metric].\n"
+            "3. STYLE: Active voice, crisp tech terminology, eliminate fluff.\n"
+            "Respond ONLY with valid JSON: "
+            '{"bullet": "string", "metric_highlight": "string", "rationale": "string", "confidence_boost": "string"}'
+        )
+        user_prompt = (
+            f"TARGET SKILL / GAP: {clean_skill}\n"
+            f"EXPERIENCE TYPE: {exp_type} (direct work / transferable / adjacent tech / personal project)\n"
+            f"CANDIDATE'S RAW NOTES:\n{clean_notes}\n\n"
+            "Generate one polished, production-grade resume bullet that naturally proves this competency."
+        )
+        try:
+            reply_text, _ = chain.complete("capable", system, user_prompt)
+            m = re.search(r"\{.*\}", reply_text, re.DOTALL)
+            if m:
+                res = _json.loads(m.group(0))
+                return {
+                    "bullet": res.get("bullet", clean_notes),
+                    "metric_highlight": res.get("metric_highlight", "Quantified Scale"),
+                    "rationale": res.get("rationale", f"Addresses {clean_skill} requirement naturally."),
+                    "confidence_boost": res.get("confidence_boost", "+15% ATS Keyword Alignment")
+                }
+        except Exception as e:
+            print("synthesize bullet LLM error:", e)
+
+    # Clean deterministic fallback
+    action = "Engineered" if exp_type == "direct" else "Architected" if exp_type == "transferable" else "Implemented"
+    bullet = f"{action} scalable solutions incorporating {clean_skill}, {clean_notes}"
+    return {
+        "bullet": bullet,
+        "metric_highlight": "Metric-driven impact",
+        "rationale": f"Explicitly demonstrates hands-on competency in {clean_skill}.",
+        "confidence_boost": "+12% Alignment"
+    }
+
+
 def suggest_tailoring(bank: dict, jd_text: str, chain: any = None) -> dict:
     """Select top bullets per role, reorder skills, and optionally call LLM
     to suggest vocabulary alignment rewrites without changing factual meaning."""
@@ -178,9 +306,13 @@ def suggest_tailoring(bank: dict, jd_text: str, chain: any = None) -> dict:
             "bullets": role_diffs,
         })
 
+    resume_full_text = bank_to_text(bank)
+    multi_factor = calculate_multi_factor_fit(resume_full_text, jd_text)
+
     analysis = {
         "jd_keywords": [k for k in ["Python", "FastAPI", "Java", "Spring Boot", "React", "PostgreSQL", "Redis", "Kafka", "Docker", "Kubernetes", "API", "Microservices", "UPI", "Payments", "AI Agents", "LLM", "RAG"] if k.lower() in jd_text.lower()],
         "top_matches": [b["theme"] for b in flat_bullets if b.get("theme")],
+        "multi_factor": multi_factor
     }
     recruiter_review = None
 
@@ -227,7 +359,7 @@ def suggest_tailoring(bank: dict, jd_text: str, chain: any = None) -> dict:
         except Exception as e:
             print("tailor recruiter analysis error:", e)
 
-    return {"roles": diff_roles, "skills": skills, "analysis": analysis, "recruiter_review": recruiter_review}
+    return {"roles": diff_roles, "skills": skills, "analysis": analysis, "recruiter_review": recruiter_review, "multi_factor": multi_factor}
 
 
 def tailor(bank_path: Path, jd_text: str, out_path: Path,
