@@ -21,8 +21,10 @@ def build(user_id: int) -> dict:
         "SELECT m.fit_score, m.verdict, m.reasoning, j.company_name, j.title, j.apply_url, j.location "
         "FROM matches m JOIN jobs j ON j.id = m.job_id WHERE m.user_id=? AND m.dismissed_at IS NULL "
         "AND j.closed_at IS NULL "
-        "ORDER BY COALESCE(m.fit_score, m.bm25_score) DESC",
-        (user_id,))]
+        "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
+        "AND (m.fit_score IS NULL OR m.fit_score >= 40) "
+        "ORDER BY COALESCE(m.fit_score, m.bm25_score) DESC LIMIT 25",
+        (user_id, user_id))]
     return {"source_failures": failures, "pipeline_moves": moved,
             "top_matches": top, "problems_practiced": 0}
 

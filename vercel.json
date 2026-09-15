@@ -8,7 +8,7 @@
         "includeFiles": [
           "migrations/**",
           "config/**",
-          "data/**",
+          "data/seed_data.db",
           "src/**"
         ]
       }

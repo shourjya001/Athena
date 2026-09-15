@@ -108,6 +108,68 @@ def create_app() -> FastAPI:
             print(f"Error rendering pattern {slug}: {e}", file=sys.stderr)
             return RedirectResponse("/patterns", status_code=303)
 
+    @app.get("/linkedin", response_class=HTMLResponse)
+    def linkedin_page(request: Request):
+        user = users.current_user(request)
+        answers = {
+            r["key"]: r["value"]
+            for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
+        }
+
+        # Pre-fill linkedin if available
+        user_li = answers.get("linkedin", "")
+        master_resume = db.query_one("SELECT parsed_text FROM resumes WHERE user_id=? AND is_master=1 LIMIT 1", (user["id"],))
+        parsed = master_resume["parsed_text"] if master_resume and master_resume["parsed_text"] else ""
+        if not user_li and parsed:
+            import re
+            m = re.search(r"https?://(?:www\.)?linkedin\.com/in/[a-zA-Z0-9_-]+", parsed)
+            if m:
+                user_li = m.group(0)
+
+        current_hl = answers.get("titles") or (f"{user.get('display_name', 'Software Engineer')} | Distributed Systems & Cloud Architecture")
+        lines = [l.strip().lstrip("-•* ") for l in parsed.splitlines() if len(l.strip()) > 25]
+        current_exp = "\n".join(lines[:3]) if lines else "Engineered high-scale backend microservices serving millions of requests.\nOptimized database queries and Redis caching, cutting p95 response times by 40%."
+        current_about = f"Software engineer specializing in high-throughput distributed systems and backend architecture. Deep hands-on experience in {answers.get('keywords', 'Python, Go, PostgreSQL, Redis, and Cloud Infrastructure')}. Focused on solving scalability and reliability bottlenecks."
+
+        return templates.TemplateResponse(
+            request,
+            "pages/linkedin.html",
+            {
+                "user": user,
+                "nav": "linkedin",
+                "user_linkedin": user_li,
+                "current_headline": current_hl,
+                "current_about": current_about,
+                "current_exp": current_exp,
+            },
+        )
+
+    @app.post("/a/linkedin/optimize")
+    async def optimize_linkedin_endpoint(request: Request):
+        from . import linkedin_optimizer
+        chain = None
+        try:
+            from .llm import Chain
+            chain = Chain.from_env()
+        except Exception:
+            chain = None
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        result = linkedin_optimizer.audit_and_optimize_profile(
+            headline=body.get("headline", ""),
+            about=body.get("about", ""),
+            experiences=body.get("experiences", ""),
+            target_audience=body.get("target_audience", "Engineering Leaders & Technical Recruiters"),
+            goal=body.get("goal", "job seeker"),
+            linkedin_url=body.get("linkedin_url", ""),
+            mode=body.get("mode", "standard"),
+            chain=chain
+        )
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"ok": True, "data": result})
+
     @app.get("/jobs", response_class=HTMLResponse)
     def jobs_page(request: Request, background_tasks: BackgroundTasks):
         user = users.current_user(request)
@@ -525,6 +587,36 @@ def create_app() -> FastAPI:
             "message": f"Successfully saved bullet to your Master Library for {skill}!"
         })
 
+    @app.post("/a/jobs/{job_id}/linkedin-seo")
+    def job_linkedin_seo_endpoint(request: Request, job_id: int):
+        from . import linkedin_optimizer
+        chain = None
+        try:
+            from .llm import Chain
+            chain = Chain.from_env()
+        except Exception:
+            chain = None
+
+        job = db.query_one("SELECT * FROM jobs WHERE id=?", (job_id,))
+        if not job:
+            from fastapi.responses import JSONResponse
+            return JSONResponse({"ok": False, "error": "Job not found"}, status_code=404)
+        job = dict(job)
+
+        user = users.current_user(request)
+        master_resume = db.query_one("SELECT parsed_text FROM resumes WHERE user_id=? AND is_master=1 LIMIT 1", (user["id"],))
+        master_text = master_resume["parsed_text"] if master_resume and master_resume["parsed_text"] else ""
+
+        seo_res = linkedin_optimizer.generate_job_targeted_linkedin_seo(
+            job_title=job.get("title", "Software Engineer"),
+            company=job.get("company_name", "Technology Company"),
+            jd_text=job.get("description_md", ""),
+            resume_text=master_text,
+            chain=chain
+        )
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"ok": True, "data": seo_res})
+
     @app.post("/a/jobs/{job_id}/apply")
     def launch_applier(request: Request, job_id: int):
         user = users.current_user(request)
@@ -933,7 +1025,7 @@ def create_app() -> FastAPI:
         from .agents.matcher import run_matcher_for_user
         results = []
         all_users = db.query("SELECT * FROM users ORDER BY id")
-        do_match = request.query_params.get("match") == "1"
+        do_match = request.query_params.get("match", "1") != "0"
 
         for u in all_users:
             u = dict(u)
@@ -952,8 +1044,10 @@ def create_app() -> FastAPI:
                     "SELECT j.title, j.company_name, j.location, j.apply_url, m.fit_score, m.verdict, m.reasoning, m.bm25_score "
                     "FROM matches m JOIN jobs j ON j.id=m.job_id "
                     "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
-                    "ORDER BY COALESCE(m.fit_score, m.bm25_score) DESC",
-                    (u["id"],)
+                    "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
+                    "AND (m.fit_score IS NULL OR m.fit_score >= 40) "
+                    "ORDER BY COALESCE(m.fit_score, m.bm25_score) DESC LIMIT 25",
+                    (u["id"], u["id"])
                 )
                 top_matches = [dict(r) for r in top_matches]
                 if top_matches:

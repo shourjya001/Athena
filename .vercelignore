@@ -1,0 +1,18 @@
+# Exclude heavy binaries and non-runtime files from Vercel function deployment
+bin/
+tests/
+scripts/
+.git/
+.github/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+*.db-shm
+*.db-wal
+*.md
+!README.md
