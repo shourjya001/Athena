@@ -18,12 +18,15 @@
     </a>
     <nav>
       <a href="/" class="{% if nav=='today' %}on{% endif %}">⚡ Command Center</a>
-      <a href="/jobs" class="{% if nav=='jobs' or nav=='pipeline' %}on{% endif %}">💼 Jobs &amp; Tracker</a>
-      <a href="/linkedin" class="{% if nav=='linkedin' or nav=='profile' %}on{% endif %}">🎯 Career AI Studio</a>
+      <a href="/jobs" class="{% if nav=='jobs' %}on{% endif %}">💼 Jobs Radar</a>
+      <a href="/linkedin" class="{% if nav=='linkedin' %}on{% endif %}">🎯 Career AI Studio</a>
       {% if not user or user.get('track', 'tech') != 'business' %}
       <a href="/patterns" class="{% if nav=='patterns' or nav=='practice' or nav=='drill' %}on{% endif %}">🧪 Prep Lab</a>
       {% endif %}
-      {% if user and (user.email == 'shourjya001@gmail.com' or user.email == 'you@example.com') %}
+      {% if user and user.is_authenticated %}
+      <a href="/pipeline" class="{% if nav=='pipeline' %}on{% endif %}">📋 Pipeline</a>
+      {% endif %}
+      {% if user and user.is_authenticated and (user.email == 'shourjya001@gmail.com' or user.email == 'you@example.com') %}
       <a href="/system" class="{% if nav=='system' %}on{% endif %}">⚙️ System</a>
       {% endif %}
     </nav>

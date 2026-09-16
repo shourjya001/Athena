@@ -49,7 +49,6 @@ def ensure_user(email: str, display_name: str | None = None) -> int:
 def current_user(request: Any = None) -> dict:
     s = get_settings()
     email = None
-    is_authenticated = False
 
     if request is not None:
         cookie_email = request.cookies.get("trackboard_user")
@@ -57,15 +56,22 @@ def current_user(request: Any = None) -> dict:
             clean = resolve_email(cookie_email)
             if clean:
                 email = clean
-                is_authenticated = True
 
+    # Web request with NO auth cookie is strictly a GUEST with ZERO personal data
+    if request is not None and not email:
+        return {
+            "id": 0,
+            "email": None,
+            "display_name": "Guest Visitor",
+            "is_authenticated": False,
+            "is_guest": True,
+            "answers": {},
+            "track": "tech",
+        }
+
+    # Background tasks / CLI / scripts without a request object fall back to dev_user_email
     if not email:
         email = resolve_email(s.dev_user_email)
-        # If there's a request with no cookie, mark as guest/public visitor
-        if request is not None and not request.cookies.get("trackboard_user"):
-            is_authenticated = False
-        else:
-            is_authenticated = True
 
     uid = ensure_user(email)
     row = db.query_one("SELECT * FROM users WHERE id = ?", (uid,))
@@ -76,7 +82,7 @@ def current_user(request: Any = None) -> dict:
     }
     user_dict["answers"] = answers
     user_dict["track"] = answers.get("track", "tech")
-    user_dict["is_authenticated"] = is_authenticated
-    user_dict["is_guest"] = not is_authenticated
+    user_dict["is_authenticated"] = True
+    user_dict["is_guest"] = False
     return user_dict
 

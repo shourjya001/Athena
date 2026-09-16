@@ -384,6 +384,8 @@ def create_app() -> FastAPI:
     def tailor_page(request: Request, job_id: int):
         try:
             user = users.current_user(request)
+            if not user.get("is_authenticated"):
+                return RedirectResponse(f"/login?error=Please+sign+in+to+generate+a+tailored+resume&next=/jobs/{job_id}/tailor", status_code=303)
             job = db.query_one("SELECT * FROM jobs WHERE id=?", (job_id,))
             if not job:
                 return RedirectResponse("/jobs", status_code=303)
@@ -757,18 +759,16 @@ def create_app() -> FastAPI:
     @app.get("/pipeline", response_class=HTMLResponse)
     def pipeline_page(request: Request):
         user = users.current_user(request)
+        if not user.get("is_authenticated"):
+            return RedirectResponse("/login?error=Please+sign+in+to+view+your+private+application+pipeline&next=/pipeline", status_code=303)
         answers = {
             r["key"]: r["value"]
             for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
         }
-        # Guarantee zero private data leakage to unauthenticated guests
-        if user.get("is_guest"):
-            rows = []
-        else:
-            rows = db.query(
-                "SELECT a.*, j.company_name, j.title FROM applications a "
-                "JOIN jobs j ON j.id = a.job_id WHERE a.user_id=? "
-                "ORDER BY a.last_event_at DESC NULLS LAST", (user["id"],))
+        rows = db.query(
+            "SELECT a.*, j.company_name, j.title FROM applications a "
+            "JOIN jobs j ON j.id = a.job_id WHERE a.user_id=? "
+            "ORDER BY a.last_event_at DESC NULLS LAST", (user["id"],))
         cols: dict[str, list] = {}
         for r in rows:
             cols.setdefault(r["status"], []).append(dict(r))
@@ -824,6 +824,8 @@ def create_app() -> FastAPI:
     @app.get("/system", response_class=HTMLResponse)
     def system(request: Request):
         user = users.current_user(request)
+        if not user.get("is_authenticated") or user.get("email") not in ["shourjya001@gmail.com", "you@example.com"]:
+            return RedirectResponse("/login?error=System+telemetry+is+restricted+to+system+architects", status_code=303)
         answers = {
             r["key"]: r["value"]
             for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
@@ -849,6 +851,8 @@ def create_app() -> FastAPI:
     @app.get("/profile", response_class=HTMLResponse)
     def profile_page(request: Request, saved: int = 0, resume_saved: int = 0, matched: int = 0, error: str | None = None):
         user = users.current_user(request)
+        if not user.get("is_authenticated"):
+            return RedirectResponse("/login?error=Please+sign+in+to+access+your+candidate+profile&next=/profile", status_code=303)
         answers = {
             r["key"]: r["value"]
             for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
@@ -889,6 +893,8 @@ def create_app() -> FastAPI:
         track: str = Form("tech"),
     ):
         user = users.current_user(request)
+        if not user.get("is_authenticated"):
+            return RedirectResponse("/login?error=Please+sign+in+to+save+profile+settings", status_code=303)
         uid = user["id"]
         if display_name or leetcode_user:
             db.execute(
@@ -921,6 +927,8 @@ def create_app() -> FastAPI:
         resume_text: str = Form(""),
     ):
         user = users.current_user(request)
+        if not user.get("is_authenticated"):
+            return RedirectResponse("/login?error=Please+sign+in+to+upload+a+resume", status_code=303)
         uid = user["id"]
         extracted_text = (resume_text or "").strip()
         label = "Master Resume"
@@ -1118,7 +1126,7 @@ def create_app() -> FastAPI:
         return RedirectResponse(f"/jobs?digest_sent={'1' if sent else 'error'}", status_code=303)
 
     @app.get("/login", response_class=HTMLResponse)
-    def login_page(request: Request, error: str | None = None, notice: str | None = None):
+    def login_page(request: Request, error: str | None = None, notice: str | None = None, next: str = "/"):
         s = get_settings()
         user = users.current_user(request)
         return templates.TemplateResponse(
@@ -1129,28 +1137,30 @@ def create_app() -> FastAPI:
                 "allowlist": s.allowlist,
                 "error": error,
                 "notice": notice,
+                "next": next if next and next.startswith("/") else "/",
                 "google_configured": bool(s.google_client_id),
             },
         )
 
     @app.post("/login")
-    def do_login(email: str = Form(...)):
+    def do_login(email: str = Form(...), next: str = Form("/")):
         clean = users.resolve_email(email.strip().lower())
         if "@" not in clean:
             return RedirectResponse(
-                url="/login?error=Please+enter+a+valid+email+address.",
+                url=f"/login?error=Please+enter+a+valid+email+address.&next={next}",
                 status_code=303,
             )
-        resp = RedirectResponse(url="/", status_code=303)
+        dest = next if next and next.startswith("/") else "/"
+        resp = RedirectResponse(url=dest, status_code=303)
         resp.set_cookie("trackboard_user", clean, max_age=30 * 86400, httponly=True, samesite="lax")
         return resp
 
     @app.get("/auth/google")
-    async def auth_google_redirect(request: Request):
+    async def auth_google_redirect(request: Request, next: str = "/"):
         s = get_settings()
         if not s.google_client_id:
             return RedirectResponse(
-                "/login?notice=Google+OAuth+is+not+configured+in+.env.+Select+a+candidate+profile+or+enter+any+email+below+to+instant-access.",
+                f"/login?notice=Google+OAuth+is+not+configured+in+.env.+Select+a+candidate+profile+or+enter+any+email+below+to+instant-access.&next={next}",
                 status_code=303,
             )
         import urllib.parse
@@ -1162,12 +1172,13 @@ def create_app() -> FastAPI:
             "scope": "openid email profile",
             "access_type": "offline",
             "prompt": "select_account",
+            "state": next if next and next.startswith("/") else "/",
         }
         auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
         return RedirectResponse(auth_url, status_code=303)
 
     @app.get("/auth/google/callback")
-    async def auth_google_callback(request: Request, code: str = "", error: str = ""):
+    async def auth_google_callback(request: Request, code: str = "", error: str = "", state: str = "/"):
         if error or not code:
             return RedirectResponse(
                 f"/login?error=Google+authentication+failed:+{error or 'No code returned'}",
@@ -1175,6 +1186,7 @@ def create_app() -> FastAPI:
             )
         s = get_settings()
         redirect_uri = str(request.url_for("auth_google_callback"))
+        dest = state if state and state.startswith("/") else "/"
         try:
             import httpx
             async with httpx.AsyncClient(timeout=10.0) as client:
@@ -1211,15 +1223,16 @@ def create_app() -> FastAPI:
 
                 users.ensure_user(email, display_name=name)
 
-                resp = RedirectResponse(url="/", status_code=303)
+                resp = RedirectResponse(url=dest, status_code=303)
                 resp.set_cookie("trackboard_user", email, max_age=30 * 86400, httponly=True, samesite="lax")
                 return resp
         except Exception as e:
             return RedirectResponse(f"/login?error={str(e)}", status_code=303)
 
     @app.get("/auth/switch/{persona}")
-    def auth_switch_persona(persona: str):
+    def auth_switch_persona(persona: str, next: str = "/"):
         persona = persona.lower().strip()
+        dest = next if next and next.startswith("/") else "/"
         if persona == "guest":
             resp = RedirectResponse(url="/", status_code=303)
             resp.delete_cookie("trackboard_user")
@@ -1227,7 +1240,7 @@ def create_app() -> FastAPI:
 
         email = users.resolve_email(persona)
         users.ensure_user(email)
-        resp = RedirectResponse(url="/", status_code=303)
+        resp = RedirectResponse(url=dest, status_code=303)
         resp.set_cookie("trackboard_user", email, max_age=30 * 86400, httponly=True, samesite="lax")
         return resp
 

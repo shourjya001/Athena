@@ -16,13 +16,13 @@
     </h1>
     
     <p class="athena-hero-sub">
-      Autonomous multi-agent digital twin orchestrator. Ingests verified live ATS telemetry from global tier-1 firms, simulates recruiter evaluation models, and manages end-to-end career velocity for working professionals.
+      Your 24/7 Autonomous Career Digital Twin. Ingests 10,800+ verified enterprise ATS openings from global tier-1 firms, simulates recruiter evaluation algorithms, and tailors high-impact applications in milliseconds.
     </p>
 
     <div class="athena-creator-credit">
-      <span>✦ Conceived &amp; Engineered by <strong>Shourjya Hazra</strong></span>
+      <span>✦ Engineered by <strong>Shourjya Hazra</strong></span>
       <span style="opacity:0.3;">•</span>
-      <span>Distributed Systems &amp; AI</span>
+      <span>Ex-NPCI UPI/IMPS Core Payments • Distributed Systems &amp; AI</span>
     </div>
 
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
@@ -31,51 +31,127 @@
         <span>Connect on LinkedIn</span>
       </a>
       <a href="/jobs" class="btn btn-primary" style="padding:8px 18px;font-size:12.5px;font-weight:600;">
-        Explore 5,000+ Live Jobs →
+        Explore 10,800+ Live Jobs →
       </a>
+      {% if not user.is_authenticated %}
+      <a href="/login" class="btn btn-ghost" style="padding:8px 16px;font-size:12.5px;font-weight:600;">
+        Access Twin Gateway ➔
+      </a>
+      {% endif %}
     </div>
   </div>
 
-  <!-- 3D Holographic Orbit Stage -->
+  <!-- 3D Holographic Digital Twin Rig & Agent Flow -->
   <div class="athena-3d-stage">
-    <div class="athena-3d-globe">
-      <div class="hologram-ring ring-1"></div>
-      <div class="hologram-ring ring-2"></div>
-      <div class="hologram-ring ring-3"></div>
-      <div class="athena-core-node">✦</div>
+    <div class="avatar-hologram-rig">
+      <div class="avatar-ring avatar-ring-1"></div>
+      <div class="avatar-ring avatar-ring-2"></div>
+      <div class="avatar-ring avatar-ring-3"></div>
+      
+      <!-- Central Digital Twin Avatar Core -->
+      <div class="avatar-core-sphere" title="Athena Digital Twin Neural Core">
+        <svg class="avatar-icon-svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2a5 5 0 0 1 5 5c0 2.22-1.44 4.1-3.46 4.75C15.65 12.82 17.5 14.7 18 17H6c.5-2.3 2.35-4.18 4.46-5.25C8.44 11.1 7 9.22 7 7a5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 9c-2.4 0-4.5 1.3-5.3 3h10.6c-.8-1.7-2.9-3-5.3-3z"/>
+        </svg>
+        <span class="avatar-core-label">AI TWIN</span>
+      </div>
+
+      <!-- Orbiting Autonomous Agent Satellites -->
+      <div class="agent-node node-scout" title="Scout Agent: 10,800+ Live Openings Verified">
+        <span>🛰️ Scout</span>
+      </div>
+      <div class="agent-node node-matcher" title="Matcher Agent: 4-Pillar Recruiter Scoring">
+        <span>⚖️ Matcher</span>
+      </div>
+      <div class="agent-node node-analyst" title="Analyst Agent: STAR Bullet Synthesis">
+        <span>🧬 Analyst</span>
+      </div>
+      <div class="agent-node node-seo" title="SEO Agent: Recruiter & AI Visibility">
+        <span>📡 SEO</span>
+      </div>
     </div>
-    <div class="agent-status-tag">
+
+    <!-- Live Status Readout HUD -->
+    <div class="hud-readout">
       <span class="pulse-dot"></span>
-      <span>MAP ORCHESTRATOR ACTIVE</span>
+      <span>TWIN ACTIVE • 10,862 ATS FEEDS • 0.08s LATENCY</span>
     </div>
   </div>
 </div>
 
 <!-- 2. Live Platform Telemetry Bar -->
-<div class="strip" style="display:flex;justify-content:space-around;padding:14px 20px;margin-bottom:28px;">
-  <span>Active Verified Openings <b>{{ live_jobs_count or '5,000+' }}</b></span>
-  <span>Enterprise ATS Feeds <b>{{ companies_count or '60+' }}</b></span>
-  <span>Interactive Patterns <b>{{ health.patterns }}</b></span>
-  <span>Mapped Lessons <b>{{ health.resources }}</b></span>
+<div class="strip" style="display:flex;justify-content:space-around;padding:14px 20px;margin-bottom:32px;flex-wrap:wrap;gap:12px;">
+  <span>Active Verified Openings <b>{{ live_jobs_count or '10,862+' }}</b></span>
+  <span>Enterprise ATS Feeds <b>{{ companies_count or '63' }}</b></span>
+  <span>Interactive Patterns <b>{{ health.patterns or 26 }}</b></span>
+  <span>Mapped Lessons <b>{{ health.resources or 347 }}</b></span>
   <span>Apply Link Health <b>100% 200 OK</b></span>
 </div>
 
-<!-- 3. Consolidated 4 Studios Navigation -->
-<div class="studio-grid">
-  <!-- Studio 1: Jobs & Pipeline -->
+<!-- 3. Infographical Architecture: How the Digital Twin Operates -->
+<div class="infographic-container">
+  <div class="infographic-head">
+    <div class="infographic-title">
+      <span>⚡ How Athena's Multi-Agent Protocol (MAP) Operates</span>
+    </div>
+    <span style="font-family:var(--mono);font-size:11.5px;color:var(--text-3);">AUTONOMOUS 24/7 PIPELINE</span>
+  </div>
+
+  <div class="infographic-steps-grid">
+    <div class="info-step-card">
+      <div class="info-step-num">01 / RADAR</div>
+      <div class="info-step-heading">Enterprise ATS Ingestion</div>
+      <div class="info-step-body">
+        Continuously ingests 10,800+ live openings across Google, JPMorgan Chase, Morgan Stanley, Goldman Sachs, Barclays, Razorpay, and NPCI with 100% verified 200 OK apply URLs.
+      </div>
+      <div class="info-step-badge">10,862 VERIFIED JOBS</div>
+    </div>
+
+    <div class="info-step-card">
+      <div class="info-step-num">02 / MAPPING</div>
+      <div class="info-step-heading">Twin Vectorization</div>
+      <div class="info-step-body">
+        Extracts candidate capabilities, technical stack depth, and track guardrails (Tech vs Business) into an immutable SQLite profile matrix with strict tenant isolation.
+      </div>
+      <div class="info-step-badge">ZERO DATA LEAKAGE</div>
+    </div>
+
+    <div class="info-step-card">
+      <div class="info-step-num">03 / AUDIT</div>
+      <div class="info-step-heading">4-Pillar Recruiter Fit</div>
+      <div class="info-step-body">
+        Simulates lead recruiter screening: Direct Skills (40%), Transferable Depth (30%), Adjacent Architecture (20%), and Quantified Impact (10%) with transparent match scores.
+      </div>
+      <div class="info-step-badge">AI RECRUITER SIMULATION</div>
+    </div>
+
+    <div class="info-step-card">
+      <div class="info-step-num">04 / SPEED</div>
+      <div class="info-step-heading">0.1s 1-Click Autofill</div>
+      <div class="info-step-body">
+        Universal console autofill suite for Greenhouse, Lever, Ashby, and Workday portals. Eliminates 45-minute form fatigue in a single keystroke.
+      </div>
+      <div class="info-step-badge">UNIVERSAL APPLIER</div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Consolidated 4 Studios Navigation (Strictly 4 Columns on Desktop) -->
+<div class="studio-grid-4">
+  <!-- Studio 1: Jobs & Radar -->
   <a class="studio-card" href="/jobs">
     <div>
       <div class="studio-icon">💼</div>
       <div class="studio-title">
-        <span>Jobs &amp; Tracker</span>
+        <span>Jobs Radar</span>
         <span>→</span>
       </div>
       <div class="studio-desc">
-        Live ATS telemetry from Google, JPMorgan, Morgan Stanley, Razorpay, CRED, and NPCI with 4-pillar recruiter alignment scoring.
+        Live telemetry from Google, JPMorgan Chase, Morgan Stanley, Razorpay, and NPCI with 4-pillar recruiter scoring.
       </div>
     </div>
     <div class="studio-meta">
-      {{ live_jobs_count or '5,000+' }} ACTIVE OPENINGS • 0 FAILURES
+      10,862 OPENINGS • 0 DEAD LINKS
     </div>
   </a>
 
@@ -88,11 +164,11 @@
         <span>→</span>
       </div>
       <div class="studio-desc">
-        50-point LinkedIn profile audit, buzzword scanner, 220-word About rewrite, and 8-point AI search visibility ranking (ChatGPT &amp; Perplexity).
+        50-point LinkedIn audit, buzzword scanner, 220-word About rewrite, and 8-point AI visibility ranking (ChatGPT &amp; Perplexity).
       </div>
     </div>
     <div class="studio-meta">
-      AI SEARCH RANKER • RECRUITER SEO
+      RECRUITER SEO • AI CITATION RANKER
     </div>
   </a>
 
@@ -105,64 +181,38 @@
         <span>→</span>
       </div>
       <div class="studio-desc">
-        26 interactive DSA pattern visualizers with animated dry runs in Python, C++, and Java + FSRS-lite spaced repetition queue.
+        26 interactive DSA pattern visualizers with animated execution in Python, C++, Java + FSRS-lite spaced repetition queue.
       </div>
     </div>
     <div class="studio-meta">
-      26 PATTERNS • 347 YOUTUBE LESSONS
+      26 PATTERNS • 347 LESSONS
     </div>
   </a>
 
-  <!-- Studio 4: Digital Twin Config -->
-  <a class="studio-card" href="/profile">
+  <!-- Studio 4: Digital Twin Gateway -->
+  <a class="studio-card" href="{% if user.is_authenticated %}/profile{% else %}/login?next=/profile{% endif %}">
     <div>
       <div class="studio-icon">👤</div>
       <div class="studio-title">
-        <span>Twin Configuration</span>
+        <span>Twin Gateway</span>
         <span>→</span>
       </div>
       <div class="studio-desc">
-        Personal target role rules, negative exclusion filters, master resume upload with hyperlink extraction, and track toggles.
+        {% if user.is_authenticated %}
+          Manage your personal candidate target roles, master resume hyperlink extraction, and private pipeline.
+        {% else %}
+          Sign in via Google or candidate persona to activate your private career digital twin and tailored bullet bank.
+        {% endif %}
       </div>
     </div>
     <div class="studio-meta">
-      MULTI-TENANT ISOLATED • WAL STORAGE
+      {% if user.is_authenticated %}
+        {{ user.display_name or 'ACTIVE TWIN' }} • ISOLATED WAL
+      {% else %}
+        AUTH GATEWAY • STRICT PRIVACY
+      {% endif %}
     </div>
   </a>
-</div>
-
-<!-- 4. Live Multi-Agent Protocol Telemetry -->
-<div class="card" style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-md);padding:20px;margin-bottom:28px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-    <h3 style="margin:0;font-size:15px;color:var(--text-0);display:flex;align-items:center;gap:8px;">
-      <span>📡 Live Multi-Agent Protocol Telemetry</span>
-      <span class="badge" style="background:rgba(63,185,80,0.15);color:var(--green);font-size:11px;padding:2px 8px;border-radius:10px;">Operational</span>
-    </h3>
-    <a href="/system" style="font-size:12px;color:var(--blue);text-decoration:none;">View System Health →</a>
-  </div>
-
-  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;">
-    <div style="background:var(--bg-2);padding:12px;border-radius:6px;border:1px solid var(--border);">
-      <div style="font-size:11px;color:var(--text-2);font-family:var(--mono);margin-bottom:4px;">SCOUT AGENT</div>
-      <div style="font-size:13px;font-weight:700;color:var(--text-0);margin-bottom:2px;">60+ ATS Portals</div>
-      <div style="font-size:11px;color:var(--green);">● Automated Ingestion</div>
-    </div>
-    <div style="background:var(--bg-2);padding:12px;border-radius:6px;border:1px solid var(--border);">
-      <div style="font-size:11px;color:var(--text-2);font-family:var(--mono);margin-bottom:4px;">MATCHER AGENT</div>
-      <div style="font-size:13px;font-weight:700;color:var(--text-0);margin-bottom:2px;">4-Pillar Recruiter Model</div>
-      <div style="font-size:11px;color:var(--blue);">● BM25 + Multi-LLM</div>
-    </div>
-    <div style="background:var(--bg-2);padding:12px;border-radius:6px;border:1px solid var(--border);">
-      <div style="font-size:11px;color:var(--text-2);font-family:var(--mono);margin-bottom:4px;">ANALYST AGENT</div>
-      <div style="font-size:13px;font-weight:700;color:var(--text-0);margin-bottom:2px;">Parse Simulator</div>
-      <div style="font-size:11px;color:var(--purple);">● §8.4.3 Regression Gate</div>
-    </div>
-    <div style="background:var(--bg-2);padding:12px;border-radius:6px;border:1px solid var(--border);">
-      <div style="font-size:11px;color:var(--text-2);font-family:var(--mono);margin-bottom:4px;">SEO AGENT</div>
-      <div style="font-size:13px;font-weight:700;color:var(--text-0);margin-bottom:2px;">AI Search Discovery</div>
-      <div style="font-size:11px;color:var(--amber);">● ChatGPT &amp; Perplexity</div>
-    </div>
-  </div>
 </div>
 
 <!-- 5. Core Algorithmic Mastery Preview -->
@@ -184,4 +234,3 @@
 </div>
 
 {% endblock %}
-

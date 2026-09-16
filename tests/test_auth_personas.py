@@ -46,11 +46,39 @@ def test_auth_page_and_personas():
     assert "/login" in r_google.headers.get("location")
 
 
-def test_pipeline_guest_privacy_shield():
+def test_protected_routes_require_authentication():
     client = TestClient(app, follow_redirects=False)
 
-    # 1. Guest request to /pipeline (no cookie) -> zero application rows shown, privacy banner shown
-    resp = client.get("/pipeline")
-    assert resp.status_code == 200
-    assert "Private Candidate Application Pipeline" in resp.text
-    assert "Public Visitor Mode" in resp.text
+    # 1. Guest request to /profile MUST redirect to /login
+    r_prof = client.get("/profile")
+    assert r_prof.status_code == 303
+    assert "/login" in r_prof.headers.get("location")
+    assert "next=%2Fprofile" in r_prof.headers.get("location") or "next=/profile" in r_prof.headers.get("location")
+
+    # 2. Guest request to /pipeline MUST redirect to /login
+    r_pipe = client.get("/pipeline")
+    assert r_pipe.status_code == 303
+    assert "/login" in r_pipe.headers.get("location")
+
+    # 3. Guest request to /jobs/1/tailor MUST redirect to /login
+    r_tailor = client.get("/jobs/1/tailor")
+    assert r_tailor.status_code == 303
+    assert "/login" in r_tailor.headers.get("location")
+
+    # 4. Authenticated user can access /profile
+    client_auth = TestClient(app, follow_redirects=False, cookies={"trackboard_user": "shourjya001@gmail.com"})
+    r_auth_prof = client_auth.get("/profile")
+    assert r_auth_prof.status_code == 200
+    assert "Shourjya" in r_auth_prof.text
+
+    # 5. Authenticated user can access /pipeline
+    r_auth_pipe = client_auth.get("/pipeline")
+    assert r_auth_pipe.status_code == 200
+
+    # 6. Public routes are accessible without auth
+    r_home = client.get("/")
+    assert r_home.status_code == 200
+    assert "ATHENA CAREER OS" in r_home.text
+
+    r_jobs = client.get("/jobs")
+    assert r_jobs.status_code == 200
