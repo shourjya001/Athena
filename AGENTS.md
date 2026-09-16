@@ -29,9 +29,10 @@ and `README.md` (current repo state) before doing anything.
   13. Job-Targeted LinkedIn Recruiter SEO in /jobs/{id}/tailor: Automated extraction of role-specific SEO keywords, Boolean search strings, and About section snippets to rank #1 in recruiter searches.
   14. Daily Digest & Matcher Automation: Enabled automated matching by default in nightly cron, added matcher to .github/workflows/daily.yml, and curated digest query to top 25 high-fit unapplied roles.
   15. Vercel Functions Storage Optimization: Created .vercelignore excluding bin/ (39MB binary), tests, and dev artifacts; optimized vercel.json includeFiles to drastically reduce deployment storage footprint.
-  16. Google OAuth & Multi-User Digital Twin Partitioning: Integrated /auth/google, /auth/google/callback, and /auth/switch/{persona} for seamless onboarding. Strict guest privacy shield prevents private application or profile leakage to public visitors.
+  16. Hardened Google OAuth & Complete Backdoor Elimination: Erased all `/auth/switch/{persona}` routes and passwordless login forms. Implemented cryptographic OAuth 2.0 PKCE / Google Identity Services token verification (`/auth/google/verify`). Strict guest privacy shield guarantees that unauthenticated visitors cannot access or impersonate any candidate profiles.
   17. Single Contact Channel Exclusivity: Direct links to Shourjya Hazra's exact LinkedIn profile (https://www.linkedin.com/in/shourjya-hazra-683128200/) across base header, 3D command center, and footer with zero personal email/phone exposure.
-  18. Standalone Master Build Guidebook (BRD & TSD): Preserved original GUIDEBOOK.md and created standalone GUIDEBOOK_MASTER_BRD_TSD.md (1,100+ lines) capturing end-to-end architecture, MAP protocol, SQLite DDLs, and Claude/GPT prompts.
+  18. Topbar Navigation & UI Flexbox Repair: Switched topbar markup from fixed `.wrap` to fluid `.topbar-container` (1320px), unified nav pills with `white-space: nowrap` and `flex-shrink: 0`, streamlined nav link labels, and added sleek `.btn-linkedin-compact`, `.user-pill-nav`, and `.btn-logout-nav`.
+  19. Standalone Master Build Guidebook (BRD & TSD): Preserved original GUIDEBOOK.md and created standalone GUIDEBOOK_MASTER_BRD_TSD.md (1,100+ lines) capturing end-to-end architecture, MAP protocol, SQLite DDLs, and Claude/GPT prompts.
 - NOT DONE — next steps:
   1. Real alert emails: save 1-2 per portal to a folder, run scout --alerts-dir.
   2. Hosted libSQL / Turso sync if multi-region persistent writes are required.

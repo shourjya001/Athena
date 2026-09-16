@@ -135,65 +135,181 @@ button { font-family: inherit; }
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(13, 17, 23, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(11, 15, 23, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-dim);
   padding: 0;
+  height: 58px;
 }
 
-.topbar .wrap {
+.topbar-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 100%;
   display: flex;
   align-items: center;
-  height: 56px;
+  justify-content: space-between;
   gap: 16px;
 }
 
 .brand {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 800;
   color: var(--text-0);
-  letter-spacing: -0.01em;
-  display: flex;
+  letter-spacing: -0.02em;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   white-space: nowrap;
+  text-decoration: none;
 }
 
-.brand::before {
-  content: "◆";
+.brand-badge {
+  font-family: var(--mono);
   font-size: 10px;
-  color: var(--green);
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: rgba(56, 139, 253, 0.12);
+  color: var(--blue);
+  border: 1px solid rgba(56, 139, 253, 0.28);
+  font-weight: 700;
 }
 
 .topbar nav {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 2px;
-  margin-left: auto;
-  background: var(--bg-1);
+  background: rgba(22, 27, 34, 0.6);
   border: 1px solid var(--border-dim);
   border-radius: 8px;
   padding: 3px;
 }
 
 .topbar nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-3);
-  padding: 5px 12px;
-  border-radius: 6px;
+  color: var(--text-2);
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
+  text-decoration: none;
 }
 
 .topbar nav a:hover {
-  color: var(--text-1);
-  background: var(--bg-2);
+  color: var(--text-0);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .topbar nav a.on {
   color: var(--text-0);
-  background: var(--bg-3);
+  background: rgba(56, 139, 253, 0.16);
+  border: 1px solid rgba(56, 139, 253, 0.3);
+  font-weight: 600;
+}
+
+.btn-linkedin-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: #0A66C2;
+  color: #ffffff !important;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid #004182;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.btn-linkedin-compact:hover {
+  background: #004182;
+  transform: translateY(-1px);
+}
+
+.btn-signin-nav {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 13px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-0);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.btn-signin-nav:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.user-pill-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: rgba(56, 139, 253, 0.1);
+  border: 1px solid rgba(56, 139, 253, 0.28);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-0);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-logout-nav {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-2);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.btn-logout-nav:hover {
+  color: var(--red);
+  border-color: rgba(248, 81, 73, 0.4);
+  background: rgba(248, 81, 73, 0.08);
+}
+
+.logout-link-nav {
+  font-size: 11px;
+  color: var(--text-3);
+  text-decoration: none;
+  margin-left: 2px;
+  transition: color 0.15s ease;
+}
+
+.logout-link-nav:hover {
+  color: var(--red);
 }
 
 /* ─── PAGE HEADER ──────────────────────────────────────────── */

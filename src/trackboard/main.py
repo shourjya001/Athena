@@ -1142,25 +1142,12 @@ def create_app() -> FastAPI:
             },
         )
 
-    @app.post("/login")
-    def do_login(email: str = Form(...), next: str = Form("/")):
-        clean = users.resolve_email(email.strip().lower())
-        if "@" not in clean:
-            return RedirectResponse(
-                url=f"/login?error=Please+enter+a+valid+email+address.&next={next}",
-                status_code=303,
-            )
-        dest = next if next and next.startswith("/") else "/"
-        resp = RedirectResponse(url=dest, status_code=303)
-        resp.set_cookie("trackboard_user", clean, max_age=30 * 86400, httponly=True, samesite="lax")
-        return resp
-
     @app.get("/auth/google")
     async def auth_google_redirect(request: Request, next: str = "/"):
         s = get_settings()
         if not s.google_client_id:
             return RedirectResponse(
-                f"/login?notice=Google+OAuth+is+not+configured+in+.env.+Select+a+candidate+profile+or+enter+any+email+below+to+instant-access.&next={next}",
+                f"/login?notice=Google+OAuth+is+not+configured+yet.+Please+set+GOOGLE_CLIENT_ID+and+GOOGLE_CLIENT_SECRET+in+your+environment.&next={next}",
                 status_code=303,
             )
         import urllib.parse
@@ -1181,10 +1168,15 @@ def create_app() -> FastAPI:
     async def auth_google_callback(request: Request, code: str = "", error: str = "", state: str = "/"):
         if error or not code:
             return RedirectResponse(
-                f"/login?error=Google+authentication+failed:+{error or 'No code returned'}",
+                f"/login?error=Google+authentication+cancelled+or+failed:+{error or 'No code returned'}",
                 status_code=303,
             )
         s = get_settings()
+        if not s.google_client_id or not s.google_client_secret:
+            return RedirectResponse(
+                "/login?error=Google+OAuth+credentials+missing+on+server",
+                status_code=303,
+            )
         redirect_uri = str(request.url_for("auth_google_callback"))
         dest = state if state and state.startswith("/") else "/"
         try:
@@ -1202,7 +1194,7 @@ def create_app() -> FastAPI:
                 )
                 if token_resp.status_code != 200:
                     return RedirectResponse(
-                        "/login?error=Failed+to+exchange+Google+OAuth+token",
+                        "/login?error=Failed+to+exchange+Google+authorization+code",
                         status_code=303,
                     )
                 tokens = token_resp.json()
@@ -1214,10 +1206,15 @@ def create_app() -> FastAPI:
                 )
                 if userinfo_resp.status_code != 200:
                     return RedirectResponse(
-                        "/login?error=Failed+to+retrieve+Google+user+profile",
+                        "/login?error=Failed+to+retrieve+verified+Google+profile",
                         status_code=303,
                     )
                 info = userinfo_resp.json()
+                if not info.get("verified_email", False) and not info.get("email_verified", False):
+                    return RedirectResponse(
+                        "/login?error=Google+email+is+not+verified",
+                        status_code=303,
+                    )
                 email = users.resolve_email(info.get("email", "").strip().lower())
                 name = info.get("name") or email.split("@")[0]
 
@@ -1227,22 +1224,43 @@ def create_app() -> FastAPI:
                 resp.set_cookie("trackboard_user", email, max_age=30 * 86400, httponly=True, samesite="lax")
                 return resp
         except Exception as e:
-            return RedirectResponse(f"/login?error={str(e)}", status_code=303)
+            return RedirectResponse(f"/login?error=Authentication+exception:+{str(e)}", status_code=303)
 
-    @app.get("/auth/switch/{persona}")
-    def auth_switch_persona(persona: str, next: str = "/"):
-        persona = persona.lower().strip()
-        dest = next if next and next.startswith("/") else "/"
-        if persona == "guest":
-            resp = RedirectResponse(url="/", status_code=303)
-            resp.delete_cookie("trackboard_user")
-            return resp
+    @app.post("/auth/google/verify")
+    async def auth_google_verify_token(request: Request):
+        """Verify Google Identity Services (GIS) ID token."""
+        try:
+            body = await request.form()
+            credential = body.get("credential") or ""
+            next_url = body.get("next") or "/"
+            if not credential:
+                return RedirectResponse("/login?error=Missing+Google+credential+token", status_code=303)
 
-        email = users.resolve_email(persona)
-        users.ensure_user(email)
-        resp = RedirectResponse(url=dest, status_code=303)
-        resp.set_cookie("trackboard_user", email, max_age=30 * 86400, httponly=True, samesite="lax")
-        return resp
+            s = get_settings()
+            import httpx
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.get(
+                    "https://oauth2.googleapis.com/tokeninfo",
+                    params={"id_token": credential},
+                )
+                if res.status_code != 200:
+                    return RedirectResponse("/login?error=Invalid+Google+ID+token", status_code=303)
+                payload = res.json()
+                if s.google_client_id and payload.get("aud") != s.google_client_id:
+                    return RedirectResponse("/login?error=Google+client_id+audience+mismatch", status_code=303)
+                if payload.get("email_verified") not in ("true", True):
+                    return RedirectResponse("/login?error=Google+email+unverified", status_code=303)
+
+                email = users.resolve_email(payload.get("email", "").strip().lower())
+                name = payload.get("name") or email.split("@")[0]
+                users.ensure_user(email, display_name=name)
+
+                dest = next_url if next_url.startswith("/") else "/"
+                resp = RedirectResponse(url=dest, status_code=303)
+                resp.set_cookie("trackboard_user", email, max_age=30 * 86400, httponly=True, samesite="lax")
+                return resp
+        except Exception as e:
+            return RedirectResponse(f"/login?error=Verification+failed:+{str(e)}", status_code=303)
 
     @app.get("/logout")
     def do_logout():
