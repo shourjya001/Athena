@@ -293,9 +293,16 @@ def shortlist(user_id: int, profile_text: str, limit: int = SHORTLIST) -> list[d
             if min_req_years > user_exp:
                 continue
 
-        # ── 3c. Track-based filtering ──
-        if user_track == "tech" and any(ex in title_lower for ex in TECH_TRACK_EXCLUSIONS) or user_track == "business" and any(tk in title_lower for tk in BUSINESS_TRACK_EXCLUSIONS):
-            continue
+        # ── 3c. Track-based filtering (honors dual-track and explicit target titles) ──
+        user_explicit_titles = [t.strip().lower() for t in user_titles if t.strip()]
+        if user_track in ("dual", "dual_track", "all", "tech,business", "business,tech"):
+            pass  # Dual track: no blanket exclusions
+        elif user_track == "tech":
+            if any(ex in title_lower for ex in TECH_TRACK_EXCLUSIONS if not any(ex in ut for ut in user_explicit_titles)):
+                continue
+        elif user_track == "business":
+            if any(tk in title_lower for tk in BUSINESS_TRACK_EXCLUSIONS if not any(tk in ut for ut in user_explicit_titles)):
+                continue
 
         # ── 3c2. Strict AI/ML Exclusion if candidate did not request AI ──
         user_wants_ai = candidate_wants_ai(user_titles, answers.get("keywords", ""))

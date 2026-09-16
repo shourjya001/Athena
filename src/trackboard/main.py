@@ -47,6 +47,12 @@ def create_app() -> FastAPI:
             r["key"]: r["value"]
             for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
         }
+        live_jobs_count = db.query_one("SELECT count(*) as c FROM jobs WHERE closed_at IS NULL")
+        companies_count = db.query_one("SELECT count(DISTINCT company_name) as c FROM jobs WHERE closed_at IS NULL")
+        applied_count = db.query_one("SELECT count(*) as c FROM applications WHERE user_id=?", (user["id"],))
+        matches_count = db.query_one("SELECT count(*) as c FROM matches WHERE user_id=? AND dismissed_at IS NULL", (user["id"],))
+        agent_runs = db.query("SELECT * FROM agent_runs ORDER BY started_at DESC LIMIT 6")
+
         return templates.TemplateResponse(
             request,
             "pages/today.html",
@@ -55,6 +61,11 @@ def create_app() -> FastAPI:
                 "answers": answers,
                 "health": content.content_health(),
                 "patterns": content.list_patterns(user["id"])[:6],
+                "live_jobs_count": live_jobs_count["c"] if live_jobs_count else 0,
+                "companies_count": companies_count["c"] if companies_count else 0,
+                "applied_count": applied_count["c"] if applied_count else 0,
+                "matches_count": matches_count["c"] if matches_count else 0,
+                "agent_runs": agent_runs,
             },
         )
 
@@ -750,10 +761,14 @@ def create_app() -> FastAPI:
             r["key"]: r["value"]
             for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
         }
-        rows = db.query(
-            "SELECT a.*, j.company_name, j.title FROM applications a "
-            "JOIN jobs j ON j.id = a.job_id WHERE a.user_id=? "
-            "ORDER BY a.last_event_at DESC NULLS LAST", (user["id"],))
+        # Guarantee zero private data leakage to unauthenticated guests
+        if user.get("is_guest"):
+            rows = []
+        else:
+            rows = db.query(
+                "SELECT a.*, j.company_name, j.title FROM applications a "
+                "JOIN jobs j ON j.id = a.job_id WHERE a.user_id=? "
+                "ORDER BY a.last_event_at DESC NULLS LAST", (user["id"],))
         cols: dict[str, list] = {}
         for r in rows:
             cols.setdefault(r["status"], []).append(dict(r))
@@ -1103,7 +1118,7 @@ def create_app() -> FastAPI:
         return RedirectResponse(f"/jobs?digest_sent={'1' if sent else 'error'}", status_code=303)
 
     @app.get("/login", response_class=HTMLResponse)
-    def login_page(request: Request, error: str | None = None):
+    def login_page(request: Request, error: str | None = None, notice: str | None = None):
         s = get_settings()
         user = users.current_user(request)
         return templates.TemplateResponse(
@@ -1113,6 +1128,8 @@ def create_app() -> FastAPI:
                 "user": user,
                 "allowlist": s.allowlist,
                 "error": error,
+                "notice": notice,
+                "google_configured": bool(s.google_client_id),
             },
         )
 
@@ -1126,6 +1143,92 @@ def create_app() -> FastAPI:
             )
         resp = RedirectResponse(url="/", status_code=303)
         resp.set_cookie("trackboard_user", clean, max_age=30 * 86400, httponly=True, samesite="lax")
+        return resp
+
+    @app.get("/auth/google")
+    async def auth_google_redirect(request: Request):
+        s = get_settings()
+        if not s.google_client_id:
+            return RedirectResponse(
+                "/login?notice=Google+OAuth+is+not+configured+in+.env.+Select+a+candidate+profile+or+enter+any+email+below+to+instant-access.",
+                status_code=303,
+            )
+        import urllib.parse
+        redirect_uri = str(request.url_for("auth_google_callback"))
+        params = {
+            "client_id": s.google_client_id,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "access_type": "offline",
+            "prompt": "select_account",
+        }
+        auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
+        return RedirectResponse(auth_url, status_code=303)
+
+    @app.get("/auth/google/callback")
+    async def auth_google_callback(request: Request, code: str = "", error: str = ""):
+        if error or not code:
+            return RedirectResponse(
+                f"/login?error=Google+authentication+failed:+{error or 'No code returned'}",
+                status_code=303,
+            )
+        s = get_settings()
+        redirect_uri = str(request.url_for("auth_google_callback"))
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                token_resp = await client.post(
+                    "https://oauth2.googleapis.com/token",
+                    data={
+                        "code": code,
+                        "client_id": s.google_client_id,
+                        "client_secret": s.google_client_secret,
+                        "redirect_uri": redirect_uri,
+                        "grant_type": "authorization_code",
+                    },
+                )
+                if token_resp.status_code != 200:
+                    return RedirectResponse(
+                        "/login?error=Failed+to+exchange+Google+OAuth+token",
+                        status_code=303,
+                    )
+                tokens = token_resp.json()
+                access_token = tokens.get("access_token")
+
+                userinfo_resp = await client.get(
+                    "https://www.googleapis.com/oauth2/v2/userinfo",
+                    headers={"Authorization": f"Bearer {access_token}"},
+                )
+                if userinfo_resp.status_code != 200:
+                    return RedirectResponse(
+                        "/login?error=Failed+to+retrieve+Google+user+profile",
+                        status_code=303,
+                    )
+                info = userinfo_resp.json()
+                email = users.resolve_email(info.get("email", "").strip().lower())
+                name = info.get("name") or email.split("@")[0]
+
+                users.ensure_user(email, display_name=name)
+
+                resp = RedirectResponse(url="/", status_code=303)
+                resp.set_cookie("trackboard_user", email, max_age=30 * 86400, httponly=True, samesite="lax")
+                return resp
+        except Exception as e:
+            return RedirectResponse(f"/login?error={str(e)}", status_code=303)
+
+    @app.get("/auth/switch/{persona}")
+    def auth_switch_persona(persona: str):
+        persona = persona.lower().strip()
+        if persona == "guest":
+            resp = RedirectResponse(url="/", status_code=303)
+            resp.delete_cookie("trackboard_user")
+            return resp
+
+        email = users.resolve_email(persona)
+        users.ensure_user(email)
+        resp = RedirectResponse(url="/", status_code=303)
+        resp.set_cookie("trackboard_user", email, max_age=30 * 86400, httponly=True, samesite="lax")
         return resp
 
     @app.get("/logout")

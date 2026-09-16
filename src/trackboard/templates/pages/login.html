@@ -1,79 +1,123 @@
 {% extends "base.html" %}
-{% block title %}Sign in — Trackboard{% endblock %}
+{% block title %}Sign in — Athena Digital Twin OS{% endblock %}
 {% block body %}
-<div style="max-width:480px;margin:40px auto 60px auto;">
+<div style="max-width:520px;margin:36px auto 60px auto;">
   <div class="page-head" style="text-align:center;padding-top:0;">
-    <div class="label">MULTI-USER ACCESS</div>
-    <h1 style="font-size:24px;">Sign in to Athena</h1>
-    <p class="sub">Select your candidate profile or sign in with your email.</p>
+    <div class="label" style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:rgba(56,139,253,0.12);border:1px solid rgba(56,139,253,0.3);border-radius:12px;color:var(--blue);font-size:11px;font-weight:700;">
+      <span class="pulse-dot" style="width:6px;height:6px;background:var(--blue);border-radius:50%;display:inline-block;"></span>
+      AUTONOMOUS DIGITAL TWIN GATEWAY
+    </div>
+    <h1 style="font-size:26px;font-weight:700;margin-top:12px;color:var(--chalk);">Sign in to Athena</h1>
+    <p class="sub" style="font-size:13px;color:var(--text-3);max-width:440px;margin:6px auto 0 auto;">
+      Access your private multi-agent job matching pipeline, tailored bullet bank, and live ATS telemetry.
+    </p>
   </div>
 
+  {% if notice %}
+  <div class="box info" style="margin-bottom:16px;padding:12px 14px;background:rgba(56,139,253,0.08);border:1px solid rgba(56,139,253,0.3);border-radius:6px;font-size:12.5px;color:var(--blue);line-height:1.4;">
+    <b>ℹ Note:</b> {{ notice }}
+  </div>
+  {% endif %}
+
   {% if error %}
-  <div class="box halt" style="margin-bottom:16px;">
+  <div class="box halt" style="margin-bottom:16px;padding:12px 14px;background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.3);border-radius:6px;font-size:12.5px;color:var(--red);line-height:1.4;">
     <b>Notice:</b> {{ error }}
   </div>
   {% endif %}
 
-  <div class="card" style="margin-bottom:20px;padding:20px;">
-    <div class="label" style="margin-bottom:12px;">Candidate Profiles</div>
+  {# Google OAuth Button #}
+  <div class="card" style="margin-bottom:20px;padding:20px;background:var(--card-bg);border:1px solid var(--rule);border-radius:10px;">
+    <a href="/auth/google" class="btn" style="width:100%;padding:12px 16px;background:#ffffff;color:#1f1f1f;border:1px solid #dadce0;border-radius:6px;font-weight:600;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;box-shadow:0 1px 2px rgba(0,0,0,0.05);transition:all 0.15s ease;">
+      <svg width="18" height="18" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z"/>
+        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.13C3.27 21.43 7.34 24 12 24z"/>
+        <path fill="#FBBC05" d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.13z"/>
+        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.27 2.57 1.25 6.58l4.03 3.13c.95-2.83 3.6-4.96 6.72-4.96z"/>
+      </svg>
+      <span>Continue with Google</span>
+    </a>
+    <div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:8px;">
+      Seamless single sign-on for working professionals & team members.
+    </div>
+  </div>
+
+  {# 1-Click Candidate Profiles for Shourjya, Manshi, Prerna #}
+  <div class="card" style="margin-bottom:20px;padding:20px;background:var(--card-bg);border:1px solid var(--rule);border-radius:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="label" style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;">Configured Candidate Personas</div>
+      <span style="font-size:11px;color:var(--muted);">1-Click Switch</span>
+    </div>
+    
     <div style="display:flex;flex-direction:column;gap:10px;">
       
       {# Shourjya #}
-      <form action="/login" method="post" style="margin:0;">
-        <input type="hidden" name="email" value="shourjya001@gmail.com">
-        <button type="submit" class="btn {% if user and user.email == 'shourjya001@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:8px;">
+      <a href="/auth/switch/shourjya" style="text-decoration:none;">
+        <div class="btn {% if user and user.email == 'shourjya001@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:8px;">
           <div>
-            <div style="font-weight:600;font-size:14px;color:var(--chalk);display:flex;align-items:center;gap:8px;">
+            <div style="font-weight:600;font-size:13.5px;color:var(--chalk);display:flex;align-items:center;gap:8px;">
               <span>Shourjya Hazra</span>
-              <span class="pill" style="font-size:10px;padding:1px 6px;background:rgba(56,139,253,0.15);color:var(--blue);border-color:rgba(56,139,253,0.3);">TECH</span>
+              <span class="pill" style="font-size:10px;padding:1px 6px;background:rgba(56,139,253,0.15);color:var(--blue);border-color:rgba(56,139,253,0.3);">TECH ARCHITECT</span>
             </div>
-            <div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">Backend / Distributed Systems Engineer</div>
+            <div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">Ex-NPCI UPI/IMPS • Backend, Distributed Systems & AI Engineer</div>
           </div>
           {% if user and user.email == 'shourjya001@gmail.com' %}<span class="tick" style="color:var(--green);font-weight:600;font-size:12px;">Active ✓</span>{% else %}<span style="color:var(--text-3);font-size:12px;">Switch ➔</span>{% endif %}
-        </button>
-      </form>
+        </div>
+      </a>
 
       {# Manshi #}
-      <form action="/login" method="post" style="margin:0;">
-        <input type="hidden" name="email" value="manshirohella21@gmail.com">
-        <button type="submit" class="btn {% if user and user.email == 'manshirohella21@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:8px;">
+      <a href="/auth/switch/manshi" style="text-decoration:none;">
+        <div class="btn {% if user and user.email == 'manshirohella21@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:8px;">
           <div>
-            <div style="font-weight:600;font-size:14px;color:var(--chalk);display:flex;align-items:center;gap:8px;">
+            <div style="font-weight:600;font-size:13.5px;color:var(--chalk);display:flex;align-items:center;gap:8px;">
               <span>Manshi Rohella</span>
               <span class="pill" style="font-size:10px;padding:1px 6px;background:rgba(56,139,253,0.15);color:var(--blue);border-color:rgba(56,139,253,0.3);">TECH</span>
             </div>
-            <div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">SDE / Full Stack / AI Engineer</div>
+            <div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">Software Development Engineer • Java / Spring Boot / React / SQL</div>
           </div>
           {% if user and user.email == 'manshirohella21@gmail.com' %}<span class="tick" style="color:var(--green);font-weight:600;font-size:12px;">Active ✓</span>{% else %}<span style="color:var(--text-3);font-size:12px;">Switch ➔</span>{% endif %}
-        </button>
-      </form>
+        </div>
+      </a>
 
       {# Prerna #}
-      <form action="/login" method="post" style="margin:0;">
-        <input type="hidden" name="email" value="prernarohilla050802@gmail.com">
-        <button type="submit" class="btn {% if user and user.email == 'prernarohilla050802@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:8px;">
+      <a href="/auth/switch/prerna" style="text-decoration:none;">
+        <div class="btn {% if user and user.email == 'prernarohilla050802@gmail.com' %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:8px;">
           <div>
-            <div style="font-weight:600;font-size:14px;color:var(--chalk);display:flex;align-items:center;gap:8px;">
+            <div style="font-weight:600;font-size:13.5px;color:var(--chalk);display:flex;align-items:center;gap:8px;">
               <span>Prerna Rohilla</span>
               <span class="pill" style="font-size:10px;padding:1px 6px;background:rgba(227,179,65,0.15);color:var(--signal);border-color:rgba(227,179,65,0.3);">BUSINESS</span>
             </div>
-            <div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">Banking Operations / Settlement / Operations Specialist</div>
+            <div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">Banking Operations / Settlement / Financial Operations Specialist</div>
           </div>
           {% if user and user.email == 'prernarohilla050802@gmail.com' %}<span class="tick" style="color:var(--green);font-weight:600;font-size:12px;">Active ✓</span>{% else %}<span style="color:var(--text-3);font-size:12px;">Switch ➔</span>{% endif %}
-        </button>
-      </form>
+        </div>
+      </a>
+
+      {# Public Guest Sandbox #}
+      <a href="/auth/switch/guest" style="text-decoration:none;">
+        <div class="btn {% if user and user.is_guest %}btn-primary{% else %}btn-ghost{% endif %}" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:8px;border:1px dashed var(--rule);">
+          <div>
+            <div style="font-weight:600;font-size:13.5px;color:var(--chalk);display:flex;align-items:center;gap:8px;">
+              <span>Public Showcase / Visitor Mode</span>
+              <span class="pill" style="font-size:10px;padding:1px 6px;background:rgba(139,148,158,0.15);color:var(--muted);border-color:rgba(139,148,158,0.3);">PORTFOLIO</span>
+            </div>
+            <div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">Browse public jobs, pattern visualizers, and MAP architecture without private profile data.</div>
+          </div>
+          {% if user and user.is_guest %}<span class="tick" style="color:var(--green);font-weight:600;font-size:12px;">Active ✓</span>{% else %}<span style="color:var(--text-3);font-size:12px;">Switch ➔</span>{% endif %}
+        </div>
+      </a>
 
     </div>
   </div>
 
-  <div class="card" style="padding:20px;">
-    <div class="label" style="margin-bottom:10px;">Or Sign in With Any Email</div>
+  {# Any Email Login #}
+  <div class="card" style="padding:20px;background:var(--card-bg);border:1px solid var(--rule);border-radius:10px;">
+    <div class="label" style="margin-bottom:10px;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;">Or Sign in With Professional Email</div>
     <form action="/login" method="post" style="display:flex;flex-direction:column;gap:12px;">
       <div>
         <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Email Address</label>
-        <input type="email" name="email" required placeholder="your.name@example.com" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:10px 12px;border-radius:4px;font-family:var(--mono);font-size:13px;">
+        <input type="email" name="email" required placeholder="your.name@company.com" style="width:100%;background:var(--ink);border:1px solid var(--rule);color:var(--chalk);padding:10px 12px;border-radius:6px;font-family:var(--mono);font-size:13px;">
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;">
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;font-weight:600;font-size:13px;">
         Continue to Workspace ➔
       </button>
     </form>

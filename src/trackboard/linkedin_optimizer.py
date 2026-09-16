@@ -199,18 +199,30 @@ def audit_and_optimize_profile(
         {"section": "Custom Vanity URL", "fix": "Ensure URL reflects name and core engineering focus without auto-generated digit suffixes."}
     ]
 
+    mode_clean = (mode or "standard").lower()
+
     # Try LLM synthesis for tailored rewrites
     if chain:
+        mode_instruction = (
+            "MODE: QUICK (5-minute rapid turnaround). Focus on 3 sharp headlines, top 3 highest-leverage immediate fixes, and 2 punchy bullets."
+            if mode_clean == "quick"
+            else "MODE: DEEP (Executive authority + AI talent search). Include 3 headlines, full 220-word About rewrite (Hook, Credibility, Proof, CTA), before/after bullets, 5 strategic authority posts, and a 4-week step-by-step optimization roadmap."
+            if mode_clean == "deep"
+            else "MODE: STANDARD (Complete profile overhaul). Section audit, 3 headlines, full 220-word About rewrite, experience bullets, and 3 authority posts."
+        )
+
         system = (
             "You are an elite LinkedIn Executive Ghostwriter & AI Talent Search Optimization Expert. "
             "You follow the exact 'linkedin-profile-optimizer' skill framework:\n"
-            "- Buzzword zero tolerance: never use 'results-driven', 'passionate', 'dynamic', 'synergy'.\n"
+            f"{mode_instruction}\n"
+            "- Buzzword zero tolerance: never use 'results-driven', 'passionate', 'dynamic', 'synergy', 'leveraging'.\n"
             "- Section 2 Headlines: write 3 variants (Authority-forward, Outcome-forward, Niche-specific), max 220 chars each.\n"
             "- Section 3 About: Hook (bold claim, no 'Hi I am'), Credibility, Proof with numbers, CTA. MAX 220 WORDS.\n"
             "- Section 4 Experience: Rewrite top bullets into Action + Metric + Scale.\n"
             "Return valid JSON ONLY matching the requested structure."
         )
         user_prompt = (
+            f"EXECUTION MODE: {mode_clean.upper()}\n"
             f"CURRENT HEADLINE:\n{headline}\n\n"
             f"CURRENT ABOUT:\n{about}\n\n"
             f"CURRENT EXPERIENCE:\n{experiences}\n\n"
@@ -225,7 +237,8 @@ def audit_and_optimize_profile(
             '  "about_rewrite": "string (max 220 words, Hook + Credibility + Proof + CTA)",\n'
             '  "about_word_count": 180,\n'
             '  "experience_bullet_rewrites": [{"company_role": "string", "before": "string", "after": "string"}],\n'
-            '  "sample_linkedin_posts": ["string", "string", "string"]\n'
+            '  "sample_linkedin_posts": ["string", "string", "string"],\n'
+            '  "roadmap": ["string (Week 1)", "string (Week 2)", "string (Week 3)", "string (Week 4)"]\n'
             "}"
         )
         try:
@@ -233,7 +246,11 @@ def audit_and_optimize_profile(
             match = re.search(r"\{.*\}", raw_reply, re.DOTALL)
             if match:
                 parsed = json.loads(match.group(0))
+                posts = parsed.get("sample_linkedin_posts", [])
+                if mode_clean == "quick" and len(posts) > 2:
+                    posts = posts[:2]
                 return {
+                    "mode": mode_clean,
                     "audit_scores": {
                         "headline": hl_score,
                         "about": about_score,
@@ -243,7 +260,7 @@ def audit_and_optimize_profile(
                         "total": total_audit_score,
                         "max": 50,
                     },
-                    "priority_fixes": priority_fixes,
+                    "priority_fixes": priority_fixes[:3] if mode_clean == "quick" else priority_fixes,
                     "buzzwords_found": buzzwords,
                     "headlines": {
                         "variant_a": parsed.get("headline_variant_a", headline),
@@ -257,7 +274,8 @@ def audit_and_optimize_profile(
                     },
                     "experience_bullets": parsed.get("experience_bullet_rewrites", []),
                     "ai_visibility": ai_vis,
-                    "sample_posts": parsed.get("sample_linkedin_posts", [])
+                    "sample_posts": posts,
+                    "roadmap": parsed.get("roadmap", [])
                 }
         except Exception as e:
             print("LinkedIn LLM optimization error:", e)
@@ -268,18 +286,63 @@ def audit_and_optimize_profile(
     var_b = f"Slashing p99 API latency and scaling transaction throughput for high-volume platforms | {clean_hl}"[:220]
     var_c = "Specialist in High-Throughput Distributed Microservices, Event Streaming & Modern Cloud Arch"[:220]
 
-    about_rewritten = (
-        "Architecting resilient backend systems that handle high traffic loads with sub-50ms latency.\n\n"
-        "Engineered distributed microservices, optimized SQL/NoSQL storage layers, and automated zero-downtime CI/CD pipelines. "
-        "Focused on turning complex system bottlenecks into predictable, horizontally scalable architectures.\n\n"
-        "Key Scale & Impact:\n"
-        "• Scaled API throughput to 10k+ requests/sec while cutting p95 response time by 40%\n"
-        "• Designed event-driven Kafka pipelines processing millions of daily transactions\n"
-        "• Reduced cloud infrastructure spend through automated autoscaling and containerization\n\n"
-        "If you are scaling backend architecture or hiring for high-ownership engineering roles, reach out at my contact links or send a direct message."
-    )
+    if mode_clean == "quick":
+        about_rewritten = (
+            f"Software Engineer specialized in high-scale distributed systems, low-latency APIs, and cloud architecture. "
+            f"Demonstrated track record of scaling backend services to 10k+ QPS with sub-50ms p99 latency. "
+            f"Available for senior engineering opportunities."
+        )
+        sample_posts = [
+            "Writing clean code is good. Writing observable, fault-tolerant code in production is what keeps systems alive at 3 AM."
+        ]
+        roadmap = ["Day 1: Deploy Variant A headline", "Day 3: Replace buzzwords in About", "Day 5: Update top 2 role bullets with metrics"]
+        active_fixes = priority_fixes[:3]
+    elif mode_clean == "deep":
+        about_rewritten = (
+            "Architecting resilient backend systems that handle high traffic loads with sub-50ms latency.\n\n"
+            "Engineered distributed microservices, optimized SQL/NoSQL storage layers, and automated zero-downtime CI/CD pipelines. "
+            "Focused on turning complex system bottlenecks into predictable, horizontally scalable architectures.\n\n"
+            "Key Scale & Impact:\n"
+            "• Scaled API throughput to 10k+ requests/sec while cutting p95 response time by 40%\n"
+            "• Designed event-driven Kafka pipelines processing millions of daily transactions\n"
+            "• Reduced cloud infrastructure spend through automated autoscaling and containerization\n\n"
+            "If you are scaling backend architecture or hiring for high-ownership engineering roles, reach out at my contact links or send a direct message."
+        )
+        sample_posts = [
+            "Most engineering teams try to solve database bottlenecks with bigger instances.\n\nHere is how we reduced query latency by 70% using compound indexing and Redis caching instead...",
+            "3 microservice architecture lessons I learned scaling an event stream to 10M daily events:\n\n1. Idempotency is not optional\n2. Partition keys dictate your scale\n3. Observability beats guesswork every time.",
+            "Writing clean code is good. Writing observable, fault-tolerant code in production is what keeps systems alive at 3 AM.",
+            "Why we chose Kafka over RabbitMQ for our payments event bus: ordering guarantees at scale, partition-level parallel processing, and immutable log replayability.",
+            "The best backend refactoring is the code you delete: how deprecating legacy RPC endpoints saved 120ms p99 latency across all checkout flows."
+        ]
+        roadmap = [
+            "Week 1 (Foundations): Deploy Variant A headline + clean custom LinkedIn URL.",
+            "Week 2 (Social Proof): Rewrite About section with quantified metrics and pin 2 featured architecture case studies.",
+            "Week 3 (Content Velocity): Publish 2 high-leverage technical posts on microservices scalability.",
+            "Week 4 (AI Citation Triggers): Cross-link GitHub repo and technical blog to solidify AI entity authority."
+        ]
+        active_fixes = priority_fixes
+    else:  # standard
+        about_rewritten = (
+            "Architecting resilient backend systems that handle high traffic loads with sub-50ms latency.\n\n"
+            "Engineered distributed microservices, optimized SQL/NoSQL storage layers, and automated zero-downtime CI/CD pipelines. "
+            "Focused on turning complex system bottlenecks into predictable, horizontally scalable architectures.\n\n"
+            "Key Scale & Impact:\n"
+            "• Scaled API throughput to 10k+ requests/sec while cutting p95 response time by 40%\n"
+            "• Designed event-driven Kafka pipelines processing millions of daily transactions\n"
+            "• Reduced cloud infrastructure spend through automated autoscaling and containerization\n\n"
+            "If you are scaling backend architecture or hiring for high-ownership engineering roles, reach out at my contact links or send a direct message."
+        )
+        sample_posts = [
+            "Most engineering teams try to solve database bottlenecks with bigger instances.\n\nHere is how we reduced query latency by 70% using compound indexing and Redis caching instead...",
+            "3 microservice architecture lessons I learned scaling an event stream to 10M daily events:\n\n1. Idempotency is not optional\n2. Partition keys dictate your scale\n3. Observability beats guesswork every time.",
+            "Writing clean code is good. Writing observable, fault-tolerant code in production is what keeps systems alive at 3 AM."
+        ]
+        roadmap = []
+        active_fixes = priority_fixes
 
     return {
+        "mode": mode_clean,
         "audit_scores": {
             "headline": hl_score,
             "about": about_score,
@@ -289,7 +352,7 @@ def audit_and_optimize_profile(
             "total": total_audit_score,
             "max": 50,
         },
-        "priority_fixes": priority_fixes,
+        "priority_fixes": active_fixes,
         "buzzwords_found": buzzwords,
         "headlines": {
             "variant_a": var_a,
@@ -314,12 +377,10 @@ def audit_and_optimize_profile(
             }
         ],
         "ai_visibility": ai_vis,
-        "sample_posts": [
-            "Most engineering teams try to solve database bottlenecks with bigger instances.\n\nHere is how we reduced query latency by 70% using compound indexing and Redis caching instead...",
-            "3 microservice architecture lessons I learned scaling an event stream to 10M daily events:\n\n1. Idempotency is not optional\n2. Partition keys dictate your scale\n3. Observability beats guesswork every time.",
-            "Writing clean code is good. Writing observable, fault-tolerant code in production is what keeps systems alive at 3 AM."
-        ]
+        "sample_posts": sample_posts,
+        "roadmap": roadmap
     }
+
 
 
 def generate_job_targeted_linkedin_seo(

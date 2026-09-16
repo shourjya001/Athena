@@ -49,14 +49,24 @@ def ensure_user(email: str, display_name: str | None = None) -> int:
 def current_user(request: Any = None) -> dict:
     s = get_settings()
     email = None
+    is_authenticated = False
+
     if request is not None:
         cookie_email = request.cookies.get("trackboard_user")
         if cookie_email:
             clean = resolve_email(cookie_email)
             if clean:
                 email = clean
+                is_authenticated = True
+
     if not email:
         email = resolve_email(s.dev_user_email)
+        # If there's a request with no cookie, mark as guest/public visitor
+        if request is not None and not request.cookies.get("trackboard_user"):
+            is_authenticated = False
+        else:
+            is_authenticated = True
+
     uid = ensure_user(email)
     row = db.query_one("SELECT * FROM users WHERE id = ?", (uid,))
     user_dict = dict(row) if row else {"id": uid, "email": email}
@@ -66,5 +76,7 @@ def current_user(request: Any = None) -> dict:
     }
     user_dict["answers"] = answers
     user_dict["track"] = answers.get("track", "tech")
+    user_dict["is_authenticated"] = is_authenticated
+    user_dict["is_guest"] = not is_authenticated
     return user_dict
 

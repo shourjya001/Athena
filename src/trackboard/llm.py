@@ -203,6 +203,10 @@ class Chain:
     providers: list[Provider] = field(default_factory=default_providers)
     callers: dict[str, Caller] = field(default_factory=lambda: dict(_CALLERS))
 
+    @classmethod
+    def from_env(cls) -> "Chain":
+        return cls()
+
     def complete(self, task_class: str, system: str, user: str) -> tuple[str, str]:
         """task_class: 'fast' | 'capable'. Returns (reply, provider_name).
         Raises RuntimeError('llm_chain_exhausted') when nothing is available —

@@ -9,7 +9,20 @@
 
 {% set order = ['prepared','submitted','acknowledged','screening','assessment','interview','offer','rejected','ghosted','withdrawn'] %}
 {% set any = cols|length > 0 %}
-{% if any %}
+
+{% if user and user.is_guest %}
+<div class="card" style="margin-bottom:24px;padding:24px;background:linear-gradient(135deg, rgba(56,139,253,0.06) 0%, rgba(13,17,23,0.95) 100%);border:1px solid rgba(56,139,253,0.25);border-radius:10px;text-align:center;">
+  <div style="font-size:26px;margin-bottom:8px;">🔒</div>
+  <h2 style="font-size:16px;font-weight:700;color:var(--chalk);margin:0 0 6px 0;">Private Candidate Application Pipeline</h2>
+  <p style="font-size:13px;color:var(--text-3);max-width:560px;margin:0 auto 16px auto;line-height:1.5;">
+    You are currently viewing Athena in <b>Public Visitor Mode</b>. Candidate job applications, interview timelines, and recruiter correspondence are strictly isolated per authenticated user in SQLite with zero cross-tenant leakage.
+  </p>
+  <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+    <a href="/login" class="btn btn-primary" style="padding:8px 18px;font-size:12.5px;font-weight:600;">Sign in with Google / Profile ➔</a>
+    <a href="/auth/switch/shourjya" class="btn btn-ghost" style="padding:8px 18px;font-size:12.5px;">Preview Shourjya's Pipeline</a>
+  </div>
+</div>
+{% elif any %}
 {% for st in order %}{% if cols.get(st) %}
 <h2>
   <span class="flap flap-{{ st }} flip">{{ st }}</span>

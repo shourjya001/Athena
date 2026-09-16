@@ -15,7 +15,7 @@ def fix_db(db_path: Path):
             shourjya_answers = {
                 "titles": "SDE, Backend Engineer, Software Engineer, Software Development Engineer, Python Developer, AI Engineer, Full Stack Developer, Member of Technical Staff",
                 "avoid_titles": "Senior, Staff, Principal, Lead, Engineering Manager, Director, VP, Business Analyst, Operations",
-                "keywords": "Python, FastAPI, Kafka, Go, PostgreSQL, Docker, Redis, Kubernetes, Distributed Systems, Microservices, REST APIs, LLM, System Design",
+                "keywords": "Python, FastAPI, Kafka, Go, PostgreSQL, Docker, Redis, Kubernetes, Distributed Systems, Microservices, REST APIs, LLM, System Design, High Scale, UPI, Payments",
                 "locations": "Bengaluru, Mumbai, Remote, India",
                 "min_ctc": "15 LPA",
                 "experience_years": "2",
@@ -24,14 +24,15 @@ def fix_db(db_path: Path):
             for k, v in shourjya_answers.items():
                 conn.execute("INSERT INTO profile_answers (user_id, key, value) VALUES (?, ?, ?) ON CONFLICT(user_id, key) DO UPDATE SET value=excluded.value", (uid1, k, v))
 
-        # 2. Fix User 2: Manshi Rohella (Tech & AI)
+        # 2. Fix User 2: Manshi Rohella (Tech Only - No Python, No Business/Operations)
         conn.execute("INSERT INTO users (email, display_name, leetcode_user, created_at, last_seen_at) VALUES ('manshirohella21@gmail.com', 'Manshi Rohella', 'manshi_codes', datetime('now'), datetime('now')) ON CONFLICT(email) DO UPDATE SET display_name='Manshi Rohella', leetcode_user='manshi_codes'")
         u2 = conn.execute("SELECT id FROM users WHERE email='manshirohella21@gmail.com'").fetchone()
         if u2:
             uid2 = u2["id"]
             manshi_answers = {
-                "titles": "Software Development Engineer, SDE, Backend Engineer, Full Stack Developer, Python Developer, Software Engineer",
-                "keywords": "Python, FastAPI, Django, PostgreSQL, Docker, Redis, REST APIs, React, JavaScript, Microservices, SQL",
+                "titles": "Software Development Engineer, SDE, Software Engineer, Full Stack Developer, Frontend Developer, Java Developer, Backend Engineer",
+                "avoid_titles": "Python, Senior, Staff, Principal, Lead, Engineering Manager, Director, VP, Business Analyst, Operations, Banking Operations, Sales, Marketing",
+                "keywords": "Java, Spring Boot, React, JavaScript, TypeScript, SQL, MySQL, REST APIs, Microservices, Git, HTML, CSS, Web Development",
                 "locations": "Bengaluru, Mumbai, Remote, India",
                 "min_ctc": "10 LPA",
                 "experience_years": "2",

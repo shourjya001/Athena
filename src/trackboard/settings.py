@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     owner_email: str = ""
     dev_user_email: str = "you@example.com"
     contact_email: str = "you@example.com"
+    google_client_id: str = ""
+    google_client_secret: str = ""
 
     youtube_api_key: str = ""
     gemini_api_key: str = ""

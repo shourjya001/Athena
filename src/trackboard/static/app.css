@@ -1404,5 +1404,274 @@ td a:hover { color: var(--blue); }
   box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
 }
 
+/* ──────────────────────────────────────────────────────────────
+   ATHENA — 3D Holographic Terminal & Futuristic Studios
+   Pure CSS3 3D transforms (60fps, zero WebGL overhead)
+   ────────────────────────────────────────────────────────────── */
 
+.athena-hero-container {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 28px;
+  align-items: center;
+  background: radial-gradient(circle at 85% 30%, rgba(88, 166, 255, 0.08) 0%, rgba(13, 17, 23, 0.95) 70%), var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 36px 40px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
 
+.athena-hero-container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--blue), var(--purple), transparent);
+}
+
+.athena-tagline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(88, 166, 255, 0.1);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-family: var(--mono);
+  color: var(--blue);
+  letter-spacing: 0.05em;
+  margin-bottom: 14px;
+}
+
+.athena-hero-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-0);
+  line-height: 1.2;
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.athena-hero-sub {
+  font-size: 14.5px;
+  color: var(--text-1);
+  line-height: 1.6;
+  margin: 0 0 20px;
+  max-width: 540px;
+}
+
+.athena-creator-credit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  margin-bottom: 24px;
+}
+
+.athena-creator-credit strong {
+  color: var(--text-0);
+}
+
+/* 3D Hologram Terminal Stage */
+.athena-3d-stage {
+  width: 280px;
+  height: 280px;
+  perspective: 900px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 0 auto;
+}
+
+.athena-3d-globe {
+  width: 200px;
+  height: 200px;
+  transform-style: preserve-3d;
+  animation: floatOrb 6s ease-in-out infinite alternate;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes floatOrb {
+  0% { transform: translateY(0px) rotateX(15deg); }
+  100% { transform: translateY(-12px) rotateX(25deg); }
+}
+
+.hologram-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px dashed;
+  pointer-events: none;
+}
+
+.ring-1 {
+  width: 190px;
+  height: 190px;
+  border-color: rgba(88, 166, 255, 0.45);
+  animation: spinRing1 12s linear infinite;
+  box-shadow: 0 0 20px rgba(88, 166, 255, 0.2);
+}
+
+.ring-2 {
+  width: 150px;
+  height: 150px;
+  border-color: rgba(188, 140, 255, 0.45);
+  animation: spinRing2 9s linear infinite reverse;
+}
+
+.ring-3 {
+  width: 110px;
+  height: 110px;
+  border-color: rgba(63, 185, 80, 0.45);
+  animation: spinRing3 6s linear infinite;
+}
+
+@keyframes spinRing1 {
+  from { transform: rotateZ(0deg) rotateX(65deg); }
+  to { transform: rotateZ(360deg) rotateX(65deg); }
+}
+@keyframes spinRing2 {
+  from { transform: rotateZ(0deg) rotateY(60deg); }
+  to { transform: rotateZ(360deg) rotateY(60deg); }
+}
+@keyframes spinRing3 {
+  from { transform: rotateX(0deg) rotateY(45deg); }
+  to { transform: rotateX(360deg) rotateY(45deg); }
+}
+
+.athena-core-node {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #58A6FF 0%, #161B22 90%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px rgba(88, 166, 255, 0.6), 0 0 10px rgba(188, 140, 255, 0.4);
+  z-index: 5;
+  font-size: 22px;
+  color: #fff;
+  animation: pulseGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(0.95); box-shadow: 0 0 20px rgba(88, 166, 255, 0.4); }
+  100% { transform: scale(1.08); box-shadow: 0 0 40px rgba(88, 166, 255, 0.8), 0 0 15px rgba(63, 185, 80, 0.5); }
+}
+
+.agent-status-tag {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(22, 27, 34, 0.9);
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.agent-status-tag .pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: blinkDot 1.5s infinite;
+}
+
+@keyframes blinkDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Studio Navigation Cards */
+.studio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.studio-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 22px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.studio-card:hover {
+  background: var(--bg-2);
+  border-color: var(--blue);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.studio-card .studio-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.studio-card .studio-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-0);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.studio-card .studio-desc {
+  font-size: 12.5px;
+  color: var(--text-2);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.studio-card .studio-meta {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.btn-linkedin-contact {
+  background: #0A66C2;
+  color: #fff !important;
+  border: 1px solid #004182;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12.5px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.btn-linkedin-contact:hover {
+  background: #004182;
+  transform: translateY(-1px);
+}

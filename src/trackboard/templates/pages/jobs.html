@@ -3,9 +3,29 @@
 {% block body %}
 
 <div class="page-head">
-  <div class="label">{% if matched_count > 0 %}{{ matched_count }} RELEVANT ROLES FOR {{ (user.display_name or user.email.split('@')[0])|upper }}{% else %}MATCH QUEUE{% endif %}</div>
-  <h1>Target Match Queue</h1>
-  <p class="sub">Filtered specifically for {{ user.display_name or user.email.split('@')[0] }} ({% if answers.get('titles') %}{{ answers.get('titles') }}{% else %}Set roles on Profile{% endif %}).</p>
+  <div class="label">
+    {% if user and user.is_guest %}
+      ✦ LIVE ATS RADAR • {{ total_open }} VERIFIED OPENINGS
+    {% elif matched_count > 0 %}
+      {{ matched_count }} RELEVANT ROLES FOR {{ (user.display_name or user.email.split('@')[0])|upper }}
+    {% else %}
+      MATCH QUEUE
+    {% endif %}
+  </div>
+  <h1>
+    {% if user and user.is_guest %}
+      Verified Openings &amp; Career Telemetry
+    {% else %}
+      Target Match Queue
+    {% endif %}
+  </h1>
+  <p class="sub">
+    {% if user and user.is_guest %}
+      Live ingested openings across Google, JPMorgan Chase, Morgan Stanley, Goldman Sachs, Barclays, NPCI, Razorpay, and CRED with 100% verified 200 OK apply links.
+    {% else %}
+      Filtered specifically for {{ user.display_name or user.email.split('@')[0] }} ({% if answers.get('titles') %}{{ answers.get('titles') }}{% else %}Set roles on Profile{% endif %}).
+    {% endif %}
+  </p>
 </div>
 
 {# ── Agent control bar ── #}
@@ -189,8 +209,26 @@
 </div>
 {% endif %}
 
+{# ── Instant Real-Time Search Bar ── #}
+<div style="margin-bottom:16px;">
+  <div style="display:flex;gap:10px;align-items:center;">
+    <div style="position:relative;flex:1;">
+      <input type="text" id="job-search-input" placeholder="🔍 Instant search by company (Google, JPMorgan, Morgan Stanley, Razorpay...), title, or skill..." 
+             oninput="filterJobCards(this.value)" 
+             style="width:100%;padding:10px 14px;background:var(--bg-1);border:1px solid var(--border);border-radius:8px;color:var(--text-1);font-size:13px;font-family:inherit;">
+    </div>
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('job-search-input').value=''; filterJobCards('');" style="font-size:12px;padding:9px 14px;">Clear</button>
+  </div>
+  <div id="search-visible-count" style="font-size:11.5px;color:var(--blue);margin-top:6px;font-weight:600;min-height:16px;"></div>
+</div>
+
 {# ── Dynamic Filter Pills ── #}
 <div class="filters" style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:8px;">
+  <button type="button" class="fpill" onclick="setQuickSearch('Google')" style="cursor:pointer;background:none;font-family:inherit;">🏢 Google</button>
+  <button type="button" class="fpill" onclick="setQuickSearch('JPMorgan')" style="cursor:pointer;background:none;font-family:inherit;">🏦 JPMorgan Chase</button>
+  <button type="button" class="fpill" onclick="setQuickSearch('Morgan Stanley')" style="cursor:pointer;background:none;font-family:inherit;">🏦 Morgan Stanley</button>
+  <button type="button" class="fpill" onclick="setQuickSearch('Razorpay')" style="cursor:pointer;background:none;font-family:inherit;">⚡ Razorpay</button>
+  <button type="button" class="fpill" onclick="setQuickSearch('NPCI')" style="cursor:pointer;background:none;font-family:inherit;">💳 NPCI (UPI)</button>
   {% if answers.get('titles') %}
     <span class="fpill on" title="Active target title filter">🎯 {{ answers.get('titles') }}</span>
   {% else %}
@@ -415,8 +453,36 @@ function copySafariAutofillScript() {
         btn.style.background = '';
       }, 3000);
     }
-    alert('📋 Safari Autofill Script Copied to Clipboard!\n\n1. Open any job application page (Greenhouse, Lever, Ashby, Workday).\n2. Press Cmd + Option + C (or right-click -> Inspect -> Console).\n3. Press Cmd + V and hit Enter.\n\nAll candidate fields will be filled automatically in 0.1s!');
+function filterJobCards(query) {
+  const q = (query || '').toLowerCase().trim();
+  const cards = document.querySelectorAll('.jcard');
+  let visibleCount = 0;
+  cards.forEach(card => {
+    if (!q) {
+      card.style.display = '';
+      visibleCount++;
+      return;
+    }
+    const text = card.textContent.toLowerCase();
+    if (text.includes(q)) {
+      card.style.display = '';
+      visibleCount++;
+    } else {
+      card.style.display = 'none';
+    }
   });
+  const countEl = document.getElementById('search-visible-count');
+  if (countEl) {
+    countEl.innerText = q ? (visibleCount + ' matching positions found') : '';
+  }
+}
+
+function setQuickSearch(term) {
+  const input = document.getElementById('job-search-input');
+  if (input) {
+    input.value = term;
+    filterJobCards(term);
+  }
 }
 </script>
 

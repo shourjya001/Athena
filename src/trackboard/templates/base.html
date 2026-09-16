@@ -11,35 +11,50 @@
 </head>
 <body>
 <div class="topbar"><div class="wrap" style="display:flex;justify-content:space-between;align-items:center;">
-  <div style="display:flex;align-items:center;gap:20px;">
-    <a class="brand" href="/">Trackboard</a>
+  <div style="display:flex;align-items:center;gap:18px;">
+    <a class="brand" href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      <span style="color:var(--text-0);font-weight:800;letter-spacing:-0.02em;">✦ ATHENA</span>
+      <span style="font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:10px;background:rgba(88,166,255,0.15);color:var(--blue);border:1px solid rgba(88,166,255,0.3);">MAP v2.4</span>
+    </a>
     <nav>
-      <a href="/" class="{% if nav=='today' %}on{% endif %}">Today</a>
-      <a href="/jobs" class="{% if nav=='jobs' %}on{% endif %}">Jobs</a>
-      <a href="/pipeline" class="{% if nav=='pipeline' %}on{% endif %}">Pipeline</a>
+      <a href="/" class="{% if nav=='today' %}on{% endif %}">⚡ Command Center</a>
+      <a href="/jobs" class="{% if nav=='jobs' or nav=='pipeline' %}on{% endif %}">💼 Jobs &amp; Tracker</a>
+      <a href="/linkedin" class="{% if nav=='linkedin' or nav=='profile' %}on{% endif %}">🎯 Career AI Studio</a>
       {% if not user or user.get('track', 'tech') != 'business' %}
-      <a href="/patterns" class="{% if nav=='patterns' %}on{% endif %}">Patterns</a>
-      <a href="/practice" class="{% if nav=='practice' %}on{% endif %}">Practice</a>
-      <a href="/drill" class="{% if nav=='drill' %}on{% endif %}">Drill</a>
+      <a href="/patterns" class="{% if nav=='patterns' or nav=='practice' or nav=='drill' %}on{% endif %}">🧪 Prep Lab</a>
       {% endif %}
-      <a href="/profile" class="{% if nav=='profile' %}on{% endif %}">Profile</a>
-      <a href="/linkedin" class="{% if nav=='linkedin' %}on{% endif %}">LinkedIn AI</a>
       {% if user and (user.email == 'shourjya001@gmail.com' or user.email == 'you@example.com') %}
-      <a href="/system" class="{% if nav=='system' %}on{% endif %}">System</a>
+      <a href="/system" class="{% if nav=='system' %}on{% endif %}">⚙️ System</a>
       {% endif %}
     </nav>
   </div>
-  <div style="display:flex;align-items:center;gap:10px;">
-    {% if user and user.email %}
-    <a href="/profile" style="font-family:var(--mono);font-size:11px;color:var(--chalk);text-decoration:none;padding:4px 10px;border-radius:4px;border:1px solid var(--rule);background:var(--slate);" title="My Profile & Resume">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="https://www.linkedin.com/in/shourjya-hazra-683128200/" target="_blank" rel="noopener noreferrer" class="btn-linkedin-contact" title="Connect with Shourjya on LinkedIn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.45a1.64 1.64 0 1 0 0 3.28 1.64 1.64 0 0 0 0-3.28z"/></svg>
+      <span>Connect on LinkedIn</span>
+    </a>
+    {% if user and user.is_authenticated %}
+    <a href="/profile" style="font-family:var(--mono);font-size:11px;color:var(--text-1);text-decoration:none;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-1);" title="My Profile & Twin Config">
       👤 {{ user.display_name or user.email.split('@')[0] }}
     </a>
-    <a href="/login" style="font-family:var(--mono);font-size:10px;color:var(--muted);text-decoration:none;" title="Switch Account">
+    <a href="/login" style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-decoration:none;" title="Switch Account">
       (switch)
+    </a>
+    {% else %}
+    <a href="/login" class="btn btn-ghost" style="padding:4px 10px;font-size:11.5px;font-weight:600;" title="Sign in or Switch Twin Persona">
+      Sign in / Switch
     </a>
     {% endif %}
   </div>
 </div></div>
 <div class="wrap">{% block body %}{% endblock %}</div>
+<footer style="margin-top:60px;padding:24px 0;border-top:1px solid var(--border);font-size:12px;color:var(--text-2);text-align:center;">
+  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div>✦ <strong>ATHENA Career OS</strong> • Conceived &amp; Engineered by <strong>Shourjya Hazra</strong></div>
+    <div>Zero-ORM SQLite • 24/7 Multi-Agent Protocol • Multi-Provider LLM Cascade</div>
+    <div><a href="https://www.linkedin.com/in/shourjya-hazra-683128200/" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none;">Connect on LinkedIn →</a></div>
+  </div>
+</footer>
+
 </body>
 </html>

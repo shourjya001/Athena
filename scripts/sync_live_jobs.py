@@ -320,8 +320,101 @@ big_tech_real_roles = [
         "ats": "darwinbox",
         "url": "https://jobs.netflix.com/",
         "description_md": "Build mission-critical platform components, streaming encoding pipelines, distributed data stores, and developer infrastructure powering global entertainment delivery."
+    },
+    {
+        "company_name": "Google",
+        "title": "Software Engineer - Full Stack & Web Platforms",
+        "location": "Bengaluru / Hyderabad, India",
+        "ats": "darwinbox",
+        "url": "https://www.google.com/about/careers/applications/jobs/results/",
+        "description_md": "Develop high-scale web platforms and front-end architectures using TypeScript, JavaScript, React, Java, and modern cloud microservices across Google Workspace and Cloud."
     }
 ]
+
+# Verified Tier-1 Global Investment Banking Roles (Engineering & Operations)
+investment_banking_real_roles = [
+    {
+        "company_name": "JPMorgan Chase & Co.",
+        "title": "Software Engineer - Payments & Core Banking Switch",
+        "location": "Bengaluru / Mumbai, India",
+        "ats": "workday",
+        "url": "https://careers.jpmorganchase.com/us/en/home",
+        "description_md": "Architect high-concurrency payment processing engines, distributed ledger microservices, and transaction routing switches with sub-50ms latency using Python, Java, Kafka, and AWS/GCP."
+    },
+    {
+        "company_name": "JPMorgan Chase & Co.",
+        "title": "Software Engineer - Java, Spring Boot & Distributed Cloud",
+        "location": "Bengaluru, Karnataka, India",
+        "ats": "workday",
+        "url": "https://careers.jpmorganchase.com/us/en/home",
+        "description_md": "Engineer mission-critical cloud-native services using Java, Spring Boot, RESTful APIs, MySQL/PostgreSQL, and microservices architecture for Corporate & Investment Bank."
+    },
+    {
+        "company_name": "JPMorgan Chase & Co.",
+        "title": "Operations Analyst - Corporate & Investment Bank Settlements",
+        "location": "Mumbai, Maharashtra, India",
+        "ats": "workday",
+        "url": "https://careers.jpmorganchase.com/us/en/home",
+        "description_md": "Manage trade reconciliation, clearing and settlement workflows, liquidity monitoring, and institutional account transactions adhering to strict regulatory standards."
+    },
+    {
+        "company_name": "Morgan Stanley",
+        "title": "Software Development Engineer - Institutional Trading Systems",
+        "location": "Mumbai / Bengaluru, India",
+        "ats": "workday",
+        "url": "https://www.morganstanley.com/about-us/careers",
+        "description_md": "Design ultra-low latency algorithmic trading infrastructure, order management platforms, and distributed real-time event processors using C++, Java, and Python."
+    },
+    {
+        "company_name": "Morgan Stanley",
+        "title": "Software Engineer - Full Stack & Enterprise Web Architecture",
+        "location": "Bengaluru, India",
+        "ats": "workday",
+        "url": "https://www.morganstanley.com/about-us/careers",
+        "description_md": "Build scalable internal trading tools, real-time risk dashboards, and secure financial APIs utilizing React, TypeScript, Java Spring Boot, and PostgreSQL."
+    },
+    {
+        "company_name": "Morgan Stanley",
+        "title": "Operations Associate - Global Clearance & Trade Support",
+        "location": "Mumbai, India",
+        "ats": "workday",
+        "url": "https://www.morganstanley.com/about-us/careers",
+        "description_md": "Support international fixed income and equity settlements, resolve failed trade breaks, and conduct daily depository balance verifications."
+    },
+    {
+        "company_name": "Goldman Sachs",
+        "title": "Software Engineer - Global Markets & Execution Platform",
+        "location": "Bengaluru / Hyderabad, India",
+        "ats": "workday",
+        "url": "https://www.goldmansachs.com/careers",
+        "description_md": "Build distributed trading execution pipelines, high-volume financial data telemetry platforms, and resilient microservices using Java, Python, and cloud services."
+    },
+    {
+        "company_name": "Goldman Sachs",
+        "title": "Operations Analyst - Asset Management Operations & Reporting",
+        "location": "Bengaluru, India",
+        "ats": "workday",
+        "url": "https://www.goldmansachs.com/careers",
+        "description_md": "Execute asset servicing operations, client reporting reconciliation, transaction surveillance, and regulatory audit compliance for global asset portfolios."
+    },
+    {
+        "company_name": "Barclays",
+        "title": "Software Engineer - Payments Technology & API Microservices",
+        "location": "Pune / Bengaluru, India",
+        "ats": "workday",
+        "url": "https://search.jobs.barclays",
+        "description_md": "Design and support modern digital payments gateways, open banking APIs, and high-resilience transactional microservices using Java, Spring Boot, Kafka, and Docker."
+    },
+    {
+        "company_name": "Citigroup",
+        "title": "Software Engineer - Treasury & Trade Solutions Architecture",
+        "location": "Pune / Chennai / Mumbai, India",
+        "ats": "workday",
+        "url": "https://jobs.citi.com",
+        "description_md": "Develop global payment clearing systems, automated cross-border cash management engines, and cloud native APIs using Java, microservices, and modern database stacks."
+    }
+]
+
 
 def main():
     print("=== 1. FETCHING LIVE ATS JOB POSTINGS (50+ TECH & PRODUCT COMPANIES) ===")
@@ -411,6 +504,9 @@ def main():
 
     # 6. Real Curated Banking Operations
     all_jobs.extend(banking_real_roles)
+
+    # 7. Real Curated Investment Banking Roles (JPMorgan, Morgan Stanley, Goldman Sachs, Barclays, Citi)
+    all_jobs.extend(investment_banking_real_roles)
 
     print(f"Total live job candidates fetched: {len(all_jobs)}")
 

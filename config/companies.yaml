@@ -1,4 +1,28 @@
 companies:
+- name: JPMorgan Chase & Co.
+  careers_url: https://careers.jpmorganchase.com/
+  ats: workday
+  token: jpmc.wd1.myworkdayjobs.com/JPMorganChaseCareers
+- name: Morgan Stanley
+  careers_url: https://morganstanley.wd5.myworkdayjobs.com/External
+  ats: workday
+  token: morganstanley.wd5.myworkdayjobs.com/External
+- name: Goldman Sachs
+  careers_url: https://www.goldmansachs.com/careers
+  ats: workday
+  token: goldmansachs.wd1.myworkdayjobs.com/GS_Careers
+- name: Barclays
+  careers_url: https://search.jobs.barclays
+  ats: workday
+  token: barclays.wd3.myworkdayjobs.com/BarclaysCareers
+- name: Citigroup
+  careers_url: https://jobs.citi.com
+  ats: workday
+  token: citi.wd5.myworkdayjobs.com/CitiCareers
+- name: Google
+  careers_url: https://careers.google.com
+  ats: workday
+  token: google.com/careers
 - name: Visa
   careers_url: https://visa.wd5.myworkdayjobs.com/Visa
   ats: workday
