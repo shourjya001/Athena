@@ -14,6 +14,35 @@
   <span>videos <b>{{ health.resources }}</b></span>
 </div>
 
+<h2>Registered Candidate Digital Twins ({{ registered_users|length }})</h2>
+{% if registered_users %}
+<table style="margin-bottom:32px;">
+  <tr><th>ID</th><th>Candidate</th><th>Email</th><th>Resumes</th><th>Matches</th><th>Pipeline</th><th>Last Active</th><th>Action</th></tr>
+  {% for u in registered_users %}
+  <tr>
+    <td><span class="mono">{{ u.id }}</span></td>
+    <td><b>{{ u.display_name or 'Candidate' }}</b></td>
+    <td><span class="mono" style="font-size:11.5px;color:var(--text-1);">{{ u.email }}</span></td>
+    <td><span class="mono">{{ u.resume_count }}</span></td>
+    <td><span class="mono">{{ u.match_count }}</span></td>
+    <td><span class="mono">{{ u.app_count }}</span></td>
+    <td><span class="mono" style="font-size:11px;color:var(--text-3);">{{ u.last_seen_at }}</span></td>
+    <td>
+      {% if u.email in ['shourjya001@gmail.com', 'you@example.com'] %}
+        <span class="pill" style="font-size:10px;padding:2px 6px;color:var(--blue);border-color:rgba(56,139,253,0.4);">Master Admin</span>
+      {% else %}
+        <form action="/system/users/{{ u.id }}/delete" method="post" onsubmit="return confirm('Permanently delete candidate {{ u.display_name }} ({{ u.email }}) and all their data?');" style="margin:0;">
+          <button type="submit" class="btn" style="background:rgba(248,81,73,0.1);color:var(--red);border:1px solid rgba(248,81,73,0.3);font-size:11px;padding:3px 8px;border-radius:4px;">
+            Delete
+          </button>
+        </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
 <h2>Recent agent runs</h2>
 {% if runs %}
 <table>

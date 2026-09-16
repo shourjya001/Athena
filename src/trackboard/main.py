@@ -6,7 +6,7 @@ from datetime import UTC
 from pathlib import Path
 
 from fastapi import BackgroundTasks, FastAPI, File, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -831,6 +831,14 @@ def create_app() -> FastAPI:
             for r in db.query("SELECT key, value FROM profile_answers WHERE user_id=?", (user["id"],))
         }
         runs = db.query("SELECT * FROM agent_runs ORDER BY started_at DESC LIMIT 50")
+        registered_users = db.query("""
+            SELECT u.*,
+                   (SELECT COUNT(*) FROM resumes r WHERE r.user_id = u.id) as resume_count,
+                   (SELECT COUNT(*) FROM applications a WHERE a.user_id = u.id) as app_count,
+                   (SELECT COUNT(*) FROM matches m WHERE m.user_id = u.id) as match_count
+            FROM users u
+            ORDER BY u.last_seen_at DESC
+        """)
         return templates.TemplateResponse(
             request,
             "pages/system.html",
@@ -838,6 +846,7 @@ def create_app() -> FastAPI:
                 "user": user,
                 "answers": answers,
                 "runs": [dict(r) for r in runs],
+                "registered_users": [dict(u) for u in registered_users],
                 "health": content.content_health(),
                 "db_path": str(get_settings().db_path),
                 "db_kb": (
@@ -847,6 +856,85 @@ def create_app() -> FastAPI:
                 ),
             },
         )
+
+    @app.post("/system/users/{uid}/delete")
+    def admin_delete_user(request: Request, uid: int):
+        user = users.current_user(request)
+        if not user.get("is_authenticated") or user.get("email") not in ["shourjya001@gmail.com", "you@example.com"]:
+            return RedirectResponse("/login?error=Unauthorized", status_code=303)
+        if uid == user["id"]:
+            return RedirectResponse("/system?error=Cannot+delete+your+own+master+admin+account", status_code=303)
+        
+        # Complete cascade deletion across all candidate tables
+        db.execute("DELETE FROM application_events WHERE application_id IN (SELECT id FROM applications WHERE user_id = ?)", (uid,))
+        db.execute("DELETE FROM applications WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM matches WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM resumes WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM profile_answers WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM reviews WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM attempts WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM drill_attempts WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM pattern_reviews WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM users WHERE id = ?", (uid,))
+        return RedirectResponse("/system?notice=Candidate+account+and+data+permanently+erased", status_code=303)
+
+    @app.post("/profile/delete")
+    def self_delete_profile(request: Request):
+        user = users.current_user(request)
+        if not user.get("is_authenticated"):
+            return RedirectResponse("/login", status_code=303)
+        uid = user["id"]
+        db.execute("DELETE FROM application_events WHERE application_id IN (SELECT id FROM applications WHERE user_id = ?)", (uid,))
+        db.execute("DELETE FROM applications WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM matches WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM resumes WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM profile_answers WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM reviews WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM attempts WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM drill_attempts WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM pattern_reviews WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM users WHERE id = ?", (uid,))
+        
+        resp = RedirectResponse("/login?notice=Your+candidate+profile+and+data+have+been+completely+wiped.", status_code=303)
+        resp.delete_cookie("trackboard_user")
+        return resp
+
+    @app.get("/robots.txt", response_class=PlainTextResponse)
+    def robots_txt():
+        return (
+            "User-agent: *\n"
+            "Allow: /\n"
+            "Allow: /jobs\n"
+            "Allow: /patterns\n"
+            "Allow: /patterns/*\n"
+            "Allow: /linkedin\n"
+            "Allow: /login\n"
+            "Disallow: /profile\n"
+            "Disallow: /pipeline\n"
+            "Disallow: /system\n"
+            "Disallow: /auth/\n\n"
+            "Sitemap: https://athena-phi-one.vercel.app/sitemap.xml\n"
+        )
+
+    @app.get("/sitemap.xml")
+    def sitemap_xml():
+        pats = db.query("SELECT slug FROM patterns")
+        urls = [
+            "https://athena-phi-one.vercel.app/",
+            "https://athena-phi-one.vercel.app/jobs",
+            "https://athena-phi-one.vercel.app/patterns",
+            "https://athena-phi-one.vercel.app/linkedin",
+            "https://athena-phi-one.vercel.app/login",
+        ]
+        for p in pats:
+            urls.append(f"https://athena-phi-one.vercel.app/patterns/{p['slug']}")
+        
+        xml_items = "\n".join(f"  <url><loc>{u}</loc><changefreq>daily</changefreq><priority>0.8</priority></url>" for u in urls)
+        content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{xml_items}
+</urlset>"""
+        return Response(content=content, media_type="application/xml")
 
     @app.get("/profile", response_class=HTMLResponse)
     def profile_page(request: Request, saved: int = 0, resume_saved: int = 0, matched: int = 0, error: str | None = None):

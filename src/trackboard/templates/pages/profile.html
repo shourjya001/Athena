@@ -151,5 +151,24 @@
     </div>
   </div>
 
+  {# Danger Zone: Account & Profile Erasure #}
+  <div class="card" style="margin-top:32px;padding:20px;border:1px solid rgba(248,81,73,0.3);background:rgba(248,81,73,0.03);border-radius:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <div>
+        <div style="color:var(--red);font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;">
+          <span>⚠️</span> Danger Zone: Erase Digital Twin Profile
+        </div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:4px;max-width:540px;line-height:1.4;">
+          Permanently deletes your account, uploaded resumes, ATS match records, bullet bank, and application pipeline from SQLite. This action cannot be undone.
+        </div>
+      </div>
+      <form action="/profile/delete" method="post" onsubmit="return confirm('Are you sure you want to permanently erase your profile and all associated data? This cannot be undone.');">
+        <button type="submit" class="btn" style="background:rgba(248,81,73,0.15);color:var(--red);border:1px solid rgba(248,81,73,0.4);font-weight:600;font-size:12.5px;padding:8px 16px;">
+          🗑️ Erase My Profile
+        </button>
+      </form>
+    </div>
+  </div>
+
 </div>
 {% endblock %}

@@ -75,3 +75,18 @@ def test_protected_routes_require_authentication():
 
     r_jobs = client.get("/jobs")
     assert r_jobs.status_code == 200
+
+    # 7. SEO endpoints
+    r_robots = client.get("/robots.txt")
+    assert r_robots.status_code == 200
+    assert "Sitemap:" in r_robots.text
+
+    r_sitemap = client.get("/sitemap.xml")
+    assert r_sitemap.status_code == 200
+    assert "<urlset" in r_sitemap.text
+
+    # 8. Self-service profile deletion
+    client_test = TestClient(app, follow_redirects=False, cookies={"trackboard_user": "temp_delete_user@gmail.com"})
+    r_del = client_test.post("/profile/delete")
+    assert r_del.status_code == 303
+    assert "/login" in r_del.headers.get("location")
