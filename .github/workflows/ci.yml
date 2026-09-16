@@ -30,6 +30,7 @@ jobs:
           uv run trackboard migrate
           uv run python scripts/seed_patterns.py
           uv run python scripts/seed_problems.py
+          uv run python scripts/fix_seed_profiles.py
 
       - name: Run Pytest Suite
         run: uv run pytest -v tests/

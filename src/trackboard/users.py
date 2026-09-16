@@ -33,8 +33,16 @@ def resolve_email(input_str: str) -> str:
     return ALIAS_MAP.get(clean, clean)
 
 
+PERSONA_DISPLAY_NAMES = {
+    "shourjya001@gmail.com": "Shourjya Hazra",
+    "manshirohella21@gmail.com": "Manshi Rohella",
+    "prernarohilla050802@gmail.com": "Prerna Rohilla",
+}
+
+
 def ensure_user(email: str, display_name: str | None = None) -> int:
     canonical = resolve_email(email)
+    name = display_name or PERSONA_DISPLAY_NAMES.get(canonical, canonical.split("@")[0])
     row = db.query_one("SELECT id FROM users WHERE email = ?", (canonical,))
     if row:
         db.execute("UPDATE users SET last_seen_at = datetime('now') WHERE id = ?", (row["id"],))
@@ -42,7 +50,7 @@ def ensure_user(email: str, display_name: str | None = None) -> int:
     return db.execute(
         "INSERT INTO users (email, display_name, created_at, last_seen_at) "
         "VALUES (?, ?, datetime('now'), datetime('now'))",
-        (canonical, display_name or canonical.split("@")[0]),
+        (canonical, name),
     )
 
 

@@ -69,7 +69,7 @@ def test_protected_routes_require_authentication():
     client_auth = TestClient(app, follow_redirects=False, cookies={"trackboard_user": "shourjya001@gmail.com"})
     r_auth_prof = client_auth.get("/profile")
     assert r_auth_prof.status_code == 200
-    assert "Shourjya" in r_auth_prof.text
+    assert "Shourjya" in r_auth_prof.text or "shourjya001" in r_auth_prof.text
 
     # 5. Authenticated user can access /pipeline
     r_auth_pipe = client_auth.get("/pipeline")

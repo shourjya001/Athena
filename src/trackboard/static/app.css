@@ -1497,6 +1497,8 @@ td a:hover { color: var(--blue); }
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
 /* ─── FUTURISTIC DIGITAL TWIN AVATAR & AGENTIC STAGE ─── */
 .athena-hero-container {
   display: grid;
