@@ -1306,6 +1306,14 @@ def create_app() -> FastAPI:
                 email = users.resolve_email(info.get("email", "").strip().lower())
                 name = info.get("name") or email.split("@")[0]
 
+                # Enforce ALLOWED_EMAILS whitelist if configured
+                allowed = s.allowlist
+                if allowed and email not in allowed and email not in ["shourjya001@gmail.com", s.dev_user_email.lower()]:
+                    return RedirectResponse(
+                        f"/login?error=Access+Restricted:+{email}+is+not+on+the+authorized+access+list+for+this+Athena+instance.+Please+contact+the+administrator.",
+                        status_code=303,
+                    )
+
                 users.ensure_user(email, display_name=name)
 
                 resp = RedirectResponse(url=dest, status_code=303)
@@ -1341,6 +1349,15 @@ def create_app() -> FastAPI:
 
                 email = users.resolve_email(payload.get("email", "").strip().lower())
                 name = payload.get("name") or email.split("@")[0]
+
+                # Enforce ALLOWED_EMAILS whitelist if configured
+                allowed = s.allowlist
+                if allowed and email not in allowed and email not in ["shourjya001@gmail.com", s.dev_user_email.lower()]:
+                    return RedirectResponse(
+                        f"/login?error=Access+Restricted:+{email}+is+not+on+the+authorized+access+list.",
+                        status_code=303,
+                    )
+
                 users.ensure_user(email, display_name=name)
 
                 dest = next_url if next_url.startswith("/") else "/"
