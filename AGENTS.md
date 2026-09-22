@@ -33,6 +33,7 @@ and `README.md` (current repo state) before doing anything.
   17. Single Contact Channel Exclusivity: Direct links to Shourjya Hazra's exact LinkedIn profile (https://www.linkedin.com/in/shourjya-hazra-683128200/) across base header, 3D command center, and footer with zero personal email/phone exposure.
   18. Topbar Navigation & UI Flexbox Repair: Switched topbar markup from fixed `.wrap` to fluid `.topbar-container` (1320px), unified nav pills with `white-space: nowrap` and `flex-shrink: 0`, streamlined nav link labels, and added sleek `.btn-linkedin-compact`, `.user-pill-nav`, and `.btn-logout-nav`.
   19. Standalone Master Build Guidebook (BRD & TSD): Preserved original GUIDEBOOK.md and created standalone GUIDEBOOK_MASTER_BRD_TSD.md (1,100+ lines) capturing end-to-end architecture, MAP protocol, SQLite DDLs, and Claude/GPT prompts.
+  20. Consolidated Daily Digest & Unscored Matcher Prioritization: Resolved stale 25-job repetition by creating migration 007_digest_rotation.sql (`digest_sent_at` column), prioritizing unscored matches in `matcher.py` (scoring up to 20 net-new jobs per nightly cron run), and delivering a consolidated blend of 12 Fresh/New Openings (`⚡ NEW`) + 13 Top High-Fit Roles (`🎯 TOP FIT`) with rotation.
 - NOT DONE — next steps:
   1. Real alert emails: save 1-2 per portal to a folder, run scout --alerts-dir.
   2. Hosted libSQL / Turso sync if multi-region persistent writes are required.

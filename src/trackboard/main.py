@@ -1144,23 +1144,17 @@ def create_app() -> FastAPI:
 
             if do_match:
                 try:
-                    m_res = run_matcher_for_user(u, force_bm25=False, max_batches=1)
+                    # Score up to 4 batches (20 net-new jobs) per user during nightly cron
+                    m_res = run_matcher_for_user(u, force_bm25=False, max_batches=4)
                     user_res["matched"] = m_res
                 except Exception as e:
                     user_res["matcher_error"] = str(e)[:200]
 
-            # Auto-dispatch daily HTML digest to registered email
+            # Auto-dispatch daily HTML digest to registered email with consolidated fresh & top-fit jobs
             try:
-                top_matches = db.query(
-                    "SELECT j.title, j.company_name, j.location, j.apply_url, m.fit_score, m.verdict, m.reasoning, m.bm25_score "
-                    "FROM matches m JOIN jobs j ON j.id=m.job_id "
-                    "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
-                    "AND j.id NOT IN (SELECT job_id FROM applications WHERE user_id=?) "
-                    "AND (m.fit_score IS NULL OR m.fit_score >= 40) "
-                    "ORDER BY COALESCE(m.fit_score, m.bm25_score) DESC LIMIT 25",
-                    (u["id"], u["id"])
-                )
-                top_matches = [dict(r) for r in top_matches]
+                from .agents.digest import get_consolidated_digest_matches
+                top_matches = get_consolidated_digest_matches(u["id"], total_limit=25)
+
                 if top_matches:
                     digest_payload = {
                         "top_matches": top_matches,
@@ -1171,9 +1165,14 @@ def create_app() -> FastAPI:
                     html = email.render_digest_html(digest_payload, u["email"])
                     sent = email.send_email(
                         to_email=u["email"],
-                        subject=f"⚡ Trackboard Digest: {len(top_matches)} Verified Job Recommendations for {u.get('display_name') or 'You'}",
+                        subject=f"⚡ Trackboard Digest: {len(top_matches)} Fresh Job Recommendations for {u.get('display_name') or 'You'}",
                         html_body=html
                     )
+                    if sent:
+                        now_iso = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+                        for m in top_matches:
+                            if "job_id" in m:
+                                db.execute("UPDATE matches SET digest_sent_at=? WHERE user_id=? AND job_id=?", (now_iso, u["id"], m["job_id"]))
                     user_res["digest_dispatched"] = sent
                     user_res["jobs_sent"] = len(top_matches)
                 else:
@@ -1191,14 +1190,8 @@ def create_app() -> FastAPI:
     def send_test_digest_route(request: Request):
         user = users.current_user(request)
         from . import email
-        top_matches = db.query(
-            "SELECT j.title, j.company_name, j.location, j.apply_url, m.fit_score, m.verdict, m.reasoning, m.bm25_score "
-            "FROM matches m JOIN jobs j ON j.id=m.job_id "
-            "WHERE m.user_id=? AND m.dismissed_at IS NULL AND j.closed_at IS NULL "
-            "ORDER BY COALESCE(m.fit_score, m.bm25_score) DESC",
-            (user["id"],)
-        )
-        top_matches = [dict(r) for r in top_matches]
+        from .agents.digest import get_consolidated_digest_matches
+        top_matches = get_consolidated_digest_matches(user["id"], total_limit=25)
         digest_payload = {
             "top_matches": top_matches,
             "pipeline_moves": [],

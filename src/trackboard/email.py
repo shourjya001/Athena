@@ -48,11 +48,19 @@ def render_digest_html(digest: dict, user_email: str) -> str:
             score_label = f"{score}% {str(m.get('verdict') or 'MATCH').upper()}" if raw_score is not None else f"BM25: {score}"
             apply_url = m.get("apply_url") or "https://trackboard.dev/jobs"
             reasoning = m.get("reasoning") or "Verified ATS active opening matched against your candidate track and target preferences."
+            badge = m.get("badge")
+            if badge == "NEW":
+                badge_html = '<span style="font-size:10px;font-weight:700;color:#58a6ff;background:rgba(56,139,253,0.15);border:1px solid rgba(56,139,253,0.3);padding:2px 6px;border-radius:10px;margin-left:6px;letter-spacing:0.02em;">⚡ NEW</span>'
+            elif badge == "TOP FIT":
+                badge_html = '<span style="font-size:10px;font-weight:700;color:#3fb950;background:rgba(63,185,80,0.15);border:1px solid rgba(63,185,80,0.3);padding:2px 6px;border-radius:10px;margin-left:6px;letter-spacing:0.02em;">🎯 TOP FIT</span>'
+            else:
+                badge_html = ""
             items += f"""
             <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:12px;">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
                 <div>
                   <span style="font-size:15px;font-weight:600;color:#f0f6fc;">{m.get('title','Software Engineer')}</span>
+                  {badge_html}
                   <span style="color:#8b949e;"> · </span>
                   <span style="font-size:14px;color:#e3b341;font-weight:600;">{m.get('company_name','Company')}</span>
                 </div>

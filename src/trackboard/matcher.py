@@ -427,7 +427,15 @@ def run_for_user(user_id: int, profile_text: str, chain: Chain | None = None, ma
 
     if chain is not None:
         import time
-        limit_cands = cands if max_batches is None else cands[:max_batches * BATCH]
+        # Prioritize unscored candidates first so every batch scores NET-NEW jobs
+        scored_job_ids = {
+            r["job_id"]
+            for r in db.query("SELECT job_id FROM matches WHERE user_id=? AND fit_score IS NOT NULL", (user_id,))
+        }
+        unscored_cands = [c for c in cands if c["id"] not in scored_job_ids]
+        already_scored = [c for c in cands if c["id"] in scored_job_ids]
+        ordered_cands = unscored_cands + already_scored
+        limit_cands = ordered_cands if max_batches is None else ordered_cands[:max_batches * BATCH]
         for i in range(0, len(limit_cands), BATCH):
             batch = limit_cands[i:i + BATCH]
             llm_calls += 1
