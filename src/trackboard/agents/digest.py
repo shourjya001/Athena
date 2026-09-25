@@ -6,17 +6,6 @@ import json
 from .. import db
 
 
-def build(user_id: int) -> dict:
-    failures = [dict(r) for r in db.query(
-        "SELECT agent, status, error, started_at FROM agent_runs "
-        "WHERE status IN ('failed','partial') AND started_at > datetime('now','-1 day') "
-        "ORDER BY started_at DESC LIMIT 10")]
-    moved = [dict(r) for r in db.query(
-        "SELECT e.status, e.occurred_at, j.company_name, j.title "
-        "FROM application_events e JOIN applications a ON a.id = e.application_id "
-        "JOIN jobs j ON j.id = a.job_id "
-        "WHERE a.user_id=? AND e.occurred_at > datetime('now','-1 day') "
-        "ORDER BY e.occurred_at DESC", (user_id,))]
 def get_consolidated_digest_matches(user_id: int, total_limit: int = 25) -> list[dict]:
     """Builds a balanced daily digest consisting of both:
     1. Fresh/New openings (never sent before or newly discovered in the last 48h)

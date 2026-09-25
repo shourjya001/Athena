@@ -57,18 +57,15 @@ def sync_alerts_dir(directory: Path, run: AgentRun, dry: bool) -> None:
                 run.items_out += 1
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--alerts-dir", type=Path)
-    args = ap.parse_args()
-
+def run_scout(dry_run: bool = False, alerts_dir: Path | None = None, limit_companies: int | None = None) -> dict:
     fetch = ats.default_fetch(get_settings().user_agent)
     companies = [dict(r) for r in db.query("SELECT * FROM companies WHERE active=1")]
+    if limit_companies:
+        companies = companies[:limit_companies]
     with AgentRun("scout") as run:
         for c in companies:
             try:
-                sync_company(c, fetch, run, args.dry_run)
+                sync_company(c, fetch, run, dry_run)
             except Exception as e:
                 run.error(c["name"], str(e))
                 db.execute("UPDATE companies SET last_error=? WHERE id=?", (str(e)[:300], c["id"]))
@@ -78,16 +75,28 @@ def main() -> None:
                 run.items_in += 1
                 remotive_seen.add(jobs.fingerprint(job.get("company_name", ""),
                                                    job["title"], job.get("location")))
-                if not args.dry_run and jobs.upsert(job) in ("new", "upgraded"):
+                if not dry_run and jobs.upsert(job) in ("new", "upgraded"):
                     run.items_out += 1
-            if not args.dry_run:
+            if not dry_run:
                 jobs.apply_strikes("remotive", remotive_seen)
         except Exception as e:
             run.error("remotive", str(e))   # failed fetch -> no strikes, per §8.1.4
-        if args.alerts_dir and args.alerts_dir.exists():
-            sync_alerts_dir(args.alerts_dir, run, args.dry_run)
-        run.detail["mode"] = "dry" if args.dry_run else "live"
-    print(f"scout: in={run.items_in} out={run.items_out} errors={len(run.detail.get('errors', []))}")
+        if alerts_dir and alerts_dir.exists():
+            sync_alerts_dir(alerts_dir, run, dry_run)
+        run.detail["mode"] = "dry" if dry_run else "live"
+
+    summary = {"items_in": run.items_in, "items_out": run.items_out, "errors": len(run.detail.get("errors", []))}
+    print(f"scout: in={run.items_in} out={run.items_out} errors={summary['errors']}")
+    return summary
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--alerts-dir", type=Path)
+    args = ap.parse_args()
+
+    run_scout(dry_run=args.dry_run, alerts_dir=args.alerts_dir)
 
 
 if __name__ == "__main__":

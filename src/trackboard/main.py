@@ -1121,70 +1121,100 @@ def create_app() -> FastAPI:
         background_tasks.add_task(run_matcher_for_user, user, False, False, 6)
         return RedirectResponse("/jobs?matched=1", status_code=303)
 
+    @app.api_route("/a/scout/run", methods=["GET", "POST"])
+    def run_scout_on_demand(request: Request, background_tasks: BackgroundTasks):
+        user = users.current_user(request)
+        from .agents.scout import run_scout
+        # Run scout asynchronously for up to 15 companies
+        background_tasks.add_task(run_scout, False, None, 15)
+        return RedirectResponse("/jobs?scouted=1", status_code=303)
+
     @app.api_route("/api/cron/sync-and-match", methods=["GET", "POST"])
     @app.api_route("/api/cron/daily", methods=["GET", "POST"])
     def cron_sync_and_match(request: Request):
         """Vercel cron endpoint for automated syncing, matching & digest dispatch."""
         import os
-        cron_secret = os.getenv("CRON_SECRET", "")
-        auth_header = request.headers.get("authorization", "")
-        if cron_secret and auth_header != f"Bearer {cron_secret}":
+        from datetime import datetime, UTC
+        cron_secret = os.getenv("CRON_SECRET", "").strip()
+        auth_header = request.headers.get("authorization", "").strip()
+        token_param = request.query_params.get("token", "").strip()
+        if cron_secret and auth_header != f"Bearer {cron_secret}" and token_param != cron_secret:
             from fastapi.responses import JSONResponse
             return JSONResponse({"error": "unauthorized"}, status_code=401)
 
         from . import email
         from .agents.matcher import run_matcher_for_user
+        from .agents.digest import get_consolidated_digest_matches
         results = []
         all_users = db.query("SELECT * FROM users ORDER BY id")
+
+        target_user_id = request.query_params.get("user_id")
+        if target_user_id:
+            all_users = [u for u in all_users if str(u["id"]) == str(target_user_id)]
+
+        do_scout = request.query_params.get("scout", "0") == "1"
         do_match = request.query_params.get("match", "1") != "0"
+        do_email = request.query_params.get("email", "1") != "0"
+
+        scout_summary = None
+        if do_scout:
+            try:
+                from .agents.scout import run_scout
+                scout_summary = run_scout(dry_run=False, limit_companies=5)
+            except Exception as se:
+                scout_summary = {"error": str(se)[:200]}
 
         for u in all_users:
             u = dict(u)
             user_res = {"user": u["email"]}
 
+            # 1. Dispatch daily HTML digest to registered email FIRST (guaranteed delivery)
+            if do_email:
+                try:
+                    top_matches = get_consolidated_digest_matches(u["id"], total_limit=25)
+                    if top_matches:
+                        digest_payload = {
+                            "top_matches": top_matches,
+                            "pipeline_moves": [],
+                            "problems_practiced": 0,
+                            "source_failures": []
+                        }
+                        html = email.render_digest_html(digest_payload, u["email"])
+                        sent = email.send_email(
+                            to_email=u["email"],
+                            subject=f"⚡ Trackboard Digest: {len(top_matches)} Fresh Job Recommendations for {u.get('display_name') or 'You'}",
+                            html_body=html
+                        )
+                        if sent:
+                            now_iso = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+                            for m in top_matches:
+                                if "job_id" in m:
+                                    db.execute("UPDATE matches SET digest_sent_at=? WHERE user_id=? AND job_id=?", (now_iso, u["id"], m["job_id"]))
+                        user_res["digest_dispatched"] = sent
+                        user_res["jobs_sent"] = len(top_matches)
+                    else:
+                        user_res["digest_dispatched"] = False
+                        user_res["notice"] = "No open matched jobs found"
+                except Exception as e:
+                    user_res["digest_error"] = str(e)[:200]
+
+            # 2. Targeted Matcher Scoring: Score up to 1 batch (5 net-new jobs) per user safely within timeout
             if do_match:
                 try:
-                    # Score up to 4 batches (20 net-new jobs) per user during nightly cron
-                    m_res = run_matcher_for_user(u, force_bm25=False, max_batches=4)
+                    m_res = run_matcher_for_user(u, force_bm25=False, max_batches=1)
                     user_res["matched"] = m_res
                 except Exception as e:
                     user_res["matcher_error"] = str(e)[:200]
 
-            # Auto-dispatch daily HTML digest to registered email with consolidated fresh & top-fit jobs
-            try:
-                from .agents.digest import get_consolidated_digest_matches
-                top_matches = get_consolidated_digest_matches(u["id"], total_limit=25)
-
-                if top_matches:
-                    digest_payload = {
-                        "top_matches": top_matches,
-                        "pipeline_moves": [],
-                        "problems_practiced": 0,
-                        "source_failures": []
-                    }
-                    html = email.render_digest_html(digest_payload, u["email"])
-                    sent = email.send_email(
-                        to_email=u["email"],
-                        subject=f"⚡ Trackboard Digest: {len(top_matches)} Fresh Job Recommendations for {u.get('display_name') or 'You'}",
-                        html_body=html
-                    )
-                    if sent:
-                        now_iso = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
-                        for m in top_matches:
-                            if "job_id" in m:
-                                db.execute("UPDATE matches SET digest_sent_at=? WHERE user_id=? AND job_id=?", (now_iso, u["id"], m["job_id"]))
-                    user_res["digest_dispatched"] = sent
-                    user_res["jobs_sent"] = len(top_matches)
-                else:
-                    user_res["digest_dispatched"] = False
-                    user_res["notice"] = "No open matched jobs found"
-            except Exception as e:
-                user_res["digest_error"] = str(e)[:200]
-
             results.append(user_res)
 
         from fastapi.responses import JSONResponse
-        return JSONResponse({"ok": True, "users_processed": len(results), "results": results})
+        return JSONResponse({
+            "ok": True,
+            "scout": scout_summary,
+            "users_processed": len(results),
+            "results": results
+        })
 
     @app.post("/a/digest/send-test")
     def send_test_digest_route(request: Request):

@@ -29,6 +29,22 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TZ: Asia/Kolkata
         run: uv run python -m trackboard.agents.matcher || true
+      - name: digest
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          TZ: Asia/Kolkata
+        run: uv run python -m trackboard.agents.digest --email || true
+      - name: trigger live vercel sync
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -s -X POST "https://athena-phi-one.vercel.app/api/cron/sync-and-match?token=${CRON_SECRET}" || true
       - name: heartbeat (keeps scheduled workflows enabled)
         run: |
           date > .heartbeat && git config user.name trackboard-bot

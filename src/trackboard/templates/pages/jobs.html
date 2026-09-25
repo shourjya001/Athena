@@ -28,6 +28,22 @@
   </p>
 </div>
 
+{% if request.query_params.get('scouted') %}
+  <div class="card" style="margin-bottom:16px;padding:12px 16px;background:rgba(56,139,253,0.1);border-left:3px solid var(--blue);color:var(--chalk);font-size:13px;">
+    🛰️ <strong>Scout Agent Active:</strong> Scanning company ATS boards in the background for net-new verified postings.
+  </div>
+{% endif %}
+{% if request.query_params.get('matched') %}
+  <div class="card" style="margin-bottom:16px;padding:12px 16px;background:rgba(63,185,80,0.1);border-left:3px solid var(--green);color:var(--chalk);font-size:13px;">
+    ⚡ <strong>Matcher Agent Complete:</strong> Instant BM25 shortlisted and LLM multi-factor scoring cascade launched!
+  </div>
+{% endif %}
+{% if request.query_params.get('digest_sent') %}
+  <div class="card" style="margin-bottom:16px;padding:12px 16px;background:rgba(227,179,65,0.1);border-left:3px solid var(--signal);color:var(--chalk);font-size:13px;">
+    📨 <strong>Daily Digest Dispatched:</strong> Fresh job recommendations and pipeline telemetry sent to your registered email!
+  </div>
+{% endif %}
+
 {# ── Agent control bar ── #}
 <div class="agent-bar">
   <div class="agent-status">
@@ -40,13 +56,16 @@
     {% endif %}
   </div>
 
+  <form method="post" action="/a/scout/run" style="margin:0;">
+    <button type="submit" class="btn" title="Scout live job postings from ATS portals">🛰️ Run Scout</button>
+  </form>
   <form method="post" action="/a/matcher/run" style="margin:0;">
-    <button type="submit" class="btn btn-blue">⚡ Sync &amp; match</button>
+    <button type="submit" class="btn btn-blue" title="Score fresh matches with LLM cascade">⚡ Run Matcher</button>
   </form>
-  <a href="/profile" class="btn" style="text-decoration:none;">👤 Edit Resume &amp; Keywords</a>
   <form method="post" action="/a/digest/send" style="margin:0;">
-    <button type="submit" class="btn">📨 Email Digest</button>
+    <button type="submit" class="btn" title="Send daily curated digest email now">📨 Send Digest</button>
   </form>
+  <a href="/profile" class="btn" style="text-decoration:none;">👤 Edit Resume</a>
 </div>
 
 {# ── 1-Click Safari & Chrome Application Autofill Suite ── #}

@@ -32,9 +32,12 @@ def init_serverless_db() -> None:
             if not tmp_db.exists() or tmp_db.stat().st_size == 0 or tmp_db.stat().st_mtime < seed_db.stat().st_mtime:
                 shutil.copyfile(seed_db, tmp_db)
                 print(f"Synced /tmp/app.db from {seed_db} ({seed_db.stat().st_size // 1024} KB)")
-        else:
-            if not tmp_db.exists():
-                db.migrate(verbose=False)
+
+        # Always run migrations on /tmp/app.db to ensure newly added columns/indexes exist
+        try:
+            db.migrate(verbose=False)
+        except Exception as me:
+            print(f"Serverless migration notice: {me}", file=sys.stderr)
     except Exception as e:
         print(f"Notice on serverless DB init: {e}", file=sys.stderr)
 

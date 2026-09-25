@@ -14,6 +14,26 @@
   <span>videos <b>{{ health.resources }}</b></span>
 </div>
 
+<div class="card" style="margin-bottom:24px;padding:16px 20px;background:linear-gradient(135deg, rgba(22,27,34,0.9) 0%, rgba(13,17,23,0.95) 100%);border:1px solid var(--line);">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h3 style="margin:0 0 4px 0;font-size:15px;color:var(--chalk);">Autonomous Multi-Agent Control Hub</h3>
+      <p style="margin:0;font-size:12px;color:var(--text-3);">Manually dispatch or verify individual autonomous pipeline workers on demand.</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <form action="/a/scout/run" method="post" style="margin:0;">
+        <button type="submit" class="btn" style="font-size:12px;">🛰️ Run Scout</button>
+      </form>
+      <form action="/a/matcher/run" method="post" style="margin:0;">
+        <button type="submit" class="btn btn-blue" style="font-size:12px;">⚡ Run Matcher</button>
+      </form>
+      <form action="/a/digest/send" method="post" style="margin:0;">
+        <button type="submit" class="btn" style="font-size:12px;">📨 Dispatch Digest</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <h2>Registered Candidate Digital Twins ({{ registered_users|length }})</h2>
 {% if registered_users %}
 <table style="margin-bottom:32px;">
