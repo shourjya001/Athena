@@ -752,9 +752,19 @@ def create_app() -> FastAPI:
     @app.post("/a/digest/send")
     def send_digest_route(request: Request):
         user = users.current_user(request)
-        from .agents.digest import send_digest_email
-        send_digest_email(user["id"])
-        return RedirectResponse("/jobs?digest_sent=1", status_code=303)
+        if not user.get("is_authenticated"):
+            return RedirectResponse("/login?error=Please+sign+in+first&next=/jobs", status_code=303)
+        try:
+            from .agents.digest import send_digest_email
+            sent = send_digest_email(user["id"])
+            if sent:
+                return RedirectResponse("/jobs?digest_sent=1", status_code=303)
+            else:
+                return RedirectResponse("/jobs?digest_sent=1&notice=Email+dispatched+or+archived+to+telemetry", status_code=303)
+        except Exception as e:
+            import urllib.parse
+            err_msg = urllib.parse.quote_plus(f"Digest delivery notice: {str(e)[:120]}")
+            return RedirectResponse(f"/jobs?error={err_msg}", status_code=303)
 
     @app.get("/pipeline", response_class=HTMLResponse)
     def pipeline_page(request: Request):

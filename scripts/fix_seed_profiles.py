@@ -8,7 +8,7 @@ def fix_db(db_path: Path):
     conn.row_factory = sqlite3.Row
     with conn:
         # 1. Fix User 1: Shourjya
-        conn.execute("UPDATE users SET display_name='Shourjya Hazra', leetcode_user='shourjya001' WHERE email='shourjya001@gmail.com'")
+        conn.execute("INSERT INTO users (email, display_name, leetcode_user, created_at, last_seen_at) VALUES ('shourjya001@gmail.com', 'Shourjya Hazra', 'shourjya001', datetime('now'), datetime('now')) ON CONFLICT(email) DO UPDATE SET display_name='Shourjya Hazra', leetcode_user='shourjya001'")
         u1 = conn.execute("SELECT id FROM users WHERE email='shourjya001@gmail.com'").fetchone()
         if u1:
             uid1 = u1["id"]
@@ -60,6 +60,13 @@ def fix_db(db_path: Path):
     print(f"✓ Fixed candidate profiles in {db_path}")
 
 if __name__ == "__main__":
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+    try:
+        from trackboard.settings import get_settings
+        fix_db(get_settings().db_path)
+    except Exception:
+        pass
     local_db = Path.home() / ".trackboard" / "app.db"
     seed_db = Path(__file__).resolve().parents[1] / "data" / "seed_data.db"
     fix_db(local_db)

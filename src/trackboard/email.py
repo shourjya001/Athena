@@ -174,9 +174,9 @@ def send_email(to_email: str, subject: str, html_body: str) -> bool:
             msg.attach(MIMEText(html_body, "html"))
 
             if settings.smtp_port == 465:
-                server = smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, timeout=15)
+                server = smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, timeout=5)
             else:
-                server = smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=15)
+                server = smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=5)
                 server.starttls()
 
             clean_user = settings.smtp_user.strip()
@@ -190,14 +190,20 @@ def send_email(to_email: str, subject: str, html_body: str) -> bool:
         except Exception as e:
             print(f"SMTP send failed: {e}. Falling back to disk digest archive.")
 
-    # Local fallback: Save to ~/.trackboard/digests/
-    out_dir = Path(os.path.expanduser("~/.trackboard/digests"))
-    out_dir.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_file = out_dir / f"digest_{stamp}.html"
-    out_file.write_text(html_body, encoding="utf-8")
-    if settings.smtp_host and settings.smtp_user:
-        print(f"ℹ Digest HTML saved locally to {out_file} (SMTP delivery failed; check credentials).")
-    else:
-        print(f"ℹ Digest HTML saved locally to {out_file} (SMTP / RESEND_API_KEY not configured in .env).")
+    # Local fallback: Save to disk archive (use /tmp on serverless environments to avoid read-only OS errors)
+    try:
+        if os.getenv("VERCEL"):
+            out_dir = Path("/tmp/trackboard_digests")
+        else:
+            out_dir = Path(os.path.expanduser("~/.trackboard/digests"))
+        out_dir.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        out_file = out_dir / f"digest_{stamp}.html"
+        out_file.write_text(html_body, encoding="utf-8")
+        if settings.smtp_host and settings.smtp_user:
+            print(f"ℹ Digest HTML saved locally to {out_file} (SMTP delivery failed; check credentials).")
+        else:
+            print(f"ℹ Digest HTML saved locally to {out_file} (SMTP / RESEND_API_KEY not configured in .env).")
+    except Exception as err:
+        print(f"Notice: local disk fallback skipped: {err}")
     return False
