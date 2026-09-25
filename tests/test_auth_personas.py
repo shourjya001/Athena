@@ -7,6 +7,7 @@ from trackboard.main import app
 
 @pytest.fixture(autouse=True)
 def ensure_test_users():
+    db.migrate(verbose=False)
     db.execute(
         "INSERT INTO users (email, display_name, created_at, last_seen_at) "
         "VALUES ('shourjya001@gmail.com', 'Shourjya Hazra', datetime('now'), datetime('now')) "
