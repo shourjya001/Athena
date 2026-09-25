@@ -104,6 +104,7 @@ def send_digest_email(user_id: int) -> bool:
     u = db.query_one("SELECT id, email, display_name FROM users WHERE id=?", (user_id,))
     if not u:
         return False
+    u = dict(u)
     d = build(user_id)
     if not d["top_matches"]:
         return False
