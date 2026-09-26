@@ -1,174 +1,52 @@
-{% extends "base.html" %}{% set nav='profile' %}
-{% block title %}My Profile & Resume — Trackboard{% endblock %}
+{% extends "base.html" %}
+{% block title %}Profile — Athena{% endblock %}
+{% block robots %}noindex{% endblock %}
 {% block body %}
-<div class="page-head" style="padding-top:0;">
-  <div class="label">PERSONAL SETTINGS</div>
-  <h1>Career Profile & Resume</h1>
-  <p class="sub">Set your target roles, keywords, and upload your master resume for automated matching & tailoring.</p>
-</div>
-
-{% if error %}
-<div class="box" style="border-color:var(--signal);background:rgba(255,85,85,0.15);color:#ff8888;margin-bottom:18px;font-size:13px;">
-  <b>Notice:</b> {{ error }}
-</div>
-{% endif %}
-
-{% if saved %}
-<div class="box live" style="margin-bottom:18px;">
-  <b>✓ Preferences Saved:</b> Your target career preferences have been updated.
-</div>
-{% endif %}
-
-{% if resume_saved %}
-<div class="box live" style="margin-bottom:18px;">
-  <b>✓ Resume Uploaded:</b> Master resume text extracted and saved successfully ({{ resume_words }} words).
-</div>
-{% endif %}
-
-{% if matched %}
-<div class="box live" style="margin-bottom:18px;">
-  <b>🎯 Matcher Complete:</b> Scored all active jobs against your profile. <a href="/jobs" style="color:var(--signal);text-decoration:underline;">View your tailored jobs queue ➔</a>
-</div>
-{% endif %}
-
-<div class="grid g2" style="gap:24px;align-items:start;">
-
-  {# Left Column: Target Roles & Keywords #}
-  <div style="display:flex;flex-direction:column;gap:20px;">
-    <div class="card" style="padding:24px;border:1px solid var(--border);background:var(--bg-1);">
-      <div class="label" style="margin-bottom:16px;color:var(--text-2);font-weight:700;font-size:12px;letter-spacing:0.06em;">1. TARGET CAREER PREFERENCES & KEYWORDS</div>
-      <form action="/profile/targets" method="post" style="display:flex;flex-direction:column;gap:18px;">
-        
-        <div>
-          <label>Display Name</label>
-          <input type="text" name="display_name" value="{{ user.display_name or '' }}" placeholder="Your Name (e.g. Manshi / Prerna / Shourjya)">
-        </div>
-
-        <div>
-          <label>Career Track & Role Focus</label>
-          <select name="track">
-            <option value="tech" {% if answers.get('track', 'tech') == 'tech' %}selected{% endif %}>💻 Engineering, Tech & AI (Includes DSA Pattern Workbenches)</option>
-            <option value="business" {% if answers.get('track') == 'business' %}selected{% endif %}>📊 Business, Operations & Analytics (Hides coding theory)</option>
-          </select>
-          <div class="help-text">Customizes navigation tabs and prioritizes relevant job listings.</div>
-        </div>
-
-        <div>
-          <label>Target Job Titles (comma-separated)</label>
-          <input type="text" name="titles" value="{{ answers.get('titles', '') }}" placeholder="e.g. SDE, Backend Engineer, AI Engineer, Software Developer" style="font-family:var(--mono);">
-          <div class="help-text">Positive title matching: only jobs matching these target roles will be shortlisted.</div>
-        </div>
-
-        <div>
-          <label>Excluded Roles & Seniorities to Avoid</label>
-          <input type="text" name="avoid_titles" value="{{ answers.get('avoid_titles', '') }}" placeholder="e.g. SDE-2, Senior, Staff, Lead, Manager, Director, Business Analyst" style="font-family:var(--mono);">
-          <div class="help-text">Roles containing these keywords are strictly filtered out (defaults to targets.yaml avoid list if empty).</div>
-        </div>
-
-        <div>
-          <label>Target Skills & Keywords (comma-separated)</label>
-          <textarea name="keywords" rows="3" placeholder="Tech: Python, FastAPI, Docker, Kafka, React, SQL, PyTorch&#10;Non-Tech: SQL, Excel, Jira, Agile, Stakeholder Management, Tableau" style="font-family:var(--mono);line-height:1.5;">{{ answers.get('keywords', '') }}</textarea>
-          <div class="help-text">Semantic search matches and weighs these keywords heavily against job descriptions.</div>
-        </div>
-
-        <div class="grid g2" style="gap:14px;">
-          <div>
-            <label>Preferred Locations</label>
-            <input type="text" name="locations" value="{{ answers.get('locations', 'Bengaluru, Mumbai, Remote, India') }}" placeholder="Bengaluru, Remote">
-          </div>
-          <div>
-            <label>Min Target CTC / Salary</label>
-            <input type="text" name="min_ctc" value="{{ answers.get('min_ctc', '18 LPA') }}" placeholder="18 LPA">
-          </div>
-        </div>
-
-        <div class="grid g2" style="gap:14px;">
-          <div>
-            <label>Years of Experience</label>
-            <input type="number" name="experience_years" value="{{ answers.get('experience_years', '2') }}">
-          </div>
-          <div>
-            <label>LeetCode Username (optional)</label>
-            <input type="text" name="leetcode_user" value="{{ user.leetcode_user or '' }}" placeholder="e.g. shourjya001" style="font-family:var(--mono);">
-          </div>
-        </div>
-
-        <div style="margin-top:6px;">
-          <button type="submit" class="btn btn-blue" style="width:100%;justify-content:center;font-weight:600;padding:11px;">
-            💾 Save Career Preferences
-          </button>
-        </div>
-      </form>
-    </div>
-
-    {# On-Demand Matcher Card #}
-    <div class="card" style="padding:22px;border:1px solid var(--border);background:var(--bg-1);">
-      <div class="label" style="color:var(--amber);margin-bottom:8px;font-weight:700;font-size:12px;letter-spacing:0.06em;">⚡ ON-DEMAND JOB MATCHER</div>
-      <p style="font-size:13px;color:var(--text-1);margin-bottom:14px;line-height:1.5;">
-        Evaluate active jobs in the database against your resume and target keywords using semantic scoring.
-      </p>
-      <form action="/a/matcher/run" method="post">
-        <button type="submit" class="btn btn-fill" style="width:100%;justify-content:center;font-weight:700;padding:11px;">
-          ⚡ Match Jobs for My Profile
-        </button>
-      </form>
-    </div>
+<h1>Your profile</h1>
+<p class="muted">Signed in as {{ user.email }}.{% if user.is_sandbox %} This is a sandbox account.{% endif %}</p>
+{% if saved %}<div class="notice ok" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#circle-check"/></svg>Saved.</div>{% endif %}
+{% if error %}<div class="notice danger" role="alert"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#alert-circle"/></svg>{{ error }}</div>{% endif %}
+<div class="grid g2" style="align-items:start">
+<form class="card" method="post" action="/profile/resume" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <h2 style="margin-top:0">Master résumé</h2>
+  {% if master_resume %}<p class="small muted">Current: <b>{{ master_resume.label }}</b> · {{ resume_words }} words · {{ master_resume.created_at|ist }}</p>{% else %}<p class="small muted">No résumé yet. Scores and tailoring need one.</p>{% endif %}
+  <div class="field"><label for="resume_file">Upload a PDF</label><input id="resume_file" type="file" name="resume_file" accept=".pdf,.txt,.md"><p class="help">Text is extracted and stored; the file itself is not kept. 5 MB max.</p></div>
+  <div class="field"><label for="resume_text">…or paste the text</label><textarea id="resume_text" name="resume_text" rows="8" placeholder="Paste your résumé as plain text."></textarea></div>
+  <button class="btn primary" type="submit">Save and run a match</button>
+  {% if tailored %}<h3 style="margin-top:20px">Tailored résumés</h3><ul class="list">{% for t in tailored %}<li><span class="small">{{ t.label|truncate(60) }}</span><a class="small" href="/resumes/{{ t.id }}/download">PDF</a></li>{% endfor %}</ul>{% endif %}
+</form>
+<form class="card" method="post" action="/profile/targets">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <h2 style="margin-top:0">Targets</h2>
+  <div class="field"><label for="display_name">Display name</label><input id="display_name" type="text" name="display_name" value="{{ user.display_name or '' }}" maxlength="80"></div>
+  <div class="field"><label for="track">Track</label><select id="track" name="track"><option value="tech" {% if answers.get('track','tech')=='tech' %}selected{% endif %}>Engineering</option><option value="business" {% if answers.get('track')=='business' %}selected{% endif %}>Business & operations</option><option value="dual_track" {% if answers.get('track')=='dual_track' %}selected{% endif %}>Both</option></select></div>
+  <div class="field"><label for="titles">Target titles</label><input id="titles" type="text" name="titles" value="{{ answers.get('titles','') }}" placeholder="SDE, Backend Engineer"><p class="help">Comma-separated.</p></div>
+  <div class="field"><label for="avoid_titles">Avoid titles</label><input id="avoid_titles" type="text" name="avoid_titles" value="{{ answers.get('avoid_titles','') }}" placeholder="Senior, Staff, Manager"></div>
+  <div class="field"><label for="keywords">Keywords</label><input id="keywords" type="text" name="keywords" value="{{ answers.get('keywords','') }}" placeholder="Python, Kafka, PostgreSQL"></div>
+  <div class="grid g2">
+    <div class="field"><label for="locations">Locations</label><input id="locations" type="text" name="locations" value="{{ answers.get('locations','') }}"></div>
+    <div class="field"><label for="experience_years">Years of experience</label><input id="experience_years" type="number" min="0" max="40" name="experience_years" value="{{ answers.get('experience_years','') }}"></div>
+    <div class="field"><label for="min_ctc">Minimum CTC</label><input id="min_ctc" type="text" name="min_ctc" value="{{ answers.get('min_ctc','') }}" placeholder="15 LPA"></div>
+    <div class="field"><label for="leetcode_user">LeetCode username</label><input id="leetcode_user" type="text" name="leetcode_user" value="{{ user.leetcode_user or '' }}"></div>
   </div>
-
-  {# Right Column: Master Resume Uploader & Preview #}
-  <div style="display:flex;flex-direction:column;gap:20px;">
-    <div class="card" style="padding:24px;border:1px solid var(--border);background:var(--bg-1);">
-      <div class="label" style="margin-bottom:16px;color:var(--text-2);font-weight:700;font-size:12px;letter-spacing:0.06em;">2. MASTER RESUME (PDF OR TEXT)</div>
-      
-      <form action="/profile/resume" method="post" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:18px;">
-        
-        <div>
-          <label>Upload PDF Resume</label>
-          <input type="file" name="resume_file" accept=".pdf,.txt,.md" style="background:var(--bg-2);border:1px dashed var(--border);color:var(--text-0);padding:14px;border-radius:var(--r-sm);font-size:13px;">
-          <div class="help-text">Text &amp; hyperlinks are extracted automatically in-memory.</div>
-        </div>
-
-        <div style="text-align:center;font-size:11px;color:var(--text-3);font-weight:700;letter-spacing:0.08em;">— OR PASTE RESUME TEXT DIRECTLY —</div>
-
-        <div>
-          <label>Resume Content</label>
-          <textarea name="resume_text" rows="12" placeholder="Paste your full resume text or experience bullet points here..." style="font-family:var(--mono);font-size:12px;line-height:1.5;">{{ master_resume.parsed_text if master_resume else '' }}</textarea>
-        </div>
-
-        <div>
-          <button type="submit" class="btn btn-blue" style="width:100%;justify-content:center;font-weight:600;padding:11px;">
-            📄 Upload &amp; Save Master Resume
-          </button>
-        </div>
-      </form>
-
-      {% if master_resume %}
-      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border-dim);display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--text-2);font-family:var(--mono);">
-        <span>Status: <b style="color:var(--green);">Active Master Resume ✓</b></span>
-        <span>Updated: {{ master_resume.created_at | ist }}</span>
-      </div>
-      {% endif %}
-    </div>
+  <h3>Application fields <span class="muted small">(optional)</span></h3>
+  <p class="help" style="margin-bottom:12px">Used only for copy-ready chips on job pages and for the header of tailored PDFs. Leave blank if you'd rather not store them.</p>
+  <div class="grid g2">
+    <div class="field"><label for="full_name">Full name</label><input id="full_name" type="text" name="full_name" value="{{ answers.get('full_name','') }}" autocomplete="name"></div>
+    <div class="field"><label for="phone">Phone</label><input id="phone" type="text" name="phone" value="{{ answers.get('phone','') }}" autocomplete="tel"></div>
+    <div class="field"><label for="linkedin_url">LinkedIn URL</label><input id="linkedin_url" type="url" name="linkedin_url" value="{{ answers.get('linkedin_url','') }}"></div>
+    <div class="field"><label for="github_url">GitHub URL</label><input id="github_url" type="url" name="github_url" value="{{ answers.get('github_url','') }}"></div>
+    <div class="field"><label for="current_location">Current location</label><input id="current_location" type="text" name="current_location" value="{{ answers.get('current_location','') }}"></div>
+    <div class="field"><label for="notice_period_days">Notice period (days)</label><input id="notice_period_days" type="number" min="0" max="180" name="notice_period_days" value="{{ answers.get('notice_period_days','') }}"></div>
+    <div class="field"><label for="work_authorization">Work authorization</label><input id="work_authorization" type="text" name="work_authorization" value="{{ answers.get('work_authorization','') }}"></div>
   </div>
-
-  {# Danger Zone: Account & Profile Erasure #}
-  <div class="card" style="margin-top:32px;padding:20px;border:1px solid rgba(248,81,73,0.3);background:rgba(248,81,73,0.03);border-radius:10px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
-      <div>
-        <div style="color:var(--red);font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;">
-          <span>⚠️</span> Danger Zone: Erase Digital Twin Profile
-        </div>
-        <div style="font-size:12px;color:var(--text-3);margin-top:4px;max-width:540px;line-height:1.4;">
-          Permanently deletes your account, uploaded resumes, ATS match records, bullet bank, and application pipeline from SQLite. This action cannot be undone.
-        </div>
-      </div>
-      <form action="/profile/delete" method="post" onsubmit="return confirm('Are you sure you want to permanently erase your profile and all associated data? This cannot be undone.');">
-        <button type="submit" class="btn" style="background:rgba(248,81,73,0.15);color:var(--red);border:1px solid rgba(248,81,73,0.4);font-weight:600;font-size:12.5px;padding:8px 16px;">
-          🗑️ Erase My Profile
-        </button>
-      </form>
-    </div>
-  </div>
-
+  <button class="btn primary" type="submit">Save targets</button>
+</form>
+</div>
+<div class="card" style="margin-top:24px;border-color:var(--danger)">
+  <h2 style="margin-top:0">Delete account</h2>
+  <p class="muted">Removes your account and every row tied to it: résumé text, targets, matches, applications, practice history. Immediate and not reversible.</p>
+  <form method="post" action="/profile/delete" data-confirm="Delete your account and all of its data? This cannot be undone."><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn danger" type="submit">Delete my account</button></form>
 </div>
 {% endblock %}

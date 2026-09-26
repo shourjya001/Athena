@@ -319,9 +319,9 @@ locations:
 
 | User | Email | Track | Target Titles | Avoid Titles |
 |:---|:---|:---|:---|:---|
-| **Shourjya Hazra** | `shourjya001@gmail.com` | `tech` | SDE, Backend Engineer, Software Engineer, AI Engineer, Member of Technical Staff | Senior, Staff, Principal, Lead, Manager, Director, Business Analyst, Operations |
-| **Manshi Rohella** | `manshirohella21@gmail.com` | `tech` (needs dual: tech + business) | SDE, Backend Engineer, Python Developer + **Business Analyst, Product Analyst, Data Analyst** | (needs per-track avoid rules) |
-| **Prerna Rohilla** | `prernarohilla050802@gmail.com` | `business` | Operations Associate, Banking Operations Specialist, Operations Analyst, Business Analyst | Director, VP, Head of, Managing Director |
+| **Shourjya Hazra** | `owner@example.com` | `tech` | SDE, Backend Engineer, Software Engineer, AI Engineer, Member of Technical Staff | Senior, Staff, Principal, Lead, Manager, Director, Business Analyst, Operations |
+| **Manshi Rohella** | `user-c@example.com` | `tech` (needs dual: tech + business) | SDE, Backend Engineer, Python Developer + **Business Analyst, Product Analyst, Data Analyst** | (needs per-track avoid rules) |
+| **Prerna Rohilla** | `user-b@example.com` | `business` | Operations Associate, Banking Operations Specialist, Operations Analyst, Business Analyst | Director, VP, Head of, Managing Director |
 
 ### Track-Aware Exclusions in Matcher
 - **Tech track** excludes: business analyst, banking operations, branch banking, policy servicing, underwriting, KYC documentation, collections, sales, marketing, HR, recruiter
@@ -813,7 +813,7 @@ trackboard/
 Read the full BUILD_SPEC.md, AGENTS.md, and README.md in this project.
 Then run:
   uv venv && source .venv/bin/activate && uv pip install -e ".[dev]"
-  cp .env.example .env   # set DEV_USER_EMAIL=shourjya001@gmail.com
+  cp .env.example .env   # set DEV_USER_EMAIL=owner@example.com
   uv run trackboard migrate
   uv run python scripts/seed_patterns.py
   uv run python scripts/seed_problems.py

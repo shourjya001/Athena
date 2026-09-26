@@ -81,9 +81,15 @@ def test_linkedin_routes():
     # 1. GET /linkedin
     r1 = client.get("/linkedin")
     assert r1.status_code == 200
-    assert "LinkedIn Profile & AI Visibility Optimizer" in r1.text
+    assert "LinkedIn Profile &amp; AI Visibility Optimizer" in r1.text
+    # Guests can read the form but the submit is disabled and the POST is gated
+    assert 'id="li-submit"' in r1.text and "disabled" in r1.text
+    r_guest = client.post("/a/linkedin/optimize", json={"headline": "x"})
+    assert r_guest.status_code == 303 and "/login" in r_guest.headers["location"]
 
-    # 2. POST /a/linkedin/optimize
+    # 2. POST /a/linkedin/optimize as a signed-in user with a CSRF token
+    from tests.helpers import signed_in
+    client = signed_in()
     payload = {
         "headline": "Fullstack Developer",
         "about": "Passionate developer building apps with results-driven approach.",
@@ -93,7 +99,7 @@ def test_linkedin_routes():
         "linkedin_url": "https://linkedin.com/in/testdev",
         "mode": "standard"
     }
-    r2 = client.post("/a/linkedin/optimize", json=payload)
+    r2 = client.post("/a/linkedin/optimize", json=payload, headers={"X-CSRF-Token": client.csrf})
     assert r2.status_code == 200
     data = r2.json()
     assert data["ok"] is True
@@ -113,7 +119,7 @@ def test_linkedin_routes():
         })
         row = db.query_one("SELECT id FROM jobs LIMIT 1")
 
-    r3 = client.post(f"/a/jobs/{row['id']}/linkedin-seo")
+    r3 = client.post(f"/a/jobs/{row['id']}/linkedin-seo", headers={"X-CSRF-Token": client.csrf})
     assert r3.status_code == 200
     seo_data = r3.json()
     assert seo_data["ok"] is True

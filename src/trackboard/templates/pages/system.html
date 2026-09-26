@@ -1,92 +1,32 @@
-{% extends "base.html" %}{% set nav='system' %}
-{% block title %}System — Trackboard{% endblock %}
+{% extends "base.html" %}
+{% block title %}System status — Athena{% endblock %}
+{% block meta_description %}Live status of Athena's agents: last scout run, open jobs, companies polling OK, and the pipeline they share through SQLite.{% endblock %}
 {% block body %}
-<div class="page-head">
-  <div class="label">System</div>
-  <h1>Health</h1>
+<h1>System status</h1>
+<p class="muted">Every agent reads and writes the same SQLite tables; none of them call each other. This page is generated from the <code>agent_runs</code> table, so it's true or it's blank.</p>
+{% if request.query_params.get('notice') == 'scout_started' %}<div class="notice ok" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#circle-check"/></svg>Scout started in the background.</div>{% endif %}
+<div class="grid g3" style="margin:16px 0 24px">
+  <div class="card"><div class="kicker">Open jobs</div><div class="score" style="font-size:28px">{{ '{:,}'.format(stats.open_jobs) }}</div><p class="help">{{ stats.companies_active }} companies with at least one open role</p></div>
+  <div class="card"><div class="kicker">Company feeds</div><div class="score" style="font-size:28px">{{ companies_ok }} <span class="muted" style="font-size:16px">ok</span>{% if companies_err %} · <span style="color:var(--danger)">{{ companies_err }} erroring</span>{% endif %}</div><p class="help">{{ stats.companies_configured }} configured</p></div>
+  <div class="card"><div class="kicker">Last scout run</div><div class="score" style="font-size:20px">{% if stats.last_scout %}{{ stats.last_scout.finished_at|ist }}{% else %}—{% endif %}</div><p class="help">{% if stats.last_scout %}{{ stats.last_scout.status }} · {{ stats.last_scout.items_out }} new{% else %}No completed scout run recorded{% endif %}</p></div>
 </div>
-
-<div class="strip">
-  <span>db <b>{{ db_path }}</b></span>
-  <span>size <b>{{ db_kb }} KB</b></span>
-  <span>patterns <b>{{ health.patterns }}</b></span>
-  <span>problems <b>{{ health.problems }}</b></span>
-  <span>videos <b>{{ health.resources }}</b></span>
-</div>
-
-<div class="card" style="margin-bottom:24px;padding:16px 20px;background:linear-gradient(135deg, rgba(22,27,34,0.9) 0%, rgba(13,17,23,0.95) 100%);border:1px solid var(--line);">
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-    <div>
-      <h3 style="margin:0 0 4px 0;font-size:15px;color:var(--chalk);">Autonomous Multi-Agent Control Hub</h3>
-      <p style="margin:0;font-size:12px;color:var(--text-3);">Manually dispatch or verify individual autonomous pipeline workers on demand.</p>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <form action="/a/scout/run" method="post" style="margin:0;">
-        <button type="submit" class="btn" style="font-size:12px;">🛰️ Run Scout</button>
-      </form>
-      <form action="/a/matcher/run" method="post" style="margin:0;">
-        <button type="submit" class="btn btn-blue" style="font-size:12px;">⚡ Run Matcher</button>
-      </form>
-      <form action="/a/digest/send" method="post" style="margin:0;">
-        <button type="submit" class="btn" style="font-size:12px;">📨 Dispatch Digest</button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<h2>Registered Candidate Digital Twins ({{ registered_users|length }})</h2>
-{% if registered_users %}
-<table style="margin-bottom:32px;">
-  <tr><th>ID</th><th>Candidate</th><th>Email</th><th>Resumes</th><th>Matches</th><th>Pipeline</th><th>Last Active</th><th>Action</th></tr>
-  {% for u in registered_users %}
-  <tr>
-    <td><span class="mono">{{ u.id }}</span></td>
-    <td><b>{{ u.display_name or 'Candidate' }}</b></td>
-    <td><span class="mono" style="font-size:11.5px;color:var(--text-1);">{{ u.email }}</span></td>
-    <td><span class="mono">{{ u.resume_count }}</span></td>
-    <td><span class="mono">{{ u.match_count }}</span></td>
-    <td><span class="mono">{{ u.app_count }}</span></td>
-    <td><span class="mono" style="font-size:11px;color:var(--text-3);">{{ u.last_seen_at }}</span></td>
-    <td>
-      {% if u.email in ['shourjya001@gmail.com', 'you@example.com'] %}
-        <span class="pill" style="font-size:10px;padding:2px 6px;color:var(--blue);border-color:rgba(56,139,253,0.4);">Master Admin</span>
-      {% else %}
-        <form action="/system/users/{{ u.id }}/delete" method="post" onsubmit="return confirm('Permanently delete candidate {{ u.display_name }} ({{ u.email }}) and all their data?');" style="margin:0;">
-          <button type="submit" class="btn" style="background:rgba(248,81,73,0.1);color:var(--red);border:1px solid rgba(248,81,73,0.3);font-size:11px;padding:3px 8px;border-radius:4px;">
-            Delete
-          </button>
-        </form>
-      {% endif %}
-    </td>
-  </tr>
-  {% endfor %}
-</table>
-{% endif %}
-
-<h2>Recent agent runs</h2>
-{% if runs %}
-<table>
-  <tr><th>Agent</th><th>Started</th><th>Status</th><th>In</th><th>Out</th><th>Error</th></tr>
-  {% for r in runs %}
-  <tr>
-    <td><span class="mono" style="font-weight:500;">{{ r.agent }}</span></td>
-    <td><span class="mono" style="font-size:11px;color:var(--text-3);">{{ r.started_at }}</span></td>
-    <td>
-      {% if r.status == 'ok' %}
-        <span class="flap flap-offer flip">ok</span>
-      {% elif r.status == 'partial' %}
-        <span class="flap flap-submitted flip">partial</span>
-      {% else %}
-        <span class="flap flap-rejected flip">{{ r.status }}</span>
-      {% endif %}
-    </td>
-    <td><span class="mono">{{ r.items_in }}</span></td>
-    <td><span class="mono">{{ r.items_out }}</span></td>
-    <td style="color:var(--red);font-size:13px;">{{ r.error or '' }}</td>
-  </tr>
-  {% endfor %}
-</table>
-{% else %}
-<div class="empty"><b>No agent runs yet.</b><br>Scheduled agents arrive at M2.</div>
+<div class="card" style="overflow-x:auto"><div style="min-width:620px">{% include "partials/pipeline.svg.html" %}</div></div>
+<h2>Sources</h2>
+<div class="chips">{% for s in stats.sources %}<span class="chip">{{ s.label }} <span class="num">{{ '{:,}'.format(s.n) }}</span></span>{% endfor %}</div>
+<h2>Recent runs</h2>
+<div class="tablewrap"><table class="stack"><thead><tr><th>Agent</th><th>Status</th><th>Started</th><th class="num">In</th><th class="num">Out</th><th class="num">LLM calls</th><th>Error</th></tr></thead><tbody>
+{% for r in runs %}<tr id="runs-{{ r.agent }}"><td data-label="Agent">{{ r.agent }}</td><td data-label="Status"><span class="status {{ r.status }}">{{ r.status }}</span></td><td data-label="Started" class="small">{{ r.started_at|ist }}</td><td data-label="In" class="num">{{ r.items_in }}</td><td data-label="Out" class="num">{{ r.items_out }}</td><td data-label="LLM" class="num">{{ r.llm_calls }}</td><td data-label="Error" class="small muted">{{ (r.error or '')|truncate(80) }}</td></tr>{% else %}<tr><td colspan="7" class="muted">No runs recorded yet.</td></tr>{% endfor %}
+</tbody></table></div>
+{% if user.is_owner %}
+<h2>Admin</h2>
+<form method="post" action="/a/scout/run" style="margin-bottom:16px"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn" type="submit">Run scout now</button> <span class="help" style="display:inline">Polls up to 15 companies in the background.</span></form>
+<p class="small muted">{{ subscribers }} access-list signups.</p>
+<div class="tablewrap"><table class="stack"><thead><tr><th>User</th><th>Last seen</th><th class="num">Résumés</th><th class="num">Applications</th><th></th></tr></thead><tbody>
+{% for u in registered_users %}<tr><td data-label="User">{{ u.display_name or '' }} <span class="muted small">{{ u.email }}</span></td><td data-label="Last seen" class="small">{{ u.last_seen_at|ist }}</td><td data-label="Résumés" class="num">{{ u.resume_count }}</td><td data-label="Applications" class="num">{{ u.app_count }}</td><td>{% if u.id != user.id %}<form method="post" action="/system/users/{{ u.id }}/delete" data-confirm="Permanently delete this user and all of their data?" style="margin:0"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn sm danger" type="submit">Delete</button></form>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+<h3 style="margin-top:20px">Company feeds</h3>
+<div class="tablewrap"><table class="stack"><thead><tr><th>Company</th><th>ATS</th><th>Last OK</th><th>Last error</th></tr></thead><tbody>
+{% for c in companies %}<tr><td data-label="Company">{{ c.name }}</td><td data-label="ATS">{{ c.ats }}</td><td data-label="Last OK" class="small">{{ c.last_ok_at|ist }}</td><td data-label="Error" class="small muted">{{ (c.last_error or '')|truncate(60) }}</td></tr>{% endfor %}
+</tbody></table></div>
 {% endif %}
 {% endblock %}

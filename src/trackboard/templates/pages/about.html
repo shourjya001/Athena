@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}About — Athena{% endblock %}
+{% block meta_description %}What Athena is, what data it stores, what it never stores, and who built it.{% endblock %}
+{% block head %}<script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Shourjya Hazra","jobTitle":"Backend engineer","url":"{{ site_url }}/about","sameAs":["https://www.linkedin.com/in/shourjya-hazra-683128200/"]}</script>{% endblock %}
+{% block body %}
+<div class="prose">
+<h1>About Athena</h1>
+<p>Athena started as a tool for four people switching jobs in India who were tired of juggling eight tabs. It reads job openings directly from the public career APIs that companies publish through Greenhouse, Lever, Ashby, Workday and Oracle — never by scraping — and ranks them against a résumé with a transparent four-part score. If the scoring model is offline, it says so instead of inventing a number.</p>
+<h2>What it stores</h2>
+<ul><li>Your Google email and display name, so you can sign in.</li><li>The résumé text you paste or upload, and any bullets you add to your bank.</li><li>Your target titles, keywords, locations and track.</li><li>Which jobs you applied to or dismissed, and your practice history.</li></ul>
+<h2>What it never stores</h2>
+<ul><li>Your Google password or any Google data beyond email and name.</li><li>Anything from LinkedIn — the audit works only on text you paste.</li><li>Other people's data in your view. Every query is scoped to your account.</li></ul>
+<h2>Who built it</h2>
+<p><a href="https://www.linkedin.com/in/shourjya-hazra-683128200/" rel="noopener noreferrer" target="_blank">Shourjya Hazra</a>, a backend engineer who has worked on UPI-scale payment systems. Athena is Python, FastAPI, Jinja and HTMX on a single SQLite file, with no client-side framework and no ORM. The <a href="/system">status page</a> shows every agent's last run.</p>
+<p>Questions or problems: message on LinkedIn. You can delete your account and all of its data at any time from <a href="/profile">your profile</a>.</p>
+</div>
+{% endblock %}

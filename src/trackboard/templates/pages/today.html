@@ -1,236 +1,94 @@
-{% extends "base.html" %}{% set nav='today' %}
-{% block title %}Athena — Autonomous Career Digital Twin OS{% endblock %}
+{% extends "base.html" %}
+{% block title %}Athena — live jobs from company career APIs, scored honestly{% endblock %}
+{% block meta_description %}Athena reads openings directly from Greenhouse, Lever, Ashby, Workday and Oracle career boards, ranks them against your résumé without inventing anything, and keeps your DSA practice on a spaced-repetition schedule.{% endblock %}
+{% block head %}<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Athena","url":"{{ site_url }}/","description":"Live jobs from company career APIs, scored honestly, with prep that schedules itself.","author":{"@type":"Person","name":"Shourjya Hazra","sameAs":["https://www.linkedin.com/in/shourjya-hazra-683128200/"]}}</script>{% endblock %}
 {% block body %}
-
-<!-- 1. Futuristic 3D Holographic Command Center Hero -->
-<div class="athena-hero-container">
-  <div>
-    <div class="athena-tagline">
-      <span>● MULTI-AGENT PROTOCOL (MAP) v2.4</span>
-      <span style="opacity:0.4;">|</span>
-      <span>ZERO-ORM SQLITE</span>
-    </div>
-    
-    <h1 class="athena-hero-title">
-      ATHENA CAREER OS
-    </h1>
-    
-    <p class="athena-hero-sub">
-      Your 24/7 Autonomous Career Digital Twin. Ingests 10,800+ verified enterprise ATS openings from global tier-1 firms, simulates recruiter evaluation algorithms, and tailors high-impact applications in milliseconds.
-    </p>
-
-    <div class="athena-creator-credit">
-      <span>✦ Engineered by <strong>Shourjya Hazra</strong></span>
-      <span style="opacity:0.3;">•</span>
-      <span>Ex-NPCI UPI/IMPS Core Payments • Distributed Systems &amp; AI</span>
-    </div>
-
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-      <a href="https://www.linkedin.com/in/shourjya-hazra-683128200/" target="_blank" rel="noopener noreferrer" class="btn-linkedin-contact">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.45a1.64 1.64 0 1 0 0 3.28 1.64 1.64 0 0 0 0-3.28z"/></svg>
-        <span>Connect on LinkedIn</span>
-      </a>
-      <a href="/jobs" class="btn btn-primary" style="padding:8px 18px;font-size:12.5px;font-weight:600;">
-        Explore 10,800+ Live Jobs →
-      </a>
-      {% if not user.is_authenticated %}
-      <a href="/login" class="btn btn-ghost" style="padding:8px 16px;font-size:12.5px;font-weight:600;">
-        Access Twin Gateway ➔
-      </a>
-      {% endif %}
-    </div>
+<section class="hero">
+  <h1>Live jobs from company career APIs, scored honestly, with prep that schedules itself.</h1>
+  <p class="lede">Athena reads openings directly from Greenhouse, Lever, Ashby, Workday and Oracle boards, ranks them against your résumé, and keeps your DSA practice on a spaced-repetition schedule. It never invents a bullet and never shows a score it didn't compute.</p>
+  <div class="cta">
+    <a class="btn primary" href="/jobs">Browse {{ '{:,}'.format(stats.open_jobs) }} live jobs</a>
+    <a class="btn" href="#how">See how it works</a>
   </div>
+  <p class="facts">{{ stats.companies_active }} companies · {{ '{:,}'.format(stats.india_jobs) }} roles in India · refreshed {{ stats.last_seen|reldate if stats.last_seen else 'recently' }}</p>
+</section>
 
-  <!-- 3D Holographic Digital Twin Rig & Agent Flow -->
-  <div class="athena-3d-stage">
-    <div class="avatar-hologram-rig">
-      <div class="avatar-ring avatar-ring-1"></div>
-      <div class="avatar-ring avatar-ring-2"></div>
-      <div class="avatar-ring avatar-ring-3"></div>
-      
-      <!-- Central Digital Twin Avatar Core -->
-      <div class="avatar-core-sphere" title="Athena Digital Twin Neural Core">
-        <svg class="avatar-icon-svg" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2a5 5 0 0 1 5 5c0 2.22-1.44 4.1-3.46 4.75C15.65 12.82 17.5 14.7 18 17H6c.5-2.3 2.35-4.18 4.46-5.25C8.44 11.1 7 9.22 7 7a5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 9c-2.4 0-4.5 1.3-5.3 3h10.6c-.8-1.7-2.9-3-5.3-3z"/>
-        </svg>
-        <span class="avatar-core-label">AI TWIN</span>
-      </div>
+{% if request.query_params.get('subscribed') == '1' %}
+<div class="notice ok" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#circle-check"/></svg>Thanks — you're on the list.</div>
+{% elif request.query_params.get('deleted') == '1' %}
+<div class="notice ok" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#circle-check"/></svg>Your account and all of its data have been deleted.</div>
+{% endif %}
 
-      <!-- Orbiting Autonomous Agent Satellites -->
-      <div class="agent-node node-scout" title="Scout Agent: 10,800+ Live Openings Verified">
-        <span>🛰️ Scout</span>
-      </div>
-      <div class="agent-node node-matcher" title="Matcher Agent: 4-Pillar Recruiter Scoring">
-        <span>⚖️ Matcher</span>
-      </div>
-      <div class="agent-node node-analyst" title="Analyst Agent: STAR Bullet Synthesis">
-        <span>🧬 Analyst</span>
-      </div>
-      <div class="agent-node node-seo" title="SEO Agent: Recruiter & AI Visibility">
-        <span>📡 SEO</span>
-      </div>
-    </div>
-
-    <!-- Live Status Readout HUD -->
-    <div class="hud-readout">
-      <span class="pulse-dot"></span>
-      <span>TWIN ACTIVE • 10,862 ATS FEEDS • 0.08s LATENCY</span>
-    </div>
+<section class="section" id="how">
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="step"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#radar"/></svg><div><b>Ingest</b><p>A scout agent polls public ATS APIs nightly, de-duplicates by company + title + location, and closes a role after it vanishes from three consecutive runs.</p></div></div>
+    <div class="step"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#target"/></svg><div><b>Score</b><p>A BM25 shortlist, then a recruiter-style pass across four pillars: direct skills, transferable depth, adjacent tooling, and quantified impact. If the model is offline you see "Unscored", not a made-up number.</p></div></div>
+    <div class="step"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#brain"/></svg><div><b>Prepare</b><p>Tailored résumés are selected from your own bullet bank and rejected if a contact field goes missing. Practice is a spaced-repetition queue across 26 patterns.</p></div></div>
   </div>
-</div>
+</section>
 
-<!-- 2. Live Platform Telemetry Bar -->
-<div class="strip" style="display:flex;justify-content:space-around;padding:14px 20px;margin-bottom:32px;flex-wrap:wrap;gap:12px;">
-  <span>Active Verified Openings <b>{{ live_jobs_count or '10,862+' }}</b></span>
-  <span>Enterprise ATS Feeds <b>{{ companies_count or '63' }}</b></span>
-  <span>Interactive Patterns <b>{{ health.patterns or 26 }}</b></span>
-  <span>Mapped Lessons <b>{{ health.resources or 347 }}</b></span>
-  <span>Apply Link Health <b>100% 200 OK</b></span>
-</div>
-
-<!-- 3. Infographical Architecture: How the Digital Twin Operates -->
-<div class="infographic-container">
-  <div class="infographic-head">
-    <div class="infographic-title">
-      <span>⚡ How Athena's Multi-Agent Protocol (MAP) Operates</span>
-    </div>
-    <span style="font-family:var(--mono);font-size:11.5px;color:var(--text-3);">AUTONOMOUS 24/7 PIPELINE</span>
-  </div>
-
-  <div class="infographic-steps-grid">
-    <div class="info-step-card">
-      <div class="info-step-num">01 / RADAR</div>
-      <div class="info-step-heading">Enterprise ATS Ingestion</div>
-      <div class="info-step-body">
-        Continuously ingests 10,800+ live openings across Google, JPMorgan Chase, Morgan Stanley, Goldman Sachs, Barclays, Razorpay, and NPCI with 100% verified 200 OK apply URLs.
-      </div>
-      <div class="info-step-badge">10,862 VERIFIED JOBS</div>
-    </div>
-
-    <div class="info-step-card">
-      <div class="info-step-num">02 / MAPPING</div>
-      <div class="info-step-heading">Twin Vectorization</div>
-      <div class="info-step-body">
-        Extracts candidate capabilities, technical stack depth, and track guardrails (Tech vs Business) into an immutable SQLite profile matrix with strict tenant isolation.
-      </div>
-      <div class="info-step-badge">ZERO DATA LEAKAGE</div>
-    </div>
-
-    <div class="info-step-card">
-      <div class="info-step-num">03 / AUDIT</div>
-      <div class="info-step-heading">4-Pillar Recruiter Fit</div>
-      <div class="info-step-body">
-        Simulates lead recruiter screening: Direct Skills (40%), Transferable Depth (30%), Adjacent Architecture (20%), and Quantified Impact (10%) with transparent match scores.
-      </div>
-      <div class="info-step-badge">AI RECRUITER SIMULATION</div>
-    </div>
-
-    <div class="info-step-card">
-      <div class="info-step-num">04 / SPEED</div>
-      <div class="info-step-heading">0.1s 1-Click Autofill</div>
-      <div class="info-step-body">
-        Universal console autofill suite for Greenhouse, Lever, Ashby, and Workday portals. Eliminates 45-minute form fatigue in a single keystroke.
-      </div>
-      <div class="info-step-badge">UNIVERSAL APPLIER</div>
-    </div>
-  </div>
-</div>
-
-<!-- 4. Consolidated 4 Studios Navigation (Strictly 4 Columns on Desktop) -->
-<div class="studio-grid-4">
-  <!-- Studio 1: Jobs & Radar -->
-  <a class="studio-card" href="/jobs">
-    <div>
-      <div class="studio-icon">💼</div>
-      <div class="studio-title">
-        <span>Jobs Radar</span>
-        <span>→</span>
-      </div>
-      <div class="studio-desc">
-        Live telemetry from Google, JPMorgan Chase, Morgan Stanley, Razorpay, and NPCI with 4-pillar recruiter scoring.
-      </div>
-    </div>
-    <div class="studio-meta">
-      10,862 OPENINGS • 0 DEAD LINKS
-    </div>
-  </a>
-
-  <!-- Studio 2: Career AI Studio -->
-  <a class="studio-card" href="/linkedin">
-    <div>
-      <div class="studio-icon">🎯</div>
-      <div class="studio-title">
-        <span>Career AI Studio</span>
-        <span>→</span>
-      </div>
-      <div class="studio-desc">
-        50-point LinkedIn audit, buzzword scanner, 220-word About rewrite, and 8-point AI visibility ranking (ChatGPT &amp; Perplexity).
-      </div>
-    </div>
-    <div class="studio-meta">
-      RECRUITER SEO • AI CITATION RANKER
-    </div>
-  </a>
-
-  <!-- Studio 3: Prep Lab -->
-  <a class="studio-card" href="/patterns">
-    <div>
-      <div class="studio-icon">🧪</div>
-      <div class="studio-title">
-        <span>Prep Lab</span>
-        <span>→</span>
-      </div>
-      <div class="studio-desc">
-        26 interactive DSA pattern visualizers with animated execution in Python, C++, Java + FSRS-lite spaced repetition queue.
-      </div>
-    </div>
-    <div class="studio-meta">
-      26 PATTERNS • 347 LESSONS
-    </div>
-  </a>
-
-  <!-- Studio 4: Digital Twin Gateway -->
-  <a class="studio-card" href="{% if user.is_authenticated %}/profile{% else %}/login?next=/profile{% endif %}">
-    <div>
-      <div class="studio-icon">👤</div>
-      <div class="studio-title">
-        <span>Twin Gateway</span>
-        <span>→</span>
-      </div>
-      <div class="studio-desc">
-        {% if user.is_authenticated %}
-          Manage your personal candidate target roles, master resume hyperlink extraction, and private pipeline.
-        {% else %}
-          Sign in via Google or candidate persona to activate your private career digital twin and tailored bullet bank.
-        {% endif %}
-      </div>
-    </div>
-    <div class="studio-meta">
-      {% if user.is_authenticated %}
-        {{ user.display_name or 'ACTIVE TWIN' }} • ISOLATED WAL
+<section class="section">
+  <h2>Today</h2>
+  <div class="today">
+    <div class="card">
+      <div class="kicker">Pattern of the day</div>
+      {% if potd and potd.pattern %}
+        <h3><a href="/patterns/{{ potd.pattern.slug }}">{{ potd.pattern.name }}</a></h3>
+        <p class="muted">{{ potd.pattern.summary|truncate(140) }}</p>
+        {% if potd.problem %}<p class="small">Try: <a href="{{ potd.problem.url }}" target="_blank" rel="noopener">{{ potd.problem.title }}</a> <span class="diff {{ potd.problem.difficulty }}">{{ potd.problem.difficulty }}</span></p>{% endif %}
+        <a class="btn sm" href="/patterns/{{ potd.pattern.slug }}">Open the pattern</a>
       {% else %}
-        AUTH GATEWAY • STRICT PRIVACY
+        <p class="muted">No patterns loaded yet.</p>
       {% endif %}
     </div>
-  </a>
-</div>
+    <div class="card">
+      <div class="row between"><div class="kicker">Newest engineering openings in India</div><a class="small" href="/jobs">All jobs →</a></div>
+      {% if newest %}
+      <ul class="list">
+        {% for j in newest %}
+        <li><span><a href="/jobs/{{ j.id }}">{{ j.title }}</a><span class="who"> · {{ j.company_name }}</span></span><span class="faint small">{{ j.seen_label }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="muted">Nothing new yet.</p>{% endif %}
+    </div>
+  </div>
+</section>
 
-<!-- 5. Core Algorithmic Mastery Preview -->
-<h2 style="font-size:18px;font-weight:700;color:var(--text-0);margin:0 0 14px;">Algorithmic Patterns &amp; Visualizers</h2>
-<div class="grid g3">
-  {% for p in patterns %}
-  <a class="card" href="/patterns/{{ p.slug }}" style="text-decoration:none;">
-    <span class="t" style="display:flex;justify-content:space-between;align-items:center;">
-      <span>{{ p.name }}</span>
-      <span style="font-size:11px;color:var(--blue);font-weight:normal;">Visualizer →</span>
-    </span>
-    <span class="s">{{ p.summary|truncate(96) }}</span>
-    <span class="n">
-      <span>{{ p.problem_count }} problems</span>
-      {% if p.solved_count %}<span class="done">{{ p.solved_count }} solved</span>{% endif %}
-    </span>
-  </a>
-  {% endfor %}
-</div>
+<section class="section" id="access">
+  {% if user.is_authenticated %}
+    <h2>Your desk</h2>
+    <div class="grid g3">
+      <a class="card" href="/jobs"><div class="kicker">Scored matches</div><div class="score" style="font-size:28px">{{ my.matches }}</div><p class="muted small">{{ 'Run a match from the jobs page.' if my.matches == 0 else 'Open the jobs page to review them.' }}</p></a>
+      <a class="card" href="/pipeline"><div class="kicker">Applications</div><div class="score" style="font-size:28px">{{ my.applied }}</div><p class="muted small">Tracked in your pipeline.</p></a>
+      <a class="card" href="/practice"><div class="kicker">Reviews due</div><div class="score" style="font-size:28px">{{ my.due }}</div><p class="muted small">Spaced-repetition queue.</p></a>
+    </div>
+    {% if not my.has_resume %}<p style="margin-top:16px"><a class="btn primary" href="/profile">Upload your résumé to get scored matches</a></p>{% endif %}
+  {% else %}
+    <h2>What signed-in users get</h2>
+    <ul class="features">
+      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>Fit scores with the reasoning, strengths and gaps for each role</li>
+      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>A tailored PDF résumé built only from your own bullets</li>
+      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>A LinkedIn audit with headline and About rewrites</li>
+      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>An application pipeline that tracks every stage</li>
+      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>A daily practice queue across 26 DSA patterns</li>
+      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>Copy-ready application fields, never a script to paste into a console</li>
+    </ul>
+    <div class="row" style="margin-top:20px">
+      <a class="btn primary" href="/login">Sign in with Google</a>
+      <a class="btn" href="/auth/demo-sandbox">Try the sandbox — no account</a>
+    </div>
+    <form class="card flat" method="post" action="/a/subscribe" style="margin-top:20px;max-width:520px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="source" value="home">
+      <label for="sub-email">Want access when it opens up? Leave an email.</label>
+      <div class="field inline"><input id="sub-email" type="email" name="email" required placeholder="you@example.com" autocomplete="email" style="flex:1;min-width:200px"><button class="btn" type="submit">Notify me</button></div>
+      <p class="help">One email when it's ready. No newsletter.</p>
+    </form>
+  {% endif %}
+</section>
 
+<section class="section">
+  <h2>About the build</h2>
+  <p class="muted">Athena is a Python, FastAPI, Jinja and HTMX app on a single SQLite file, with no client-side framework and no ORM. Eight small agents read and write the same tables instead of calling each other, which is why it runs on a free serverless plan. The <a href="/system">status page</a> shows every agent's last run. Built by <a href="https://www.linkedin.com/in/shourjya-hazra-683128200/" rel="noopener noreferrer" target="_blank">Shourjya Hazra</a>.</p>
+</section>
 {% endblock %}

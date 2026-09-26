@@ -1,70 +1,31 @@
-{% extends "base.html" %}{% set nav='pipeline' %}
-{% block title %}Pipeline — Trackboard{% endblock %}
+{% extends "base.html" %}
+{% block title %}Pipeline — Athena{% endblock %}
+{% block robots %}noindex{% endblock %}
 {% block body %}
-<div class="page-head">
-  <div class="label">Applications</div>
-  <h1>The board</h1>
-  <p class="sub">Every application, grouped by stage. Moves on its own once Gmail is connected.</p>
-</div>
-
+<div class="crumbs"><a href="/jobs">Jobs</a> / Pipeline</div>
+<h1>Your pipeline</h1>
+<p class="muted">Every application, grouped by stage.</p>
 {% set order = ['prepared','submitted','acknowledged','screening','assessment','interview','offer','rejected','ghosted','withdrawn'] %}
-{% set any = cols|length > 0 %}
-
-{% if user and user.is_guest %}
-<div class="card" style="margin-bottom:24px;padding:24px;background:linear-gradient(135deg, rgba(56,139,253,0.06) 0%, rgba(13,17,23,0.95) 100%);border:1px solid rgba(56,139,253,0.25);border-radius:10px;text-align:center;">
-  <div style="font-size:26px;margin-bottom:8px;">🔒</div>
-  <h2 style="font-size:16px;font-weight:700;color:var(--chalk);margin:0 0 6px 0;">Private Candidate Application Pipeline</h2>
-  <p style="font-size:13px;color:var(--text-3);max-width:560px;margin:0 auto 16px auto;line-height:1.5;">
-    You are currently viewing Athena in <b>Public Visitor Mode</b>. Candidate job applications, interview timelines, and recruiter correspondence are strictly isolated per authenticated user in SQLite with zero cross-tenant leakage.
-  </p>
-  <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
-    <a href="/login" class="btn btn-primary" style="padding:8px 18px;font-size:12.5px;font-weight:600;">Sign in with Google ➔</a>
-  </div>
-</div>
-{% elif any %}
+{% if cols %}
+<div class="kanban">
 {% for st in order %}{% if cols.get(st) %}
-<h2>
-  <span class="flap flap-{{ st }} flip">{{ st }}</span>
-  <span class="mono" style="color:var(--text-3);margin-left:4px;font-size:12px;">{{ cols[st]|length }}</span>
-</h2>
+<h2>{{ st }} <span class="num muted" style="font-size:14px">{{ cols[st]|length }}</span></h2>
+<div class="stack">
 {% for a in cols[st] %}
-<div class="card" style="margin-bottom:10px;padding:16px;">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
-    <div>
-      <span class="t" style="font-size:15px;">
-        {{ a.title }}
-        <span style="color:var(--text-3);font-weight:400;">·</span>
-        <span style="color:var(--amber);">{{ a.company_name }}</span>
-      </span>
-      <div class="s" style="margin-top:4px;">
-        <span class="mono" style="font-size:11px;color:var(--text-3);">
-          Applied {{ (a.applied_at or a.last_event_at)|ist if (a.applied_at or a.last_event_at) else 'recently' }}
-        </span>
-        {% if a.status_source == 'inbox_agent' %}
-          <span class="pill" style="color:var(--green);background:var(--green-dim);margin-left:6px;font-size:10px;">auto-tracked via Gmail</span>
-        {% else %}
-          <span class="pill" style="margin-left:6px;font-size:10px;">user-tracked</span>
-        {% endif %}
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <form method="post" action="/a/applications/{{ a.id }}/status" style="margin:0;">
-        <select name="status" onchange="this.form.submit()" style="background:var(--bg-2);color:var(--text-1);border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;padding:4px 8px;cursor:pointer;">
-          {% for opt in order %}
-            <option value="{{ opt }}" {% if opt == st %}selected{% endif %}>Move to: {{ opt|capitalize }}</option>
-          {% endfor %}
-        </select>
-      </form>
-      <a href="/jobs/{{ a.job_id }}/tailor" class="btn btn-ghost" style="font-size:12px;" title="View tailored resume">Resume ↗</a>
+<div class="card">
+  <div class="row between">
+    <div><b>{{ a.title }}</b> <span class="muted">· {{ a.company_name }}</span><div class="small muted" style="margin-top:4px">{{ 'Applied ' ~ ((a.applied_at or a.last_event_at)|ist) if (a.applied_at or a.last_event_at) else 'Recently' }}{% if a.status_source == 'inbox_agent' %} · <span class="chip ok">tracked from email</span>{% endif %}</div></div>
+    <div class="row">
+      <form method="post" action="/a/applications/{{ a.id }}/status" style="margin:0"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label class="sr-only" for="st-{{ a.id }}">Move stage</label><select id="st-{{ a.id }}" name="status" data-autosubmit style="min-height:36px;width:auto">{% for opt in order %}<option value="{{ opt }}" {% if opt == st %}selected{% endif %}>{{ opt|capitalize }}</option>{% endfor %}</select></form>
+      <a class="btn sm" href="/jobs/{{ a.job_id }}/tailor">Résumé</a>
     </div>
   </div>
 </div>
 {% endfor %}
-{% endif %}{% endfor %}
-{% else %}
-<div class="empty">
-  <b>Nothing in the pipeline yet.</b><br>
-  Applications appear here once you apply — and move on their own once Gmail is connected.
 </div>
+{% endif %}{% endfor %}
+</div>
+{% else %}
+<div class="empty"><b>Nothing in the pipeline yet.</b><br>Mark a job as applied from the jobs page and it shows up here.</div>
 {% endif %}
 {% endblock %}

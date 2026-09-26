@@ -132,13 +132,17 @@ def test_apply_go_route_redirects_safely(monkeypatch):
     from trackboard.main import app
 
     monkeypatch.setattr(jobs, "is_job_url_closed", lambda url: False)
+    import trackboard.security as sec
+    monkeypatch.setattr(sec, "validate_outbound_url", lambda url, extra_hosts=None, strict=False: url)
+    import trackboard.main as m
+    monkeypatch.setattr(m, "validate_outbound_url", lambda url, extra_hosts=None, strict=False: url)
 
-    jobs.upsert(_job(company_name="GoCorp", title="Go Engineer", apply_url="https://gocorp.com/apply"))
+    jobs.upsert(_job(company_name="GoCorp", title="Go Engineer", apply_url="https://gocorp.greenhouse.io/apply"))
     row = db.query_one("SELECT id FROM jobs WHERE company_name='GoCorp'")
 
     client = TestClient(app, follow_redirects=False)
     resp = client.get(f"/a/jobs/{row['id']}/go")
     assert resp.status_code == 303
-    assert resp.headers.get("location") == "https://gocorp.com/apply"
+    assert resp.headers.get("location") == "https://gocorp.greenhouse.io/apply"
 
 

@@ -476,9 +476,9 @@ Athena supports multi-tenant candidate profiling with customizable tracks and se
 
 | User Email | Assigned Track | Target Job Titles | Negative Avoid Titles |
 |:---|:---|:---|:---|
-| `shourjya001@gmail.com` (Shourjya) | `tech` | SDE, Software Development Engineer, Backend Engineer, AI Engineer, Systems Engineer | Senior, Staff, Principal, Lead, Manager, Director, Business Analyst, Banking Ops |
-| `manshirohella21@gmail.com` (Manshi) | `dual_track` (`tech` + `business`) | SDE, Backend Engineer, Python Developer **AND** Business Analyst, Product Analyst, Data Analyst | Lead, Staff, Principal, Director, VP, Branch Banking, Sales, Telecaller |
-| `prernarohilla050802@gmail.com` (Prerna) | `business` | Banking Operations Associate, Operations Analyst, Business Analyst, KYC Specialist | Director, VP, Head of, Managing Director, Partner |
+| `owner@example.com` (Shourjya) | `tech` | SDE, Software Development Engineer, Backend Engineer, AI Engineer, Systems Engineer | Senior, Staff, Principal, Lead, Manager, Director, Business Analyst, Banking Ops |
+| `user-c@example.com` (Manshi) | `dual_track` (`tech` + `business`) | SDE, Backend Engineer, Python Developer **AND** Business Analyst, Product Analyst, Data Analyst | Lead, Staff, Principal, Director, VP, Branch Banking, Sales, Telecaller |
+| `user-b@example.com` (Prerna) | `business` | Banking Operations Associate, Operations Analyst, Business Analyst, KYC Specialist | Director, VP, Head of, Managing Director, Partner |
 
 ### 8.3 Track-Aware Negative Exclusions
 - **Tech Track Exclusions**: If track is `tech`, automatically reject jobs containing:  
@@ -537,7 +537,7 @@ A structured master bank written once by the candidate containing all validated 
 ```yaml
 identity:
   name: "Shourjya Hazra"
-  email: "shourjya001@gmail.com"
+  email: "owner@example.com"
   linkedin: "https://www.linkedin.com/in/shourjya-hazra-683128200/"
   github: "https://github.com/shourjya001"
   location: "Mumbai, India"

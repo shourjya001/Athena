@@ -1,26 +1,19 @@
-{% extends "base.html" %}{% set nav='patterns' %}
-{% block title %}Patterns — Trackboard{% endblock %}
+{% extends "base.html" %}
+{% block title %}DSA patterns — Athena{% endblock %}
+{% block meta_description %}{{ total }} DSA patterns ordered as a curriculum: two pointers, sliding window, monotonic stack, binary search, trees, graphs, DP and more, each with problems and videos.{% endblock %}
 {% block body %}
-<div class="page-head">
-  <div class="label">{{ total }} patterns</div>
-  <h1>The taxonomy</h1>
-  <p class="sub">Ordered as a curriculum. Problems, videos, and drills all join through these.</p>
-</div>
-
-{% for family, pats in families.items() %}
-<h2>{{ family }}</h2>
-<div class="grid g2">
+<div class="crumbs"><a href="/prep">Prep</a> / Patterns</div>
+<h1>The taxonomy</h1>
+<p class="muted">{{ total }} patterns ordered as a curriculum. Problems, videos and drills all hang off these.</p>
+{% for fam, pats in families.items() %}
+<section class="family">
+  <h2>{{ fam|replace('-', ' ') }}</h2>
   {% for p in pats %}
-  <a class="card" href="/patterns/{{ p.slug }}">
-    <span class="t">{{ p.name }}</span>
-    <span class="s">{{ p.summary|truncate(120) }}</span>
-    <span class="n">
-      <span>{{ p.problem_count }} problems</span>
-      <span>{{ p.resource_count }} videos</span>
-      {% if p.solved_count %}<span class="done">{{ p.solved_count }} solved</span>{% endif %}
-    </span>
+  <a class="pattern-row" href="/patterns/{{ p.slug }}">
+    <div><b>{{ p.name }}</b><div class="s">{{ p.summary|truncate(120) }}</div></div>
+    <div class="n">{{ p.problem_count }} problems<br>{{ p.video_count }} videos{% if p.solved_count %}<br><span class="done">{{ p.solved_count }} solved</span>{% endif %}</div>
   </a>
   {% endfor %}
-</div>
+</section>
 {% endfor %}
 {% endblock %}

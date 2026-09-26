@@ -1,340 +1,48 @@
 {% extends "base.html" %}
-{% block title %}LinkedIn Profile & AI Visibility Optimizer — Trackboard{% endblock %}
-
+{% block title %}LinkedIn audit — Athena{% endblock %}
+{% block meta_description %}A scored LinkedIn audit with a buzzword scan, three headline variants, an About rewrite and an AI-search visibility checklist. Built from what you've done, not what sounds good.{% endblock %}
 {% block body %}
-<div style="max-width:960px; margin: 0 auto; padding: 24px 0 60px;">
+<div class="crumbs"><a href="/studio">Studio</a> / LinkedIn audit</div>
+<h1>LinkedIn Profile &amp; AI Visibility Optimizer</h1>
+<p class="muted">Paste your current headline, About and a few experience bullets. You get a scored audit, buzzword replacements, three headline variants, an About rewrite, and an eight-point checklist for how AI assistants and recruiter search read profiles.</p>
 
-  <!-- Header -->
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px; border-bottom:1px solid var(--rule); padding-bottom:16px;">
-    <div>
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-        <h1 style="margin:0; font-size:24px; font-weight:700; color:var(--text-0);">LinkedIn Profile & AI Visibility Optimizer</h1>
-        <span class="badge" style="background:rgba(56, 139, 253, 0.15); color:var(--blue); border:1px solid var(--blue); font-size:11px; padding:2px 8px; border-radius:12px;">v1.0 AI Search Ranker</span>
-      </div>
-      <p style="margin:0; color:var(--text-2); font-size:13.5px; line-height:1.5;">
-        Audit and rewrite your profile to attract engineering leaders and rank #1 in <strong>LinkedIn Recruiter search</strong>, <strong>ChatGPT</strong>, <strong>Perplexity</strong>, and <strong>Claude</strong>.
-      </p>
-    </div>
-    <div style="text-align:right;">
-      <a href="/jobs" class="btn btn-sm" style="font-size:12px;">← Back to Jobs</a>
-    </div>
+{% if not user.is_authenticated %}
+<div class="notice info" style="margin-bottom:20px"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#info"/></svg><span>The form is open to read. Running the audit needs an account — <a href="/login?next=/linkedin">sign in</a> or <a href="/auth/demo-sandbox?next=/linkedin">use the sandbox</a>.</span></div>
+{% endif %}
+
+<form id="li-form" class="card" data-authenticated="{{ '1' if user.is_authenticated else '0' }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div class="grid g2">
+    <div class="field"><label for="li-url">LinkedIn profile URL</label><input id="li-url" type="url" name="linkedin_url" value="{{ user_linkedin }}" placeholder="https://www.linkedin.com/in/…" autocomplete="url"><p class="help">Used for the custom-URL check only. Nothing is fetched from LinkedIn.</p></div>
+    <div class="field"><label for="li-audience">Who should find you?</label><input id="li-audience" type="text" name="target_audience" value="Engineering leaders and technical recruiters" maxlength="120"></div>
   </div>
-
-  <!-- Intake Form -->
-  <div class="card" style="background:var(--bg-1); border:1px solid var(--rule); border-radius:8px; padding:20px; margin-bottom:28px;">
-    <h3 style="margin-top:0; margin-bottom:14px; font-size:15px; color:var(--text-0); display:flex; align-items:center; gap:8px;">
-      <span>📝 Profile Intake & Strategy</span>
-      <span style="font-size:11px; color:var(--text-2); font-weight:normal;">(Paste your details or LinkedIn URL below)</span>
-    </h3>
-
-    <form id="linkedin-form" onsubmit="handleOptimize(event)">
-      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px; margin-bottom:14px;">
-        <div>
-          <label style="display:block; font-size:11.5px; font-weight:600; color:var(--text-1); margin-bottom:5px;">LinkedIn Profile URL</label>
-          <input type="text" id="li-url" value="{{ user_linkedin or '' }}" placeholder="https://linkedin.com/in/username" style="width:100%; padding:8px 10px; background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; color:var(--text-0); font-size:13px; font-family:var(--sans);">
-        </div>
-        <div>
-          <label style="display:block; font-size:11.5px; font-weight:600; color:var(--text-1); margin-bottom:5px;">Who are you targeting?</label>
-          <input type="text" id="li-audience" value="Engineering Managers & Technical Recruiters at Tier-1 / FinTech startups" style="width:100%; padding:8px 10px; background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; color:var(--text-0); font-size:13px; font-family:var(--sans);">
-        </div>
-        <div>
-          <label style="display:block; font-size:11.5px; font-weight:600; color:var(--text-1); margin-bottom:5px;">Positioning Goal</label>
-          <select id="li-goal" style="width:100%; padding:8px 10px; background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; color:var(--text-0); font-size:13px; font-family:var(--sans);">
-            <option value="job seeker" selected>Job Seeker (Inbound Recruiter Inquiries)</option>
-            <option value="thought leadership">Thought Leadership & Authority</option>
-            <option value="client attraction">Client / Advisory Inbound</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="margin-bottom:14px;">
-        <label style="display:block; font-size:11.5px; font-weight:600; color:var(--text-1); margin-bottom:5px;">Current Headline (or title)</label>
-        <input type="text" id="li-headline" value="{{ current_headline or '' }}" placeholder="e.g. Software Engineer @ Company | Python, Go, Distributed Systems" style="width:100%; padding:8px 10px; background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; color:var(--text-0); font-size:13px; font-family:var(--sans);">
-      </div>
-
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:16px;">
-        <div>
-          <label style="display:block; font-size:11.5px; font-weight:600; color:var(--text-1); margin-bottom:5px;">Current About Section</label>
-          <textarea id="li-about" rows="5" placeholder="Paste your current About text here..." style="width:100%; padding:8px 10px; background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; color:var(--text-0); font-size:12.5px; font-family:var(--sans); line-height:1.4;">{{ current_about or '' }}</textarea>
-        </div>
-        <div>
-          <label style="display:block; font-size:11.5px; font-weight:600; color:var(--text-1); margin-bottom:5px;">Top Experience Bullets & Metrics</label>
-          <textarea id="li-experiences" rows="5" placeholder="Paste 2-3 key accomplishments from your top role(s)..." style="width:100%; padding:8px 10px; background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; color:var(--text-0); font-size:12.5px; font-family:var(--sans); line-height:1.4;">{{ current_exp or '' }}</textarea>
-        </div>
-      </div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex; gap:10px; align-items:center;">
-          <span style="font-size:12px; color:var(--text-2); font-weight:600;">Mode:</span>
-          <label style="font-size:12px; color:var(--text-1); cursor:pointer;"><input type="radio" name="mode" value="quick"> Quick Fixes</label>
-          <label style="font-size:12px; color:var(--text-1); cursor:pointer;"><input type="radio" name="mode" value="standard" checked> Standard (Full Rewrite)</label>
-          <label style="font-size:12px; color:var(--text-1); cursor:pointer;"><input type="radio" name="mode" value="deep"> Deep + AI Visibility</label>
-        </div>
-
-        <button type="submit" id="submit-btn" class="btn btn-primary" style="padding:8px 20px; font-weight:600; font-size:13px; display:flex; align-items:center; gap:6px;">
-          <span>⚡ Run Audit & AI Visibility Optimization</span>
-        </button>
-      </div>
-    </form>
+  <div class="field"><label for="li-goal">Goal</label><select id="li-goal" name="goal"><option value="job seeker">Inbound recruiter interest</option><option value="thought leadership">Authority and thought leadership</option><option value="client advisory">Client or advisory inbound</option></select></div>
+  <div class="field"><label for="li-headline">Current headline</label><input id="li-headline" type="text" name="headline" value="{{ current_headline }}" maxlength="300" placeholder="Software Engineer at …"></div>
+  <div class="field"><label for="li-about">Current About section</label><textarea id="li-about" name="about" rows="6" maxlength="4000" placeholder="Paste your About section as it reads today.">{{ current_about }}</textarea></div>
+  <div class="field"><label for="li-experiences">Top experience bullets</label><textarea id="li-experiences" name="experiences" rows="5" maxlength="4000" placeholder="One bullet per line, with numbers where you have them.">{{ current_exp }}</textarea><p class="help">Real bullets only. The rewrite reorders and sharpens; it never adds a claim you didn't make.</p></div>
+  <fieldset><legend>Depth</legend>
+    <div class="seg" role="radiogroup" aria-label="Audit depth">
+      <label><input type="radio" name="mode" value="quick">Quick fixes</label>
+      <label><input type="radio" name="mode" value="standard" checked>Full rewrite</label>
+      <label><input type="radio" name="mode" value="deep">Deep + AI visibility</label>
+    </div>
+  </fieldset>
+  <div class="row">
+    <button id="li-submit" class="btn primary" type="submit" {% if not user.is_authenticated %}disabled aria-disabled="true"{% endif %}><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#sparkles"/></svg>Run audit</button>
+    {% if not user.is_authenticated %}<span class="help" style="margin:0">Sign in to run the audit.</span>{% endif %}
+    <span id="li-status" class="help" role="status" aria-live="polite" style="margin:0"></span>
   </div>
+</form>
 
-  <!-- Loading State -->
-  <div id="optimizer-loading" style="display:none; text-align:center; padding:40px 20px;">
-    <div style="font-size:24px; margin-bottom:12px; animation:spin 1s infinite linear;">⚡</div>
-    <div style="font-size:14px; font-weight:600; color:var(--text-0); margin-bottom:6px;">Auditing Profile & Calculating AI Visibility...</div>
-    <div style="font-size:12px; color:var(--text-2);">Scanning buzzwords, synthesizing authority headlines, and testing against AI search criteria.</div>
-  </div>
-
-  <!-- Results Section -->
-  <div id="optimizer-results" style="display:none;">
-
-    <!-- Section 1: Scorecard & Buzzwords -->
-    <div style="display:grid; grid-template-columns: 1fr 1.3fr; gap:16px; margin-bottom:20px;">
-      
-      <!-- Scores -->
-      <div class="card" style="background:var(--bg-1); border:1px solid var(--rule); border-radius:8px; padding:18px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <h4 style="margin:0; font-size:14px; color:var(--text-0);">📊 Section 1: Scored Profile Audit</h4>
-          <span id="res-total-score" class="badge" style="background:rgba(63, 185, 80, 0.15); color:var(--green); font-size:13px; font-weight:700; padding:3px 10px; border-radius:12px;">-- / 50</span>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:8px;" id="scores-container">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-
-      <!-- Priority Roadmap & Buzzword Scan -->
-      <div class="card" style="background:var(--bg-1); border:1px solid var(--rule); border-radius:8px; padding:18px;">
-        <h4 style="margin:0 0 10px; font-size:14px; color:var(--text-0);">🚨 Priority Fix Roadmap</h4>
-        <ol id="res-priority-list" style="margin:0 0 14px 20px; padding:0; font-size:12px; color:var(--text-1); line-height:1.6;">
-        </ol>
-
-        <h4 style="margin:0 0 8px; font-size:13px; color:var(--yellow);">🔍 Buzzword Scan & Replacements</h4>
-        <div id="res-buzzwords" style="max-height:110px; overflow-y:auto; font-size:11.5px; color:var(--text-2);">
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 2: Headline Rewrites -->
-    <div class="card" style="background:var(--bg-1); border:1px solid var(--rule); border-radius:8px; padding:20px; margin-bottom:20px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <h4 style="margin:0; font-size:15px; color:var(--text-0);">🎯 Section 2: 3 Strategic Headline Rewrites (Max 220 chars)</h4>
-        <span style="font-size:11.5px; color:var(--text-2);">Zero generic buzzwords • Search-indexed</span>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:12px;">
-        <div style="background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; padding:12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span style="font-size:11px; font-weight:700; color:var(--blue); text-transform:uppercase;">Variant A — Authority-Forward</span>
-            <button class="btn btn-sm" onclick="copyText('hl-a-text')" style="font-size:11px; padding:2px 8px;">Copy</button>
-          </div>
-          <div id="hl-a-text" style="font-size:13px; color:var(--text-0); font-weight:500; font-family:var(--sans);"></div>
-        </div>
-
-        <div style="background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; padding:12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span style="font-size:11px; font-weight:700; color:var(--green); text-transform:uppercase;">Variant B — Outcome-Forward</span>
-            <button class="btn btn-sm" onclick="copyText('hl-b-text')" style="font-size:11px; padding:2px 8px;">Copy</button>
-          </div>
-          <div id="hl-b-text" style="font-size:13px; color:var(--text-0); font-weight:500; font-family:var(--sans);"></div>
-        </div>
-
-        <div style="background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; padding:12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span style="font-size:11px; font-weight:700; color:var(--yellow); text-transform:uppercase;">Variant C — Niche-Specific</span>
-            <button class="btn btn-sm" onclick="copyText('hl-c-text')" style="font-size:11px; padding:2px 8px;">Copy</button>
-          </div>
-          <div id="hl-c-text" style="font-size:13px; color:var(--text-0); font-weight:500; font-family:var(--sans);"></div>
-        </div>
-      </div>
-
-      <div id="res-ab-rec" style="margin-top:12px; padding:10px 12px; background:rgba(88, 166, 255, 0.08); border-left:3px solid var(--blue); font-size:12px; color:var(--text-1); border-radius:0 4px 4px 0;">
-      </div>
-    </div>
-
-    <!-- Section 3: About Rewrite -->
-    <div class="card" style="background:var(--bg-1); border:1px solid var(--rule); border-radius:8px; padding:20px; margin-bottom:20px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <div>
-          <h4 style="margin:0; font-size:15px; color:var(--text-0);">✍️ Section 3: Complete About Section Rewrite</h4>
-          <span style="font-size:11.5px; color:var(--text-2);">Scroll-stopping Hook + Quantified Scale Proof + Direct CTA</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span id="about-wc-badge" class="badge" style="background:var(--bg-2); font-size:11px; color:var(--text-2);">-- words</span>
-          <button class="btn btn-sm btn-primary" onclick="copyText('res-about-text')" style="font-size:11.5px;">Copy Full About</button>
-        </div>
-      </div>
-
-      <div id="res-about-text" style="white-space:pre-wrap; background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; padding:14px; font-size:13px; color:var(--text-1); line-height:1.6; font-family:var(--sans);">
-      </div>
-    </div>
-
-    <!-- Section 4: Experience Bullets -->
-    <div class="card" style="background:var(--bg-1); border:1px solid var(--rule); border-radius:8px; padding:20px; margin-bottom:20px;">
-      <h4 style="margin:0 0 14px; font-size:15px; color:var(--text-0);">💼 Section 4: Experience Bullets Optimization (Before vs After)</h4>
-      <div id="res-exp-bullets" style="display:flex; flex-direction:column; gap:12px;">
-      </div>
-    </div>
-
-    <!-- Section 5: AI Visibility Checklist -->
-    <div class="card" style="background:var(--bg-1); border:1px solid var(--rule); border-radius:8px; padding:20px; margin-bottom:20px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <div>
-          <h4 style="margin:0; font-size:15px; color:var(--text-0);">🤖 Section 5: AI Visibility & Search Engine Optimization</h4>
-          <span style="font-size:11.5px; color:var(--text-2);">Surfaces profile in ChatGPT, Perplexity, Claude, and LinkedIn Recruiter Search</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span id="ai-vis-score" class="badge" style="background:rgba(63, 185, 80, 0.15); color:var(--green); font-size:12px; font-weight:700;">Score: --/8</span>
-        </div>
-      </div>
-
-      <div id="res-ai-checklist" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
-      </div>
-
-      <div style="background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; padding:12px;">
-        <div style="font-size:11.5px; font-weight:700; color:var(--text-0); margin-bottom:6px; text-transform:uppercase;">Top 3 Moves to Rank #1 in AI Search:</div>
-        <ol id="res-ai-moves" style="margin:0 0 0 18px; padding:0; font-size:12px; color:var(--text-1); line-height:1.6;">
-        </ol>
-      </div>
-    </div>
-
-    <!-- Section 6: Sample Content Posts -->
-    <div class="card" style="background:var(--bg-1); border:1px solid var(--rule); border-radius:8px; padding:20px;">
-      <h4 style="margin:0 0 12px; font-size:15px; color:var(--text-0);">📢 Section 6: Authority LinkedIn Posts (Positioning Reinforcement)</h4>
-      <div id="res-posts" style="display:flex; flex-direction:column; gap:12px;">
-      </div>
-    </div>
-
-  </div>
-
+<div id="li-results" hidden class="stack" style="margin-top:24px">
+  <div class="notice warn" id="li-offline" hidden><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#alert-circle"/></svg><span>The AI provider was unavailable, so this audit used the rule-based checks only. Headline and About rewrites are omitted rather than made up.</span></div>
+  <section class="card"><div class="row between"><h2 style="margin:0">Audit</h2><span class="chip accent"><span id="li-total" class="score">—</span> / 50</span></div><div id="li-scores" class="pillars"></div><h3 style="margin-top:16px">Priority fixes</h3><ol id="li-fixes"></ol></section>
+  <section class="card"><h2 style="margin:0 0 8px">Buzzwords</h2><div id="li-buzz"></div></section>
+  <section class="card"><h2 style="margin:0 0 8px">Headline variants</h2><div id="li-headlines" class="stack"></div><p id="li-ab" class="help"></p></section>
+  <section class="card"><div class="row between"><h2 style="margin:0">About rewrite</h2><span id="li-about-wc" class="chip"></span></div><p id="li-about-text" style="white-space:pre-wrap;margin-top:12px"></p><button class="btn sm" type="button" data-copy-from="li-about-text">Copy</button></section>
+  <section class="card"><h2 style="margin:0 0 8px">Experience bullets, before and after</h2><div id="li-bullets" class="stack"></div></section>
+  <section class="card"><div class="row between"><h2 style="margin:0">AI visibility</h2><span class="chip"><span id="li-ai" class="score">—</span> / 8</span></div><div id="li-ai-checks" class="stack" style="margin-top:12px"></div><h3 style="margin-top:16px">Top moves</h3><ul id="li-ai-moves"></ul></section>
+  <section class="card" id="li-posts-wrap" hidden><h2 style="margin:0 0 8px">Sample posts</h2><div id="li-posts" class="stack"></div></section>
 </div>
-
-<script>
-async function handleOptimize(e) {
-  e.preventDefault();
-  const btn = document.getElementById('submit-btn');
-  const loader = document.getElementById('optimizer-loading');
-  const results = document.getElementById('optimizer-results');
-
-  const payload = {
-    linkedin_url: document.getElementById('li-url').value.trim(),
-    target_audience: document.getElementById('li-audience').value.trim(),
-    goal: document.getElementById('li-goal').value,
-    headline: document.getElementById('li-headline').value.trim(),
-    about: document.getElementById('li-about').value.trim(),
-    experiences: document.getElementById('li-experiences').value.trim(),
-    mode: document.querySelector('input[name="mode"]:checked').value
-  };
-
-  btn.disabled = true;
-  loader.style.display = 'block';
-  results.style.display = 'none';
-
-  try {
-    const res = await fetch('/a/linkedin/optimize', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!data.ok) {
-      alert('Optimization error: ' + (data.error || 'Server error'));
-      return;
-    }
-    renderResults(data.data);
-  } catch (err) {
-    alert('Failed to connect to optimizer: ' + err);
-  } finally {
-    btn.disabled = false;
-    loader.style.display = 'none';
-  }
-}
-
-function renderResults(data) {
-  const r = document.getElementById('optimizer-results');
-  r.style.display = 'block';
-  r.scrollIntoView({ behavior: 'smooth' });
-
-  // 1. Audit scores
-  document.getElementById('res-total-score').innerText = `${data.audit_scores.total} / 50`;
-  const scoresCont = document.getElementById('scores-container');
-  scoresCont.innerHTML = `
-    <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-1);"><span>Headline Clarity</span><strong>${data.audit_scores.headline}/10</strong></div>
-    <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-1);"><span>About Section Impact</span><strong>${data.audit_scores.about}/10</strong></div>
-    <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-1);"><span>Experience Metrics</span><strong>${data.audit_scores.experience}/10</strong></div>
-    <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-1);"><span>Featured / Proof</span><strong>${data.audit_scores.featured}/10</strong></div>
-    <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-1);"><span>Fit for Goal</span><strong>${data.audit_scores.fit}/10</strong></div>
-  `;
-
-  // Priority Roadmap
-  const prioList = document.getElementById('res-priority-list');
-  prioList.innerHTML = (data.priority_fixes || []).map(p => `<li><strong>${p.section}:</strong> ${p.fix}</li>`).join('');
-
-  // Buzzwords
-  const bzCont = document.getElementById('res-buzzwords');
-  if (data.buzzwords_found && data.buzzwords_found.length > 0) {
-    bzCont.innerHTML = data.buzzwords_found.map(b => `<div style="margin-bottom:4px;">⚠️ <strong>${b.buzzword}</strong> → replace with <em>"${b.replacement}"</em></div>`).join('');
-  } else {
-    bzCont.innerHTML = '<span style="color:var(--green);">✓ Zero generic buzzwords found! Excellent crisp copy.</span>';
-  }
-
-  // 2. Headlines
-  document.getElementById('hl-a-text').innerText = data.headlines.variant_a;
-  document.getElementById('hl-b-text').innerText = data.headlines.variant_b;
-  document.getElementById('hl-c-text').innerText = data.headlines.variant_c;
-  document.getElementById('res-ab-rec').innerText = '💡 A/B Test Recommendation: ' + data.headlines.ab_recommendation;
-
-  // 3. About
-  document.getElementById('res-about-text').innerText = data.about.rewrite;
-  document.getElementById('about-wc-badge').innerText = `${data.about.word_count || data.about.rewrite.split(' ').length} words (Max 220)`;
-
-  // 4. Experience Bullets
-  const expCont = document.getElementById('res-exp-bullets');
-  expCont.innerHTML = (data.experience_bullets || []).map(b => `
-    <div style="background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; padding:12px;">
-      <div style="font-size:12px; font-weight:700; color:var(--text-0); margin-bottom:6px;">${b.company_role || 'Engineering Accomplishment'}</div>
-      <div style="font-size:11.5px; color:var(--text-2); margin-bottom:4px; text-decoration:line-through;">• ${b.before}</div>
-      <div style="font-size:12.5px; color:var(--green); font-weight:500;">• ${b.after}</div>
-    </div>
-  `).join('');
-
-  // 5. AI Visibility
-  document.getElementById('ai-vis-score').innerText = `AI Score: ${data.ai_visibility.score} / 8 (${data.ai_visibility.percentage}%)`;
-  const aiCheckCont = document.getElementById('res-ai-checklist');
-  aiCheckCont.innerHTML = (data.ai_visibility.checks || []).map(c => {
-    const icon = c.status === 'pass' ? '✅' : c.status === 'needs_work' ? '⚠️' : '❌';
-    const color = c.status === 'pass' ? 'var(--green)' : c.status === 'needs_work' ? 'var(--yellow)' : 'var(--red)';
-    return `
-      <div style="background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; padding:10px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-          <span style="font-size:12px; font-weight:600; color:var(--text-0);">${icon} ${c.name}</span>
-          <span style="font-size:10px; font-weight:700; color:${color}; text-transform:uppercase;">${c.status}</span>
-        </div>
-        <div style="font-size:11px; color:var(--text-2); line-height:1.4;">${c.detail}</div>
-      </div>
-    `;
-  }).join('');
-
-  const aiMoves = document.getElementById('res-ai-moves');
-  aiMoves.innerHTML = (data.ai_visibility.top_moves || []).map(m => `<li>${m}</li>`).join('');
-
-  // 6. Posts
-  const postsCont = document.getElementById('res-posts');
-  postsCont.innerHTML = (data.sample_posts || []).map((p, idx) => `
-    <div style="background:var(--bg-2); border:1px solid var(--rule); border-radius:6px; padding:12px;">
-      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span style="font-size:11px; font-weight:700; color:var(--blue);">Post #${idx+1}</span>
-        <button class="btn btn-sm" onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText); alert('Post copied!');" style="font-size:10.5px; padding:1px 6px;">Copy</button>
-      </div>
-      <div style="font-size:12px; color:var(--text-1); white-space:pre-wrap; line-height:1.5;">${p}</div>
-    </div>
-  `).join('');
-}
-
-function copyText(elemId) {
-  const text = document.getElementById(elemId).innerText;
-  navigator.clipboard.writeText(text).then(() => {
-    alert('Copied to clipboard!');
-  });
-}
-</script>
 {% endblock %}
+{% block scripts %}<script src="/static/linkedin.js?v={{ static_v }}" defer></script>{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Privacy — Athena{% endblock %}
+{% block meta_description %}What Athena collects, where it lives, how long it's kept, and how to delete it.{% endblock %}
+{% block body %}
+<div class="prose">
+<h1>Privacy</h1>
+<p class="muted">Last updated 26 September 2026.</p>
+<h2>What we collect</h2>
+<ul><li><b>Account:</b> your email address and display name from Google sign-in.</li><li><b>Profile:</b> the résumé text you provide, your target roles, keywords, locations, and optional contact fields you choose to add (phone, LinkedIn, GitHub) for copy-ready application chips.</li><li><b>Activity:</b> jobs you mark applied or dismissed, application stages you record, practice attempts and reviews.</li><li><b>Technical:</b> standard server logs, and per-IP counters used for rate limiting that expire within an hour.</li></ul>
+<h2>Where it lives</h2>
+<p>In a single SQLite database on the hosting provider (Vercel). There is no analytics script, no advertising pixel, and no third-party tracker on any page. YouTube videos on pattern pages load only after you press play, through YouTube's privacy-enhanced domain.</p>
+<h2>AI processing</h2>
+<p>When you run a match, a tailoring interview or a LinkedIn audit, the relevant text is sent to a language-model provider (Google Gemini, with fallbacks via OpenRouter). Names, emails and phone numbers are redacted before sending when <code>LLM_REDACT_PII</code> is on, which is the default. Job descriptions are wrapped as untrusted data so they can't act as instructions.</p>
+<h2>Retention and deletion</h2>
+<p>Your data is kept while your account exists. Sandbox accounts are deleted at sign-out or within two days. You can delete your account and every row tied to it at any time from <a href="/profile">your profile</a>; deletion is immediate and not reversible.</p>
+<h2>Sharing</h2>
+<p>We don't sell or share personal data. The only third parties that see any of it are Google (sign-in) and the model providers above, for the single request you trigger.</p>
+<h2>Contact</h2>
+<p>Privacy questions: message <a href="https://www.linkedin.com/in/shourjya-hazra-683128200/" rel="noopener noreferrer" target="_blank">Shourjya Hazra on LinkedIn</a>.</p>
+</div>
+{% endblock %}

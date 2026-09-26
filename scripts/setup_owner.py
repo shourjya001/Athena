@@ -12,7 +12,7 @@ from trackboard.settings import get_settings  # noqa: E402
 
 ANSWERS = {
     "full_name": "Shourjya Hazra",
-    "email": "shourjya001@gmail.com",
+    "email": "",
     "linkedin_url": "https://www.linkedin.com/in/shourjya-hazra-683128200/",
     # Fill these before the first Applier run — the form filler reads them:
     # "phone": "",
@@ -28,7 +28,7 @@ ANSWERS = {
 
 
 def main() -> None:
-    uid = users.ensure_user(get_settings().owner_email or "shourjya001@gmail.com",
+    uid = users.ensure_user(get_settings().owner_email or (_ for _ in ()).throw(SystemExit("Set OWNER_EMAIL first")),
                             "Shourjya Hazra")
     for k, v in ANSWERS.items():
         db.execute("INSERT INTO profile_answers (user_id, key, value) VALUES (?,?,?) "

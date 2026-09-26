@@ -1,511 +1,56 @@
-{% extends "base.html" %}{% set nav='jobs' %}
-{% block title %}Jobs — Trackboard{% endblock %}
+{% extends "base.html" %}
+{% block title %}Jobs — Athena{% endblock %}
+{% block meta_description %}{{ '{:,}'.format(stats.open_jobs) }} live openings read straight from company career APIs. Filter by region, track and seniority. Signed-in users see honest fit scores.{% endblock %}
 {% block body %}
-
-<div class="page-head">
-  <div class="label">
-    {% if user and user.is_guest %}
-      ✦ LIVE ATS RADAR • {{ total_open }} VERIFIED OPENINGS
-    {% elif matched_count > 0 %}
-      {{ matched_count }} RELEVANT ROLES FOR {{ (user.display_name or user.email.split('@')[0])|upper }}
-    {% else %}
-      MATCH QUEUE
-    {% endif %}
-  </div>
-  <h1>
-    {% if user and user.is_guest %}
-      Verified Openings &amp; Career Telemetry
-    {% else %}
-      Target Match Queue
-    {% endif %}
-  </h1>
-  <p class="sub">
-    {% if user and user.is_guest %}
-      Live ingested openings across Google, JPMorgan Chase, Morgan Stanley, Goldman Sachs, Barclays, NPCI, Razorpay, and CRED with 100% verified 200 OK apply links.
-    {% else %}
-      Filtered specifically for {{ user.display_name or user.email.split('@')[0] }} ({% if answers.get('titles') %}{{ answers.get('titles') }}{% else %}Set roles on Profile{% endif %}).
-    {% endif %}
-  </p>
-</div>
-
-{% if request.query_params.get('scouted') %}
-  <div class="card" style="margin-bottom:16px;padding:12px 16px;background:rgba(56,139,253,0.1);border-left:3px solid var(--blue);color:var(--chalk);font-size:13px;">
-    🛰️ <strong>Scout Agent Active:</strong> Scanning company ATS boards in the background for net-new verified postings.
-  </div>
-{% endif %}
-{% if request.query_params.get('matched') %}
-  <div class="card" style="margin-bottom:16px;padding:12px 16px;background:rgba(63,185,80,0.1);border-left:3px solid var(--green);color:var(--chalk);font-size:13px;">
-    ⚡ <strong>Matcher Agent Complete:</strong> Instant BM25 shortlisted and LLM multi-factor scoring cascade launched!
-  </div>
-{% endif %}
-{% if request.query_params.get('digest_sent') %}
-  <div class="card" style="margin-bottom:16px;padding:12px 16px;background:rgba(227,179,65,0.1);border-left:3px solid var(--signal);color:var(--chalk);font-size:13px;">
-    📨 <strong>Daily Digest Dispatched:</strong> Fresh job recommendations and pipeline telemetry sent to your registered email!
-  </div>
-{% endif %}
-
-{# ── Agent control bar ── #}
-<div class="agent-bar">
-  <div class="agent-status">
-    {% if agent_running %}
-      <div class="dot-live"></div>
-      <span style="color:var(--green);font-weight:500;">{{ agent_name }} running</span>
-    {% else %}
-      <div class="dot-idle"></div>
-      <span>{{ matched_count }} Active Matches</span>
-    {% endif %}
-  </div>
-
-  <form method="post" action="/a/scout/run" style="margin:0;">
-    <button type="submit" class="btn" title="Scout live job postings from ATS portals">🛰️ Run Scout</button>
-  </form>
-  <form method="post" action="/a/matcher/run" style="margin:0;">
-    <button type="submit" class="btn btn-blue" title="Score fresh matches with LLM cascade">⚡ Run Matcher</button>
-  </form>
-  <form method="post" action="/a/digest/send" style="margin:0;">
-    <button type="submit" class="btn" title="Send daily curated digest email now">📨 Send Digest</button>
-  </form>
-  <a href="/profile" class="btn" style="text-decoration:none;">👤 Edit Resume</a>
-</div>
-
-{# ── 1-Click Safari & Chrome Application Autofill Suite ── #}
-<div class="card" style="margin-bottom:20px;padding:16px 20px;border-left:3px solid var(--signal);background:linear-gradient(135deg, rgba(227,179,65,0.08) 0%, rgba(13,17,23,0.95) 100%);">
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-    <div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:16px;">⚡</span>
-        <strong style="font-size:14px;color:var(--chalk);">Universal 1-Click Application Autofill Suite (Safari &amp; Chrome)</strong>
-        <span class="pill" style="color:var(--green);border-color:rgba(63,185,80,0.3);font-size:10px;font-weight:700;">NO BOOKMARK DRAGGING NEEDED</span>
-      </div>
-      <p style="color:var(--muted);font-size:12.5px;margin:4px 0 0 0;line-height:1.4;">
-        Apply to Greenhouse, Lever, Ashby, Workday, and corporate ATS portals in <b>seconds</b> instead of 40-50 minutes.
-      </p>
-    </div>
-
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button type="button" class="btn btn-fill" id="btn-copy-script" onclick="copySafariAutofillScript()" style="font-weight:700;box-shadow:0 0 10px rgba(242,201,76,0.3);">
-        📋 Copy Safari Autofill Script
-      </button>
-      <button type="button" class="btn btn-blue" onclick="toggleQuickFillDrawer()">
-        ⚡ Quick-Fill Candidate Palette
-      </button>
-      <form method="post" action="/a/digest/send" style="margin:0;">
-        <button type="submit" class="btn btn-green" title="Send all visible recommended jobs directly to your inbox now">
-          ✉️ Send Digest to Email Now
-        </button>
-      </form>
-    </div>
-  </div>
-
-  {# Slide-out Candidate Quick-Fill Drawer #}
-  <div id="quickfill-drawer" style="display:none;margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);">
-    <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--signal);letter-spacing:0.04em;margin-bottom:10px;">
-      ⚡ 1-Click Field Chips (Click any chip to copy instantly to clipboard):
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-      <button type="button" class="qchip" onclick="copyAllFieldsText(this)" style="background:rgba(56,139,253,0.15);border-color:#58a6ff;color:#58a6ff;font-weight:700;">📋 Copy All Fields (One Block)</button>
-      <button type="button" class="qchip" onclick="copyText('{{ user.display_name or 'Candidate' }}', this)"><strong>Name:</strong> {{ user.display_name or 'Candidate' }} 📋</button>
-      <button type="button" class="qchip" onclick="copyText('{{ (user.display_name or 'Candidate').split(' ')[0] }}', this)"><strong>First:</strong> {{ (user.display_name or 'Candidate').split(' ')[0] }} 📋</button>
-      <button type="button" class="qchip" onclick="copyText('{{ (user.display_name or 'Candidate').split(' ')[-1] }}', this)"><strong>Last:</strong> {{ (user.display_name or 'Candidate').split(' ')[-1] }} 📋</button>
-      <button type="button" class="qchip" onclick="copyText('{{ user.email }}', this)"><strong>Email:</strong> {{ user.email }} 📋</button>
-      <button type="button" class="qchip" onclick="copyText('{{ answers.get('phone', '+91-7679530903') }}', this)"><strong>Phone:</strong> {{ answers.get('phone', '+91-7679530903') }} 📋</button>
-      <button type="button" class="qchip" onclick="copyText('{{ answers.get('linkedin_url', 'https://linkedin.com') }}', this)"><strong>LinkedIn 📋</strong></button>
-      <button type="button" class="qchip" onclick="copyText('{{ answers.get('github_url', 'https://github.com') }}', this)"><strong>GitHub 📋</strong></button>
-      <button type="button" class="qchip" onclick="copyText('{{ answers.get('locations', 'Bengaluru, India') }}', this)"><strong>Location:</strong> {{ answers.get('locations', 'Bengaluru, India') }} 📋</button>
-      <button type="button" class="qchip" onclick="copyText('{{ answers.get('experience_years', '2') }} Years', this)"><strong>Exp:</strong> {{ answers.get('experience_years', '2') }} Yrs 📋</button>
-      <button type="button" class="qchip" onclick="copyText('30 Days', this)"><strong>Notice:</strong> 30 Days 📋</button>
-      <button type="button" class="qchip" onclick="copyText('Indian Citizen', this)"><strong>Work Auth:</strong> Indian Citizen 📋</button>
-    </div>
-    <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.5;">
-      💡 <b>Console Auto-Fill Instructions:</b> On any job page (Greenhouse, Lever, Ashby, Workday), click <b>"📋 Copy Safari Autofill Script"</b> above &rarr; open Console (<kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Cmd + Option + C</kbd>) &rarr; paste (<kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Cmd + V</kbd>) &amp; press <kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Enter</kbd>.<br>
-      <span style="color:var(--amber);">⚠️ <b>Safari Note:</b> If <kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;color:#f0f6fc;">Cmd + Option + C</kbd> does not open the console, enable it once in Safari: <b>Safari &rarr; Settings &rarr; Advanced &rarr; Check "Show features for web developers"</b>.</span>
-    </div>
-  </div>
-</div>
-
-{# ── Collapsible Candidate Quick-Start Guide ── #}
-<details style="margin-bottom:20px;background:rgba(22,27,34,0.6);border:1px solid rgba(88,166,255,0.25);border-radius:8px;padding:12px 16px;">
-  <summary style="font-size:13px;font-weight:600;color:var(--blue);cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px;">
-    <span>ℹ️ How Trackboard Works — 4-Step Career Automation Guide</span>
-  </summary>
-  <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;font-size:12.5px;line-height:1.5;">
-    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
-      <strong style="color:var(--signal);display:block;margin-bottom:4px;">1. 🎯 Precision Job Match</strong>
-      Scrapes 460+ verified domestic ATS portals (Razorpay, Paytm, InMobi, CRED, etc.) with 0% dead links, filtering strictly for your positive target titles and excluding over-senior roles.
-    </div>
-    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
-      <strong style="color:var(--green);display:block;margin-bottom:4px;">2. 👔 5-Pillar Recruiter Audit</strong>
-      Evaluates your profile the way a Lead Recruiter does: 10-second attention scan, competitor mindset, ATS keyword gaps, and high-impact statement rewrites.
-    </div>
-    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
-      <strong style="color:var(--blue);display:block;margin-bottom:4px;">3. 🧭 Experience Discovery</strong>
-      Missing a keyword? Use the interactive branching interview to uncover your real hands-on or adjacent experience without ever fabricating false claims.
-    </div>
-    <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:6px;border:1px solid var(--rule);">
-      <strong style="color:var(--chalk);display:block;margin-bottom:4px;">4. ⚡ 60-Second Auto-Apply</strong>
-      Generate a clean ATS-friendly PDF and use the candidate palette chips or console autofill snippet to breeze through application forms in under a minute.
-    </div>
-  </div>
-</details>
-
-<style>
-.qchip {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid var(--rule);
-  color: var(--chalk);
-  font-size: 11.5px;
-  padding: 5px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.qchip:hover {
-  background: rgba(242,201,76,0.15);
-  border-color: var(--signal);
-  color: var(--signal);
-}
-.qchip.copied {
-  background: rgba(63,185,80,0.2) !important;
-  border-color: var(--green) !important;
-  color: var(--green) !important;
-}
-</style>
-
-{# ── Banners ── #}
-{% if closed_notice %}
-<div class="banner banner-amber" style="background:#2a1f00;border:1px solid rgba(227,179,65,0.4);color:#f2c94c;padding:12px 16px;border-radius:8px;margin-bottom:16px;">
-  <span class="bi">⚠️</span>
-  <div class="bt">
-    <strong>Expired Opening Automatically Removed.</strong>
-    <small style="display:block;margin-top:2px;">The job posting at {{ expired_company }} was closed on their portal. Trackboard verified it and removed it from your queue so you never waste time on dead links.</small>
-  </div>
-</div>
-{% endif %}
-
-{% if digest_sent %}
-<div class="banner banner-green">
-  <span class="bi">✓</span>
-  <div class="bt">
-    <strong>Daily Digest Dispatched.</strong>
-    <small>All {{ matched_count }} recommended job openings delivered directly to {{ user.email }}.</small>
-  </div>
-</div>
-{% endif %}
-
-{% if matched %}
-<div class="banner banner-blue">
-  <span class="bi">✓</span>
-  <div class="bt">
-    <strong>Matcher agent finished.</strong>
-    <small>Evaluated active jobs against your profile and target criteria.</small>
-  </div>
-</div>
-{% endif %}
-
-{# ── High-Leverage Skills Alert Card ── #}
-{% if high_leverage_skills and high_leverage_skills|length > 0 %}
-<div class="card" style="margin-bottom:20px;background:rgba(227,179,65,0.03);border:1px solid rgba(227,179,65,0.25);border-radius:8px;padding:14px 18px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span style="color:var(--signal);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;">💡 High-Leverage Skills (Multi-Job Requirement Alert)</span>
-      <span class="pill" style="background:rgba(227,179,65,0.15);color:var(--signal);font-size:10.5px;font-weight:600;">High ROI</span>
-    </div>
-    <span style="font-size:11.5px;color:var(--text-3);">Appears across multiple of your top matched target companies</span>
-  </div>
-  <p style="font-size:12.5px;color:var(--text-2);margin:0 0 10px 0;line-height:1.4;">
-    Addressing these high-leverage skills in your resume or tailoring interview will immediately elevate your candidate match score across multiple employers simultaneously:
-  </p>
-  <div style="display:flex;flex-wrap:wrap;gap:8px;">
-    {% for sk in high_leverage_skills %}
-    <div style="background:rgba(255,255,255,0.04);border:1px solid var(--rule);padding:6px 12px;border-radius:6px;display:flex;align-items:center;gap:8px;">
-      <span style="font-weight:600;font-size:12px;color:var(--chalk);">{{ sk.name }}</span>
-      <span class="pill" style="font-size:10.5px;padding:1px 6px;background:rgba(56,139,253,0.15);color:var(--blue);border-color:rgba(56,139,253,0.3);">
-        {{ sk.count }} Openings ({{ sk.pct }}%)
-      </span>
-    </div>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-
-{# ── Instant Real-Time Search Bar ── #}
-<div style="margin-bottom:16px;">
-  <div style="display:flex;gap:10px;align-items:center;">
-    <div style="position:relative;flex:1;">
-      <input type="text" id="job-search-input" placeholder="🔍 Instant search by company (Google, JPMorgan, Morgan Stanley, Razorpay...), title, or skill..." 
-             oninput="filterJobCards(this.value)" 
-             style="width:100%;padding:10px 14px;background:var(--bg-1);border:1px solid var(--border);border-radius:8px;color:var(--text-1);font-size:13px;font-family:inherit;">
-    </div>
-    <button type="button" class="btn btn-ghost" onclick="document.getElementById('job-search-input').value=''; filterJobCards('');" style="font-size:12px;padding:9px 14px;">Clear</button>
-  </div>
-  <div id="search-visible-count" style="font-size:11.5px;color:var(--blue);margin-top:6px;font-weight:600;min-height:16px;"></div>
-</div>
-
-{# ── Dynamic Filter Pills ── #}
-<div class="filters" style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:8px;">
-  <button type="button" class="fpill" onclick="setQuickSearch('Google')" style="cursor:pointer;background:none;font-family:inherit;">🏢 Google</button>
-  <button type="button" class="fpill" onclick="setQuickSearch('JPMorgan')" style="cursor:pointer;background:none;font-family:inherit;">🏦 JPMorgan Chase</button>
-  <button type="button" class="fpill" onclick="setQuickSearch('Morgan Stanley')" style="cursor:pointer;background:none;font-family:inherit;">🏦 Morgan Stanley</button>
-  <button type="button" class="fpill" onclick="setQuickSearch('Razorpay')" style="cursor:pointer;background:none;font-family:inherit;">⚡ Razorpay</button>
-  <button type="button" class="fpill" onclick="setQuickSearch('NPCI')" style="cursor:pointer;background:none;font-family:inherit;">💳 NPCI (UPI)</button>
-  {% if answers.get('titles') %}
-    <span class="fpill on" title="Active target title filter">🎯 {{ answers.get('titles') }}</span>
-  {% else %}
-    <span class="fpill on">🎯 Target Roles Configured</span>
-  {% endif %}
-  {% if answers.get('track') %}
-    <span class="fpill" style="border-color:rgba(56,139,253,0.3);color:var(--blue);background:rgba(56,139,253,0.08);">
-      Track: {{ answers.get('track')|upper }}
-    </span>
+<div class="row between" style="align-items:flex-end;margin-bottom:8px">
+  <div><h1 style="margin-bottom:4px">Jobs</h1><p class="muted" style="margin:0">{{ '{:,}'.format(stats.open_jobs) }} open roles from {{ stats.companies_active }} companies. Read from their own career APIs; links go straight to the employer.</p></div>
+  {% if user.is_authenticated %}
+  <form method="post" action="/a/matcher/run" style="margin:0"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn" type="submit" {% if not has_resume %}disabled title="Upload a résumé first"{% endif %}><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#zap"/></svg>Run match</button></form>
   {% endif %}
 </div>
 
-{# ── Job cards ── #}
-{% if items and items|length > 0 %}
-{% for j in items %}
-<div class="jcard" style="transition:transform 0.15s ease, border-color 0.15s ease;">
-  {# Score ring #}
-  {% if j.fit_score is not none %}
-    {% if j.verdict == 'strong' %}
-      <div class="score-ring score-strong" title="AI Recruiter Score: {{ j.fit_score }}/100">{{ j.fit_score }}</div>
-    {% elif j.verdict == 'worth_a_shot' %}
-      <div class="score-ring score-worth" title="AI Recruiter Score: {{ j.fit_score }}/100">{{ j.fit_score }}</div>
-    {% else %}
-      <div class="score-ring score-stretch" title="AI Recruiter Score: {{ j.fit_score }}/100">{{ j.fit_score }}</div>
-    {% endif %}
-  {% else %}
-    <div class="score-ring score-none" title="Semantic Match: BM25 {{ '%.1f'|format(j.bm25_score) }} — AI Recruiter evaluation in queue" style="font-size:11px;font-weight:700;color:var(--text-3);border-color:var(--rule);background:rgba(255,255,255,0.03);">NEW</div>
-  {% endif %}
+{% if notice == 'matched' %}<div class="notice ok" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#circle-check"/></svg>Match run started. Scores appear as each batch finishes.</div>
+{% elif notice == 'closed' %}<div class="notice warn" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#alert-circle"/></svg>That role at {{ expired_company or 'the company' }} has closed. It's been removed from the list.</div>
+{% elif notice == 'digest_sent' %}<div class="notice ok" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#mail"/></svg>Digest sent to your email.</div>
+{% elif notice == 'digest_failed' %}<div class="notice danger" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#alert-circle"/></svg>Digest could not be sent. Email isn't configured on this server.</div>
+{% elif notice == 'sandbox_no_email' %}<div class="notice info" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#info"/></svg>Sandbox accounts don't receive email.</div>
+{% endif %}
 
-  <div class="jbody">
-    <div class="title" style="display:flex;align-items:baseline;flex-wrap:wrap;gap:6px;">
-      <span style="font-weight:600;font-size:15px;color:var(--chalk);">{{ j.title }}</span>
-      <span style="color:var(--text-3);font-weight:400;"> · </span>
-      <span class="company" style="color:var(--signal);font-weight:500;">{{ j.company_name }}</span>
-    </div>
+{% if user.is_authenticated and not has_resume %}
+<div class="notice info"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#info"/></svg><span>Scores need your résumé. <a href="/profile">Upload it once</a> and every role gets a four-pillar fit score.</span></div>
+{% endif %}
 
-    <div class="meta" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-      {% if (j.first_seen_at and j.first_seen_at.startswith(today_str)) or (j.posted_at and j.posted_at.startswith(today_str)) %}
-        <span class="pill" style="background:rgba(63,185,80,0.15);color:var(--green);border-color:rgba(63,185,80,0.3);font-weight:600;">✨ Found Today</span>
-      {% else %}
-        <span class="pill" style="color:var(--text-3);border-color:var(--rule);">Active Opening</span>
-      {% endif %}
-      {% if j.fit_score and j.fit_score >= 80 %}
-        <span class="pill" style="background:rgba(227,179,65,0.15);color:var(--signal);border-color:rgba(227,179,65,0.3);font-weight:600;" title="High Match — Early applicants have 3x higher callback rate">⚡ High Priority Match</span>
-      {% endif %}
-      {% if j.posted_at %}<span class="pill" style="color:var(--text-3);">🗓️ Posted: {{ j.posted_at }}</span>{% endif %}
-      {% if j.location %}<span class="pill">📍 {{ j.location }}</span>{% endif %}
-      <span class="pill" style="text-transform:capitalize;">🏢 {{ j.source }}</span>
-      {% if j.fit_score is not none %}
-        {% if j.verdict == 'strong' %}
-          <span class="verdict verdict-strong">★ Strong Fit ({{ j.fit_score }}/100)</span>
-        {% elif j.verdict == 'worth_a_shot' %}
-          <span class="verdict verdict-worth">⚡ Worth a Shot ({{ j.fit_score }}/100)</span>
-        {% else %}
-          <span class="verdict verdict-stretch">Stretch ({{ j.fit_score }}/100)</span>
-        {% endif %}
-        <span class="tag" style="font-family:var(--mono);font-size:11px;" title="BM25 Keyword Alignment Score">BM25: {{ '%.1f'|format(j.bm25_score) }}</span>
-      {% else %}
-        <span class="pill" style="color:var(--blue);border-color:rgba(88,166,255,0.3);background:rgba(88,166,255,0.08);" title="Matched on core skills. Queued for 5-pillar evaluation.">⚡ Semantic Match (BM25: {{ '%.1f'|format(j.bm25_score) }})</span>
-      {% endif %}
-    </div>
-
-    {% if j.reasoning %}
-    <div class="reasoning" style="margin-top:10px;font-size:12.5px;line-height:1.5;color:var(--chalk);background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:4px;border-left:2px solid var(--rule);">
-      {{ j.reasoning }}
-    </div>
-    {% endif %}
-
-    {% if (j.strengths and j.strengths|length > 0) or (j.gaps and j.gaps|length > 0) %}
-    <details style="margin-top:10px;background:rgba(255,255,255,0.02);border:1px solid var(--border-dim);border-radius:6px;padding:8px 12px;">
-      <summary style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:500;user-select:none;">
-        🔍 5-Pillar Recruiter Assessment (Strengths &amp; Gaps)
-      </summary>
-      <div style="margin-top:8px;font-size:12px;line-height:1.6;">
-        {% if j.strengths and j.strengths|length > 0 %}
-          <div style="color:var(--green);margin-bottom:6px;">
-            <strong>✓ Standout Capability Proofs:</strong>
-            <ul style="margin:4px 0 6px 18px;padding:0;">
-              {% for s in j.strengths %}<li>{{ s }}</li>{% endfor %}
-            </ul>
-          </div>
-        {% endif %}
-        {% if j.gaps and j.gaps|length > 0 %}
-          <div style="color:var(--amber);">
-            <strong>⚠️ Identified Competency Gaps:</strong>
-            <ul style="margin:4px 0 0 18px;padding:0;">
-              {% for g in j.gaps %}<li>{{ g }}</li>{% endfor %}
-            </ul>
-          </div>
-        {% endif %}
-      </div>
-    </details>
-    {% endif %}
-
-    {% if j.multi_factor %}
-    <div style="margin-top:10px;padding:6px 12px;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid var(--border-dim);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <div style="display:flex;align-items:center;gap:6px;font-size:11px;flex-wrap:wrap;">
-        <span style="color:var(--signal);font-weight:700;">{{ j.multi_factor.confidence_tier }}</span>
-        <span style="color:var(--text-3);">·</span>
-        <span title="Exact technology & keyword alignment">🎯 Direct {{ j.multi_factor.direct }}%</span>
-        <span style="color:var(--text-3);">·</span>
-        <span title="Architecture & engineering problem solving">🔄 Trans {{ j.multi_factor.transferable }}%</span>
-        <span style="color:var(--text-3);">·</span>
-        <span title="Adjacent tools & complementary frameworks">🧩 Adj {{ j.multi_factor.adjacent }}%</span>
-        <span style="color:var(--text-3);">·</span>
-        <span title="Quantified business metrics">📈 Impact {{ j.multi_factor.impact }}%</span>
-      </div>
-      <a href="/jobs/{{ j.id }}/tailor" style="font-size:11px;color:var(--blue);text-decoration:none;font-weight:600;">🧭 Discover &amp; Tailor &rarr;</a>
-    </div>
-    {% endif %}
-
-    <div class="actions" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-      <a href="/a/jobs/{{ j.id }}/go" target="_blank" rel="noopener noreferrer" class="btn btn-fill" title="Verify liveness and open official application form in new tab">⚡ Apply on Company Site ↗</a>
-      <form method="post" action="/a/jobs/{{ j.id }}/apply" style="margin:0;">
-        <button type="submit" class="btn btn-amber" title="Launch desktop Chromium on your Mac to automatically fill all fields and attach tailored resume">🤖 Desktop Auto-Fill</button>
-      </form>
-      <button type="button" class="btn btn-ghost" onclick="toggleQuickFillDrawer()" title="View &amp; copy candidate application details in 1 click">📋 Quick-Fill</button>
-      <a href="/jobs/{{ j.id }}/tailor" class="btn btn-blue">✏️ Tailor Resume</a>
-      <form method="post" action="/a/jobs/{{ j.id }}/mark-applied" style="margin:0;">
-        <button type="submit" class="btn btn-green" title="Move this job to your Pipeline after applying">✓ Mark Applied</button>
-      </form>
-      <form method="post" action="/a/match/{{ j.match_id }}/dismiss" style="margin:0;margin-left:auto;">
-        <button type="submit" class="btn btn-ghost" title="Dismiss this role from queue">✕ Dismiss</button>
-      </form>
-    </div>
-  </div>
-</div>
-{% endfor %}
-{% else %}
-<div class="card" style="padding:40px 24px;text-align:center;margin-top:20px;border:1px dashed var(--rule);background:var(--slate);border-radius:8px;">
-  <div style="font-size:36px;margin-bottom:14px;">🎯</div>
-  <h3 style="margin-bottom:8px;font-family:var(--sans);font-weight:600;color:var(--chalk);">No Matching Jobs in Queue</h3>
-  <p style="color:var(--muted);font-size:13px;max-width:520px;margin:0 auto 20px auto;line-height:1.6;">
-    {% if not has_resume %}
-      Upload your master resume on the <b>Profile</b> page to automatically score active openings against your experience and target keywords.
-    {% else %}
-      All active jobs have either been scored or don't match your current target criteria. Click <b>Sync &amp; match</b> to rescan.
-    {% endif %}
-  </p>
-  <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
-    <a href="/profile" class="btn btn-primary" style="text-decoration:none;padding:9px 18px;">
-      👤 Edit Target Roles &amp; Resume
-    </a>
-    <form action="/a/matcher/run" method="post" style="margin:0;">
-      <button type="submit" class="btn" style="padding:9px 18px;">
-        ⚡ Sync &amp; Match Now
-      </button>
+<div class="jobs-layout">
+  <aside class="filters">
+    <form id="filters" method="get" action="/jobs" hx-get="/jobs" hx-target="#results" hx-push-url="true" hx-indicator="#results">
+      <details {% if page.total == 0 or f.q or f.region != 'india' or f.track != 'tech' or f.level != 'any' %}open{% endif %}>
+        <summary class="btn block" style="margin-bottom:12px"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#filter"/></svg>Filters</summary>
+        <div class="field"><label for="q">Search</label><input id="q" type="search" name="q" value="{{ f.q }}" placeholder="Title or company" autocomplete="off"></div>
+        <div class="field"><label for="region">Region</label><select id="region" name="region"><option value="india" {% if f.region=='india' %}selected{% endif %}>India + remote</option><option value="remote" {% if f.region=='remote' %}selected{% endif %}>Remote only</option><option value="all" {% if f.region=='all' %}selected{% endif %}>All locations</option></select></div>
+        <div class="field"><label for="track">Track</label><select id="track" name="track"><option value="tech" {% if f.track=='tech' %}selected{% endif %}>Engineering</option><option value="business" {% if f.track=='business' %}selected{% endif %}>Business & operations</option><option value="all" {% if f.track=='all' %}selected{% endif %}>All roles</option></select></div>
+        <div class="field"><label for="level">Seniority</label><select id="level" name="level"><option value="any" {% if f.level=='any' %}selected{% endif %}>Any</option><option value="junior" {% if f.level=='junior' %}selected{% endif %}>Junior / intern</option><option value="mid" {% if f.level=='mid' %}selected{% endif %}>Mid</option><option value="senior" {% if f.level=='senior' %}selected{% endif %}>Senior+</option></select></div>
+        <div class="field"><label for="source">Source</label><select id="source" name="source"><option value="">Any</option>{% for s in stats.sources %}<option value="{{ s.source }}" {% if f.source==s.source %}selected{% endif %}>{{ s.label }} ({{ '{:,}'.format(s.n) }})</option>{% endfor %}</select></div>
+        <noscript><button class="btn block" type="submit">Apply filters</button></noscript>
+      </details>
     </form>
-  </div>
+    {% if user.is_authenticated %}
+    <div class="card flat" style="margin-top:16px">
+      <div class="kicker">Your pipeline</div>
+      {% if pipeline_counts %}<ul class="list">{% for k,v in pipeline_counts.items() %}<li><span style="text-transform:capitalize">{{ k }}</span><span class="num">{{ v }}</span></li>{% endfor %}</ul>{% else %}<p class="muted small" style="margin:0">Nothing tracked yet.</p>{% endif %}
+      <a class="btn sm block" href="/pipeline" style="margin-top:10px">Open pipeline</a>
+    </div>
+    {% endif %}
+    {% if demand %}
+    <div class="card flat" style="margin-top:16px">
+      <div class="kicker">Skills in this result set</div>
+      <ul class="list">{% for d in demand %}<li><span class="small">{{ d.name }}</span><span class="num small">{{ d.pct }}%</span></li>{% endfor %}</ul>
+      <p class="help">Share of the {{ page.total }} roles on this page mentioning each skill family.</p>
+    </div>
+    {% endif %}
+  </aside>
+
+  <section id="results" aria-label="Job results">
+    {% include "partials/job_cards.html" %}
+  </section>
 </div>
-{% endif %}
-
-<script>
-function toggleQuickFillDrawer() {
-  const el = document.getElementById('quickfill-drawer');
-  if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
-
-function copyText(val, btn) {
-  navigator.clipboard.writeText(val).then(() => {
-    const originalText = btn.innerHTML;
-    btn.classList.add('copied');
-    btn.innerHTML = '✓ Copied!';
-    setTimeout(() => {
-      btn.classList.remove('copied');
-      btn.innerHTML = originalText;
-    }, 1500);
-  });
-}
-
-function copyAllFieldsText(btn) {
-  const text = `Full Name: {{ user.display_name or 'Candidate' }}
-First Name: {{ (user.display_name or 'Candidate').split(' ')[0] }}
-Last Name: {{ (user.display_name or 'Candidate').split(' ')[-1] }}
-Email: {{ user.email or '' }}
-Phone: {{ answers.get('phone', '+91-7679530903') }}
-LinkedIn: {{ answers.get('linkedin_url', 'https://linkedin.com') }}
-GitHub: {{ answers.get('github_url', 'https://github.com') }}
-Location: {{ answers.get('locations', 'Bengaluru, India') }}
-Total Experience: {{ answers.get('experience_years', '2') }} Years
-Notice Period: 30 Days
-Work Authorization: Indian Citizen`;
-
-  navigator.clipboard.writeText(text).then(() => {
-    const oldText = btn.innerHTML;
-    btn.innerHTML = '✓ All Fields Copied!';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.innerHTML = oldText;
-      btn.classList.remove('copied');
-    }, 2000);
-  });
-}
-
-function copySafariAutofillScript() {
-  const d = {
-    name: "{{ user.display_name or 'Candidate' }}",
-    first_name: "{{ (user.display_name or 'Candidate').split(' ')[0] }}",
-    last_name: "{{ (user.display_name or 'Candidate').split(' ')[-1] }}",
-    email: "{{ user.email or '' }}",
-    phone: "{{ answers.get('phone', '+91-7679530903') }}",
-    linkedin: "{{ answers.get('linkedin_url', 'https://linkedin.com') }}",
-    github: "{{ answers.get('github_url', 'https://github.com') }}",
-    location: "{{ answers.get('locations', 'Bengaluru, India') }}",
-    company: "National Payments Corporation of India (NPCI)",
-    title: "Software Developer",
-    notice: "30",
-    experience: "{{ answers.get('experience_years', '2') }}"
-  };
-
-  const script = "(function(){try{const d=" + JSON.stringify(d) + ";function setVal(el,val){try{const proto=el instanceof HTMLTextAreaElement?window.HTMLTextAreaElement.prototype:window.HTMLInputElement.prototype;const desc=Object.getOwnPropertyDescriptor(proto,'value');if(desc&&desc.set){desc.set.call(el,val);}else{el.value=val;}}catch(e){el.value=val;}el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));el.dispatchEvent(new Event('blur',{bubbles:true}));}let count=0;const docs=[document];document.querySelectorAll('iframe').forEach(function(f){try{if(f.contentDocument)docs.push(f.contentDocument);}catch(e){}});docs.forEach(function(doc){doc.querySelectorAll('input, textarea, select').forEach(function(el){const label=((el.getAttribute('aria-label')||'')+' '+(el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')+' '+(el.labels&&el.labels[0]?el.labels[0].innerText:'')).toLowerCase();let val=null;if(/first.*name|given.*name/.test(label))val=d.first_name;else if(/last.*name|surname|family/.test(label))val=d.last_name;else if(/full.*name|^name$/.test(label))val=d.name;else if(/email|e-mail/.test(label))val=d.email;else if(/phone|mobile|contact|cell/.test(label))val=d.phone;else if(/linkedin/.test(label))val=d.linkedin;else if(/github|portfolio|website/.test(label))val=d.github;else if(/location|city|current.*city/.test(label))val=d.location;else if(/company|employer|organization/.test(label))val=d.company;else if(/title|designation|role/.test(label))val=d.title;else if(/notice/.test(label))val=d.notice;else if(/experience|years/.test(label))val=d.experience;if(val!==null){setVal(el,val);count++;}});});alert(count>0?'✓ Athena Auto-Fill: '+count+' candidate fields filled across the page!':'⚡ Athena: 0 open form inputs found on this page. If the form is in an iframe, click inside the form and run again.');}catch(err){alert('Athena notice: '+err.message);}})();void(0);";
-
-  navigator.clipboard.writeText(script).then(() => {
-    const btn = document.getElementById('btn-copy-script');
-    if (btn) {
-      const oldText = btn.innerHTML;
-      btn.innerHTML = '✓ Script Copied to Clipboard!';
-      btn.style.background = '#238636';
-      setTimeout(() => {
-        btn.innerHTML = oldText;
-        btn.style.background = '';
-      }, 3000);
-    }
-  });
-}
-
-function filterJobCards(query) {
-  const q = (query || '').toLowerCase().trim();
-  const cards = document.querySelectorAll('.jcard');
-  let visibleCount = 0;
-  cards.forEach(card => {
-    if (!q) {
-      card.style.display = '';
-      visibleCount++;
-      return;
-    }
-    const text = card.textContent.toLowerCase();
-    if (text.includes(q)) {
-      card.style.display = '';
-      visibleCount++;
-    } else {
-      card.style.display = 'none';
-    }
-  });
-  const countEl = document.getElementById('search-visible-count');
-  if (countEl) {
-    countEl.innerText = q ? (visibleCount + ' matching positions found') : '';
-  }
-}
-
-function setQuickSearch(term) {
-  const input = document.getElementById('job-search-input');
-  if (input) {
-    input.value = term;
-    filterJobCards(term);
-  }
-}
-</script>
-
 {% endblock %}
