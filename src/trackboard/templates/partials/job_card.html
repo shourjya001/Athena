@@ -1,4 +1,4 @@
-<article class="job" id="job-{{ j.id }}">
+<article class="job{% if j.scored and j.verdict == 'strong' %} strong{% endif %}" id="job-{{ j.id }}">
   <button class="job-head" type="button" aria-expanded="false" aria-controls="job-body-{{ j.id }}">
     <span class="avatar" data-h="{{ (j.company_name|length + j.id) % 8 }}" aria-hidden="true">{{ j.company_name[:1]|upper }}</span>
     <div>
@@ -25,7 +25,7 @@
       {% if j.reasoning %}<p class="small" style="margin:12px 0 0">{{ j.reasoning }}</p>{% endif %}
       {% if j.strengths or j.gaps %}<div class="chips" style="margin-top:10px">{% for s in j.strengths[:3] %}<span class="chip ok">{{ s|truncate(48) }}</span>{% endfor %}{% for g in j.gaps[:3] %}<span class="chip warn">gap: {{ g|truncate(48) }}</span>{% endfor %}</div>{% endif %}
     {% endif %}
-    <div class="jd" tabindex="0" aria-label="Job description">{{ (j.description_md or 'No description was published with this listing.')|trim }}</div>
+    <div class="jd" tabindex="0" aria-label="Job description">{{ (j.description_md|plaintext) or 'No description was published with this listing.' }}</div>
     <div class="job-actions">
       <a class="btn primary sm" href="/a/jobs/{{ j.id }}/go" target="_blank" rel="noopener noreferrer">Open on company site <svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#external-link"/></svg></a>
       <a class="btn sm" href="/jobs/{{ j.id }}">Details</a>

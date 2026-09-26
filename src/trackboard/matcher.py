@@ -10,7 +10,7 @@ from pathlib import Path
 
 import yaml
 from pydantic import BaseModel, Field, field_validator
-from rank_bm25 import BM25Okapi
+from .bm25 import BM25Okapi
 
 from . import db
 from .llm import Chain, parse_json_reply, wrap_untrusted

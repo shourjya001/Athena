@@ -27,8 +27,8 @@ def _tokens(block: str) -> dict[str, str]:
 
 
 def _blocks():
-    dark = CSS[CSS.index(":root{"):CSS.index("@media (prefers-color-scheme:light)")]
-    light = CSS[CSS.index(':root[data-theme="light"]'):CSS.index("/* ---------- reset")]
+    light = CSS[CSS.index(":root{"):CSS.index(':root[data-theme="dark"]')]
+    dark = CSS[CSS.index(':root[data-theme="dark"]'):CSS.index("/* ---------- base")]
     return {"dark": _tokens(dark), "light": _tokens(light)}
 
 
@@ -38,7 +38,8 @@ def test_text_contrast_meets_aa_in_both_themes():
             for bg in ("bg", "bg-2", "surface", "surface-2"):
                 assert _ratio(t[fg], t[bg]) >= 4.5, f"{theme}: {fg} on {bg} = {_ratio(t[fg], t[bg]):.2f}"
         assert _ratio(t["text-3"], t["bg"]) >= 3.0, theme
-        assert _ratio(t["accent-ink"], t["accent"]) >= 4.5, theme
+        assert _ratio("#ffffff", t["btn-a"]) >= 4.5 and _ratio("#ffffff", t["btn-b"]) >= 4.5, theme
+        assert _ratio(t["accent"], t["bg"]) >= 3.0 and _ratio(t["accent"], t["surface"]) >= 3.0, theme
 
 
 def test_landmarks_and_skip_link():

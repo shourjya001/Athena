@@ -71,3 +71,40 @@ def test_json_ld_present_on_home_and_about():
     c = guest()
     assert '"@type":"WebSite"' in c.get("/").text
     assert '"@type":"Person"' in c.get("/about").text
+
+
+def test_agents_page_and_state_api_are_public_and_pii_free():
+    import re
+
+    c = guest()
+    r = c.get("/agents")
+    assert r.status_code == 200 and 'id="flow"' in r.text and "Replay last run" in r.text
+    s = c.get("/api/agents/state")
+    assert s.status_code == 200
+    data = s.json()
+    assert {"nodes", "events", "totals"} <= set(data)
+    assert all("email" not in n and "user" not in n for n in data["nodes"])
+    assert not re.search(r"@\w+\.\w+", s.text)
+    assert "max-age=15" in s.headers["Cache-Control"]
+
+
+def test_system_design_section():
+    from trackboard import sysdesign
+
+    assert len(sysdesign.TOPICS) == 15 and len({t["slug"] for t in sysdesign.TOPICS}) == 15
+    c = guest()
+    idx = c.get("/prep/system-design")
+    assert idx.status_code == 200 and "Case studies" in idx.text and 'class="hscroll"' in idx.text
+    for t in sysdesign.TOPICS:
+        r = c.get(f"/prep/system-design/{t['slug']}")
+        assert r.status_code == 200, t["slug"]
+        assert 'class="scene"' in r.text and "animateMotion" in r.text
+        assert t["ideas"][0][:30] in r.text
+    assert c.get("/prep/system-design/nope").status_code == 404
+    assert "/prep/system-design/caching" in c.get("/sitemap.xml").text
+
+
+def test_home_has_fanin_and_compact_rows():
+    r = guest().get("/")
+    assert 'class="fanin"' in r.text and "Every career API, one desk" in r.text
+    assert 'class="hscroll compact"' in r.text or "Nothing new yet" in r.text

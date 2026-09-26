@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}System design, basics to case studies — Athena{% endblock %}
+{% block meta_description %}Fifteen system-design topics from one server to a Dynamo-style store, each with an animated diagram, the five ideas that matter, and what to say in the interview.{% endblock %}
+{% block body %}
+<div class="crumbs"><a href="/prep">Prep</a> / System design</div>
+<div class="section-head"><div><h1>System design</h1><p>Basics → building blocks → case studies. Every page has one animated diagram, five ideas, and three things to say in the room.</p></div></div>
+{% for key, label, topics in levels %}
+<section class="family" data-fam="{{ key }}">
+  <h2>{{ label }} <span class="muted small" style="font-weight:400">· {{ topics|length }}</span></h2>
+  <div class="hscroll" tabindex="0" aria-label="{{ label }} topics">
+    {% for t in topics %}
+    <a class="pcard sd" href="/prep/system-design/{{ t.slug }}">
+      <div class="top"><b>{{ t.title }}</b><span class="chip">{{ loop.index }}</span></div>
+      <div class="s">{{ t.summary }}</div>
+      <div class="badges"><span class="chip">{{ t.ideas|length }} ideas</span><span class="chip">animated</span></div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+<p class="help" style="margin-top:24px">Original notes written for Athena. Links under "Further reading" go to the primary sources: papers and engineering blogs.</p>
+{% endblock %}

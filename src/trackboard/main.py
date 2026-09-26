@@ -21,7 +21,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.gzip import GZipMiddleware
 
-from . import content, db, drill, listing, llm, practice, stats, users
+from . import content, db, drill, listing, llm, practice, stats, sysdesign, users
 from .security import (
     SecurityHeadersMiddleware, check_csrf, client_ip, csrf_from_request, host_allowed,
     rate_limit, safe_next, validate_outbound_url,
@@ -61,6 +61,7 @@ def format_ist(val: Any) -> str:
 
 templates.env.filters["ist"] = format_ist
 templates.env.filters["reldate"] = listing._rel_date
+templates.env.filters["plaintext"] = listing.plaintext
 templates.env.globals["static_v"] = STATIC_VERSION
 
 
@@ -321,6 +322,17 @@ def create_app() -> FastAPI:
             "resources": resources,
         })
 
+    @app.get("/prep/system-design", response_class=HTMLResponse)
+    def sysdesign_index(request: Request):
+        return render(request, "pages/sysdesign.html", {"nav": "prep", "levels": sysdesign.by_level()})
+
+    @app.get("/prep/system-design/{slug}", response_class=HTMLResponse)
+    def sysdesign_topic(request: Request, slug: str):
+        t = sysdesign.get(slug)
+        if not t:
+            raise HTTPException(404)
+        return render(request, "pages/sysdesign_topic.html", {"nav": "prep", "t": t})
+
     @app.get("/studio", response_class=HTMLResponse)
     def studio_index(request: Request):
         user = users.current_user(request)
@@ -371,6 +383,53 @@ def create_app() -> FastAPI:
             ctx["subscribers"] = db.query_one("SELECT count(*) c FROM subscribers")["c"]
         return render(request, "pages/system.html", ctx)
 
+    AGENT_META = {
+        "scout": ("Scout", "Polls ATS APIs, de-duplicates, closes vanished roles", "jobs"),
+        "sync_live_jobs": ("Scout", "Polls ATS APIs, de-duplicates, closes vanished roles", "jobs"),
+        "matcher": ("Matcher", "BM25 shortlist, then four-pillar recruiter scoring", "matches"),
+        "inbox": ("Inbox", "Reads recruiter replies, advances application stage", "applications"),
+        "digest": ("Digest", "Morning email with the top roles and due reviews", "email"),
+        "leetcode_sync": ("LeetCode sync", "Pulls accepted submissions into the review schedule", "reviews"),
+        "tailor": ("Tailor + Analyst", "Selects bullets, renders PDF, runs the parse gate", "applications"),
+        "linkedin": ("LinkedIn audit", "Scored audit and rewrites", "profile"),
+    }
+
+    def agents_state() -> dict[str, Any]:
+        runs = [dict(r) for r in db.query("SELECT agent, status, started_at, finished_at, items_in, items_out, llm_calls FROM agent_runs ORDER BY started_at DESC LIMIT 60")]
+        latest: dict[str, dict] = {}
+        for r in runs:
+            key = "scout" if r["agent"] == "sync_live_jobs" else r["agent"]
+            latest.setdefault(key, {**r, "agent": key})
+        st = stats.site_stats()
+        nodes = []
+        for key, (label, desc, writes) in AGENT_META.items():
+            if key == "sync_live_jobs":
+                continue
+            r = latest.get(key)
+            nodes.append({"key": key, "label": label, "desc": desc, "writes": writes,
+                          "status": (r or {}).get("status", "idle"), "finished_at": (r or {}).get("finished_at"),
+                          "items_in": (r or {}).get("items_in", 0), "items_out": (r or {}).get("items_out", 0),
+                          "llm_calls": (r or {}).get("llm_calls", 0), "ago": listing._rel_date((r or {}).get("finished_at"))})
+        events = [{"agent": ("scout" if r["agent"] == "sync_live_jobs" else r["agent"]), "status": r["status"],
+                   "at": r["finished_at"] or r["started_at"], "ago": listing._rel_date(r["finished_at"] or r["started_at"]),
+                   "items_in": r["items_in"], "items_out": r["items_out"], "llm_calls": r["llm_calls"]} for r in runs[:20]]
+        return {"generated_at": datetime.now(UTC).isoformat(timespec="seconds"), "nodes": nodes, "events": events,
+                "totals": {"open_jobs": st["open_jobs"], "companies": st["companies_active"], "india_jobs": st["india_jobs"]},
+                "any_running": any(n["status"] == "running" for n in nodes)}
+
+    @app.get("/api/agents/state")
+    def api_agents_state(request: Request):
+        rate_limit(f"agents:{client_ip(request)}", 120, 600)
+        resp = JSONResponse(agents_state())
+        resp.headers["Cache-Control"] = "public, max-age=15"
+        return resp
+
+    @app.get("/agents", response_class=HTMLResponse)
+    def agents_page(request: Request):
+        user = users.current_user(request)
+        return render(request, "pages/agents.html", {"user": user, "nav": "agents", "state": agents_state(),
+                                                     "state_json": json.dumps(agents_state())})
+
     for _slug, _tpl in (("about", "about"), ("privacy", "privacy"), ("terms", "terms"), ("changelog", "changelog")):
         def _make(tpl: str):
             def page(request: Request):
@@ -380,6 +439,12 @@ def create_app() -> FastAPI:
                 return render(request, f"pages/{tpl}.html", ctx)
             return page
         app.add_api_route(f"/{_slug}", _make(_tpl), methods=["GET"], response_class=HTMLResponse, name=_slug)
+
+    @app.get("/.well-known/security.txt", response_class=PlainTextResponse)
+    def security_txt():
+        return ("Contact: https://www.linkedin.com/in/shourjya-hazra-683128200/\n"
+                "Preferred-Languages: en\nPolicy: " + get_settings().site_url + "/privacy\n"
+                "Expires: 2027-12-31T00:00:00.000Z\n")
 
     @app.get("/healthz")
     def healthz():
@@ -400,8 +465,9 @@ def create_app() -> FastAPI:
         site = get_settings().site_url
         urls = [(f"{site}/", "daily", "1.0"), (f"{site}/jobs", "hourly", "0.9"), (f"{site}/prep", "weekly", "0.8"),
                 (f"{site}/patterns", "weekly", "0.8"), (f"{site}/studio", "monthly", "0.6"),
-                (f"{site}/about", "monthly", "0.5"), (f"{site}/system", "daily", "0.4")]
+                (f"{site}/about", "monthly", "0.5"), (f"{site}/agents", "daily", "0.6"), (f"{site}/system", "daily", "0.4")]
         urls += [(f"{site}/patterns/{p['slug']}", "monthly", "0.7") for p in db.query("SELECT slug FROM patterns")]
+        urls += [(f"{site}/prep/system-design", "monthly", "0.8")] + [(f"{site}/prep/system-design/{t['slug']}", "monthly", "0.7") for t in sysdesign.TOPICS]
         items = "\n".join(f"  <url><loc>{u}</loc><changefreq>{c}</changefreq><priority>{p}</priority></url>" for u, c, p in urls)
         return Response(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{items}\n</urlset>',
                         media_type="application/xml")
@@ -489,7 +555,9 @@ def create_app() -> FastAPI:
             "redirect_uri": f"{s.site_url}/auth/google/callback",
             "response_type": "code",
             "scope": "openid email profile",
-            "prompt": "select_account",
+            # Unknown device or network: Google must re-verify the password (its own 2-Step
+            # Verification applies). Known device: just pick the account.
+            "prompt": "login" if request.cookies.get("athena_known") != users.device_hash(request) else "select_account",
             "access_type": "online",
             "state": _oauth_state(nxt),
             "code_challenge": challenge,
@@ -532,7 +600,7 @@ def create_app() -> FastAPI:
             return RedirectResponse("/login?error=oauth_failed", status_code=303)
         if not (info.get("verified_email") or info.get("email_verified")):
             return RedirectResponse("/login?error=email_unverified", status_code=303)
-        resp = _finish_login(info.get("email", ""), info.get("name") or "", dest)
+        resp = _finish_login(info.get("email", ""), info.get("name") or "", dest, request)
         resp.delete_cookie(OAUTH_COOKIE, path="/auth/google/callback")
         return resp
 
@@ -559,9 +627,9 @@ def create_app() -> FastAPI:
             return RedirectResponse("/login?error=oauth_failed", status_code=303)
         if payload.get("email_verified") not in ("true", True):
             return RedirectResponse("/login?error=email_unverified", status_code=303)
-        return _finish_login(payload.get("email", ""), payload.get("name") or "", dest)
+        return _finish_login(payload.get("email", ""), payload.get("name") or "", dest, request)
 
-    def _finish_login(email: str, name: str, dest: str) -> Response:
+    def _finish_login(email: str, name: str, dest: str, request: Request | None = None) -> Response:
         s = get_settings()
         email = email.strip().lower()
         if not email:
@@ -572,7 +640,10 @@ def create_app() -> FastAPI:
             return RedirectResponse("/login?error=not_allowed", status_code=303)
         uid = users.ensure_user(email, display_name=name or None)
         resp = RedirectResponse(dest, status_code=303)
-        users.set_session_cookie(resp, uid)
+        users.set_session_cookie(resp, uid, request)
+        # remember this device for a year so the next sign-in can skip the password step-up
+        resp.set_cookie("athena_known", users.device_hash(request), max_age=365 * 86400, httponly=True,
+                        secure=not s.insecure_cookies, samesite="lax", path="/")
         return resp
 
     @app.get("/auth/demo-sandbox")
@@ -580,7 +651,7 @@ def create_app() -> FastAPI:
         rate_limit(f"sandbox:{client_ip(request)}", 5, 3600)
         uid = users.create_sandbox_user()
         resp = RedirectResponse(safe_next(next, "/jobs"), status_code=303)
-        users.set_session_cookie(resp, uid)
+        users.set_session_cookie(resp, uid, request)
         return resp
 
     @app.get("/logout")
@@ -1026,13 +1097,21 @@ def cli() -> None:
     ap = argparse.ArgumentParser(prog="trackboard")
     sub = ap.add_subparsers(dest="cmd")
     sub.add_parser("migrate", help="apply pending database migrations")
+    seed = sub.add_parser("seed", help="copy content tables from a local SQLite file into the active DB (one-time Turso seed)")
+    seed.add_argument("--from", dest="src", default="data/seed_data.db")
     serve = sub.add_parser("serve", help="run the web app")
     serve.add_argument("--port", type=int, default=8000)
     serve.add_argument("--host", default="127.0.0.1")
     args = ap.parse_args()
     if args.cmd == "migrate":
-        print(f"database: {get_settings().db_path}")
+        print(f"database backend: {db.backend()}")
         db.migrate()
+        return
+    if args.cmd == "seed":
+        print(f"seeding {db.backend()} from {args.src}")
+        db.migrate(verbose=False)
+        db.import_sqlite_file(Path(args.src))
+        stats.invalidate()
         return
     import uvicorn
 

@@ -36,3 +36,14 @@
 - Hero with a labelled sample job card, trust line and larger CTAs; four live stat tiles; feature cards with icon tiles; FAQ; section headers.
 - Prep as icon tiles; patterns as a card grid with per-pattern progress; job cards get company avatar tiles, depth and hover lift.
 - Header blur, accent hairline, gradient primary button, softer 20px radii, second accent for tiles. Still one primary accent, no emoji icons, CSP unchanged.
+
+## 2026-09-26 (v3.1) — Hosted database + live agents
+- `db.py` gains a Turso/libSQL HTTP backend behind the same API; `trackboard seed` uploads content tables once. Production data no longer lives on a serverless `/tmp`.
+- `/agents`: live pipeline diagram driven by `agent_runs`, 15 s polling, event log, replay of the last run.
+- Daily GitHub workflow calls the cron with a bearer token and writes to the hosted DB.
+
+## 2026-09-26 (v3.2) — Lighter bundle, device-bound sessions, system design, fan-in
+- Dropped numpy (pure-Python BM25) and uvicorn extras: ~80 MB smaller deployments.
+- Sessions bound to browser + network prefix; Google password step-up on unknown devices; security.txt.
+- `/prep/system-design`: 15 original topics, animated scenes, three levels.
+- Home: fan-in "every career API, one desk" animation, compact scroll-snap rows, pointer tilt.

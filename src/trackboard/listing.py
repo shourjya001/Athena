@@ -177,8 +177,24 @@ def list_jobs(f: dict[str, Any], user: dict[str, Any] | None = None) -> dict[str
     }
 
 
+_TAG_RE = re.compile(r"<\s*br\s*/?\s*>|</p\s*>|</li\s*>|</h[1-6]\s*>", re.I)
+_OTHER_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def plaintext(md: str | None) -> str:
+    """Turn stored description HTML/markdown into readable plain text for display."""
+    import html as _html
+
+    text = _TAG_RE.sub("\n", md or "")
+    text = _OTHER_TAG_RE.sub("", text)
+    text = _html.unescape(text)
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 def _preview(md: str, n: int = 220) -> str:
-    text = re.sub(r"\s+", " ", re.sub(r"[#*_`>\[\]]", "", md)).strip()
+    text = re.sub(r"\s+", " ", re.sub(r"[#*_`>\[\]]", "", plaintext(md))).strip()
     return text[:n] + ("…" if len(text) > n else "")
 
 

@@ -25,5 +25,5 @@
 <div class="notice info" style="margin-bottom:20px"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#info"/></svg>Not scored yet. Run a match from the jobs page.</div>
 {% endif %}
 <h2>Description</h2>
-<div class="jd" style="max-height:none">{{ (job.description_md or 'No description was published with this listing.')|trim }}</div>
+<div class="jd" style="max-height:none">{{ (job.description_md|plaintext) or 'No description was published with this listing.' }}</div>
 {% endblock %}

@@ -13,7 +13,7 @@
     <div class="top"><b>{{ p.name }}</b>{% if p.solved_count %}<span class="chip ok">{{ p.solved_count }}/{{ p.problem_count }}</span>{% endif %}</div>
     <div class="s">{{ p.summary }}</div>
     {% if p.solved_count and p.problem_count %}<div class="prog" aria-label="{{ p.solved_count }} of {{ p.problem_count }} solved"><i style="width:{{ (100 * p.solved_count / p.problem_count)|round|int }}%"></i></div>{% endif %}
-    <div class="badges"><span class="chip">{{ p.problem_count }} problems</span><span class="chip">{{ p.video_count }} videos</span></div>
+    <div class="badges"><span class="chip">{{ p.problem_count }} problems</span><span class="chip">{{ p.resource_count }} videos</span></div>
   </a>
   {% endfor %}
   </div>

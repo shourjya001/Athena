@@ -13,17 +13,23 @@ jobs:
       - run: uv sync --no-dev
       - name: migrate db
         env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
           DB_URL: ${{ secrets.DB_URL }}
           TZ: Asia/Kolkata
         run: uv run trackboard migrate || true
       - name: scout
         env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
           DB_URL: ${{ secrets.DB_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TZ: Asia/Kolkata
         run: uv run python -m trackboard.agents.scout || true
       - name: matcher
         env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
           DB_URL: ${{ secrets.DB_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -31,6 +37,8 @@ jobs:
         run: uv run python -m trackboard.agents.matcher || true
       - name: digest
         env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
           DB_URL: ${{ secrets.DB_URL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -42,9 +50,11 @@ jobs:
         run: uv run python -m trackboard.agents.digest --email || true
       - name: trigger live vercel sync
         env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          curl -s -X POST "https://athena-phi-one.vercel.app/api/cron/sync-and-match?token=${CRON_SECRET}" || true
+          curl -s -X POST -H "Authorization: Bearer ${CRON_SECRET}" "https://athena-phi-one.vercel.app/api/cron/sync-and-match" || true
       - name: heartbeat (keeps scheduled workflows enabled)
         run: |
           date > .heartbeat && git config user.name trackboard-bot

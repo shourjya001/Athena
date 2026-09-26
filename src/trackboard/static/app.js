@@ -6,14 +6,12 @@
   // ---- theme ----
   var THEME_KEY = "athena.theme";
   function applyTheme(t) { if (t) root.setAttribute("data-theme", t); else root.removeAttribute("data-theme"); }
-  try { applyTheme(localStorage.getItem(THEME_KEY) || ""); } catch (e) {}
+  try { applyTheme(localStorage.getItem(THEME_KEY) === "dark" ? "dark" : ""); } catch (e) {}
   doc.addEventListener("click", function (ev) {
     var b = ev.target.closest("[data-theme-toggle]"); if (!b) return;
-    var cur = root.getAttribute("data-theme");
-    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    var isDark = cur ? cur === "dark" : prefersDark;
+    var isDark = root.getAttribute("data-theme") === "dark";
     var next = isDark ? "light" : "dark";
-    applyTheme(next); try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    applyTheme(next === "dark" ? "dark" : ""); try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
   });
 
   // ---- csrf for fetch/htmx ----
@@ -75,6 +73,20 @@
   // ---- filter forms: submit on change via htmx if present ----
   var fform = doc.getElementById("filters");
   if (fform) fform.addEventListener("change", function () { if (window.htmx) window.htmx.trigger(fform, "submit"); else fform.submit(); });
+
+  // ---- pointer tilt: cheap 3D on hover, desktop only ----
+  var canTilt = window.matchMedia && window.matchMedia("(hover:hover) and (prefers-reduced-motion:no-preference)").matches;
+  if (canTilt) {
+    doc.addEventListener("mousemove", function (ev) {
+      var el = ev.target.closest(".tilt"); if (!el) return;
+      var r = el.getBoundingClientRect(); var x = (ev.clientX - r.left) / r.width - 0.5, y = (ev.clientY - r.top) / r.height - 0.5;
+      el.classList.add("tilting"); el.style.transform = "perspective(900px) rotateX(" + (-y * 6).toFixed(2) + "deg) rotateY(" + (x * 8).toFixed(2) + "deg) translateY(-2px)";
+    });
+    doc.addEventListener("mouseout", function (ev) {
+      var el = ev.target.closest(".tilt"); if (!el || el.contains(ev.relatedTarget)) return;
+      el.classList.remove("tilting"); el.style.transform = "";
+    });
+  }
 
   // ---- keep a live region updated after htmx swaps ----
   doc.body.addEventListener("htmx:afterSwap", function (ev) {

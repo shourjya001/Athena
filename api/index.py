@@ -18,7 +18,14 @@ from trackboard import db
 from trackboard.main import app
 
 def init_serverless_db() -> None:
-    """Initialize /tmp/app.db from pre-seeded database or migrations on serverless boot."""
+    """Hosted DB (Turso): just run migrations. Otherwise fall back to /tmp/app.db seeded from
+    data/seed_data.db — a demo-only mode where writes are lost on cold start."""
+    if db.backend() == "turso":
+        try:
+            db.migrate(verbose=False)
+        except Exception as me:
+            print(f"Serverless migration notice (turso): {me}", file=sys.stderr)
+        return
     try:
         tmp_db = Path("/tmp/app.db")
         seed_candidates = [

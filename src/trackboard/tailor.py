@@ -16,7 +16,7 @@ from pathlib import Path
 
 import yaml
 from fpdf import FPDF
-from rank_bm25 import BM25Okapi
+from .bm25 import BM25Okapi
 
 from .analyst import ParseReport, analyse_pdf, report_regression
 

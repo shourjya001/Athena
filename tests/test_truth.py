@@ -60,3 +60,10 @@ def test_guest_job_cards_are_unscored():
     assert r.status_code == 200
     assert not re.search(r"\b(STRONG|WORTH A SHOT)\b", r.text)
     assert "Unscored" in r.text or "No roles match" in r.text
+
+
+def test_descriptions_render_without_html_tags():
+    from trackboard.listing import plaintext
+
+    assert plaintext("Build <b>things</b>.<br/><br/>Own the <i>platform</i>.") == "Build things.\n\nOwn the platform."
+    assert plaintext("&amp; scale") == "& scale"

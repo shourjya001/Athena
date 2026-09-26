@@ -1,0 +1,12 @@
+<svg class="scene" viewBox="0 0 640 220" role="img" aria-label="Writes go to a primary and replicate to two replicas that serve reads"><defs><marker id="sr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#6b7387" stroke-width="1.5"/></marker></defs>
+<g class="n"><rect x="20" y="86" width="110" height="48" rx="10"/><text x="75" y="115" text-anchor="middle">Writes</text></g>
+<path id="r1" class="e" d="M130 110 H230" marker-end="url(#sr)"/>
+<g class="n hot"><rect x="234" y="80" width="120" height="60" rx="10"/><text x="294" y="105" text-anchor="middle">Primary</text><text x="294" y="126" text-anchor="middle" class="sub">one writer</text></g>
+<path id="r2" class="e dashed" d="M354 100 C 400 100, 400 40, 450 40" marker-end="url(#sr)"/><path id="r3" class="e dashed" d="M354 120 C 400 120, 400 180, 450 180" marker-end="url(#sr)"/>
+<g class="n"><rect x="454" y="16" width="160" height="48" rx="10"/><text x="534" y="38" text-anchor="middle">Replica 1</text><text x="534" y="56" text-anchor="middle" class="sub">reads · lag 20 ms</text></g>
+<g class="n"><rect x="454" y="156" width="160" height="48" rx="10"/><text x="534" y="178" text-anchor="middle">Replica 2</text><text x="534" y="196" text-anchor="middle" class="sub">reads · lag 35 ms</text></g>
+<text x="400" y="120" text-anchor="middle" class="sub">async</text>
+<circle class="pk" r="5"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#r1"/></animateMotion></circle>
+<circle class="pk alt" r="4"><animateMotion dur="1.4s" begin="0.7s" repeatCount="indefinite"><mpath href="#r2"/></animateMotion></circle>
+<circle class="pk alt" r="4"><animateMotion dur="1.6s" begin="0.9s" repeatCount="indefinite"><mpath href="#r3"/></animateMotion></circle>
+</svg>

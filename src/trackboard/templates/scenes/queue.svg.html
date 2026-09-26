@@ -1,0 +1,12 @@
+<svg class="scene" viewBox="0 0 640 200" role="img" aria-label="Producers push messages into a queue; workers pull and acknowledge"><defs><marker id="sq" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#6b7387" stroke-width="1.5"/></marker></defs>
+<g class="n"><rect x="20" y="76" width="110" height="48" rx="10"/><text x="75" y="105" text-anchor="middle">Producer</text></g>
+<path id="q1" class="e" d="M130 100 H220" marker-end="url(#sq)"/>
+<g class="n hot"><rect x="224" y="70" width="190" height="60" rx="10"/><text x="319" y="95" text-anchor="middle">Queue</text><text x="319" y="116" text-anchor="middle" class="sub">at-least-once · per-key order</text></g>
+<g class="slot"><rect x="240" y="122" width="14" height="6" rx="2"/><rect x="258" y="122" width="14" height="6" rx="2"/><rect x="276" y="122" width="14" height="6" rx="2"/><rect x="294" y="122" width="14" height="6" rx="2"/></g>
+<path id="q2" class="e" d="M414 90 C 450 90, 450 40, 490 40" marker-end="url(#sq)"/><path id="q3" class="e" d="M414 110 C 450 110, 450 160, 490 160" marker-end="url(#sq)"/>
+<g class="n"><rect x="494" y="16" width="126" height="48" rx="10"/><text x="557" y="38" text-anchor="middle">Worker 1</text><text x="557" y="56" text-anchor="middle" class="sub">idempotent</text></g>
+<g class="n"><rect x="494" y="136" width="126" height="48" rx="10"/><text x="557" y="158" text-anchor="middle">Worker 2</text><text x="557" y="176" text-anchor="middle" class="sub">idempotent</text></g>
+<circle class="pk" r="5"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#q1"/></animateMotion></circle>
+<circle class="pk" r="5"><animateMotion dur="1.5s" begin="0.6s" repeatCount="indefinite"><mpath href="#q2"/></animateMotion></circle>
+<circle class="pk" r="5"><animateMotion dur="1.5s" begin="1.3s" repeatCount="indefinite"><mpath href="#q3"/></animateMotion></circle>
+</svg>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ t.title }} — System design — Athena{% endblock %}
+{% block meta_description %}{{ t.summary|truncate(150) }}{% endblock %}
+{% block head %}<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":{{ t.title|tojson }},"about":"System design","author":{"@type":"Person","name":"Shourjya Hazra"}}</script>{% endblock %}
+{% block body %}
+<div class="crumbs"><a href="/prep">Prep</a> / <a href="/prep/system-design">System design</a> / {{ t.title }}</div>
+<div class="section-head"><div><span class="kicker">{{ t.level|replace('basics','Basics')|replace('core','Core building blocks')|replace('advanced','Case study') }} · {{ t.index }} of 15</span><h1>{{ t.title }}</h1><p>{{ t.summary }}</p></div></div>
+<div class="card scene-card">{% include "scenes/" ~ t.scene ~ ".svg.html" %}<p class="help" style="margin:10px 0 0">Animation pauses if your system prefers reduced motion.</p></div>
+<div class="grid g2" style="margin-top:20px;align-items:start">
+  <section class="card"><h2 style="margin:0 0 12px;font-size:20px">The five ideas</h2><ol class="ideas">{% for i in t.ideas %}<li>{{ i }}</li>{% endfor %}</ol></section>
+  <div class="stack">
+    <section class="card"><h2 style="margin:0 0 12px;font-size:20px">Say this in the interview</h2><ul class="cue">{% for i in t.interview %}<li>{{ i }}</li>{% endfor %}</ul></section>
+    <section class="card"><h2 style="margin:0 0 12px;font-size:20px">Further reading</h2><ul class="cue">{% for title, url in t.reading %}<li><a href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ title }} ↗</a></li>{% endfor %}</ul></section>
+  </div>
+</div>
+<div class="row between" style="margin-top:28px">
+  {% if t.prev %}<a class="btn" href="/prep/system-design/{{ t.prev.slug }}">← {{ t.prev.title }}</a>{% else %}<span></span>{% endif %}
+  {% if t.next %}<a class="btn primary" href="/prep/system-design/{{ t.next.slug }}">{{ t.next.title }} →</a>{% endif %}
+</div>
+{% endblock %}

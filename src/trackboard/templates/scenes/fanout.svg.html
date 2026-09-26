@@ -1,0 +1,12 @@
+<svg class="scene" viewBox="0 0 640 220" role="img" aria-label="Requests fan out from a load balancer to three servers"><defs><marker id="sa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#6b7387" stroke-width="1.5"/></marker></defs>
+<g class="n"><rect x="20" y="86" width="120" height="48" rx="10"/><text x="80" y="115" text-anchor="middle">Clients</text></g>
+<path id="s1" class="e" d="M140 110 H240" marker-end="url(#sa)"/>
+<g class="n hot"><rect x="244" y="80" width="130" height="60" rx="10"/><text x="309" y="105" text-anchor="middle">Load balancer</text><text x="309" y="126" text-anchor="middle" class="sub">health checks</text></g>
+<path id="s2" class="e" d="M374 100 C 420 100, 420 40, 470 40" marker-end="url(#sa)"/><path id="s3" class="e" d="M374 110 H470" marker-end="url(#sa)"/><path id="s4" class="e" d="M374 120 C 420 120, 420 180, 470 180" marker-end="url(#sa)"/>
+<g class="n"><rect x="474" y="16" width="140" height="48" rx="10"/><text x="544" y="45" text-anchor="middle">Server A</text></g>
+<g class="n"><rect x="474" y="86" width="140" height="48" rx="10"/><text x="544" y="115" text-anchor="middle">Server B</text></g>
+<g class="n down"><rect x="474" y="156" width="140" height="48" rx="10"/><text x="544" y="185" text-anchor="middle">Server C · unhealthy</text></g>
+<circle class="pk" r="5"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#s1"/></animateMotion></circle>
+<circle class="pk" r="5"><animateMotion dur="1.6s" begin="0.8s" repeatCount="indefinite"><mpath href="#s2"/></animateMotion></circle>
+<circle class="pk" r="5"><animateMotion dur="1.6s" begin="1.2s" repeatCount="indefinite"><mpath href="#s3"/></animateMotion></circle>
+</svg>

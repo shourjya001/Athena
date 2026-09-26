@@ -1,0 +1,10 @@
+<svg class="scene" viewBox="0 0 640 200" role="img" aria-label="A request checks the cache first and only reaches the database on a miss"><defs><marker id="sc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#6b7387" stroke-width="1.5"/></marker></defs>
+<g class="n"><rect x="20" y="76" width="120" height="48" rx="10"/><text x="80" y="105" text-anchor="middle">App</text></g>
+<path id="c1" class="e" d="M140 100 H250" marker-end="url(#sc)"/>
+<g class="n hot"><rect x="254" y="70" width="130" height="60" rx="10"/><text x="319" y="95" text-anchor="middle">Cache</text><text x="319" y="116" text-anchor="middle" class="sub">hit ≈ 90%, ~1 ms</text></g>
+<path id="c2" class="e dashed" d="M384 100 H500" marker-end="url(#sc)"/>
+<g class="n"><rect x="504" y="70" width="116" height="60" rx="10"/><text x="562" y="95" text-anchor="middle">Database</text><text x="562" y="116" text-anchor="middle" class="sub">miss, ~10 ms</text></g>
+<text x="440" y="90" text-anchor="middle" class="sub">miss only</text>
+<circle class="pk" r="5"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#c1"/></animateMotion></circle>
+<circle class="pk alt" r="5"><animateMotion dur="2.4s" begin="1.2s" repeatCount="indefinite"><mpath href="#c2"/></animateMotion></circle>
+</svg>

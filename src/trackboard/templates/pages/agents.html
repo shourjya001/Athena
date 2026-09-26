@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Agents, live — Athena{% endblock %}
+{% block meta_description %}Watch Athena's agents work in real time: the scout reading career APIs, the matcher scoring roles, the digest going out. Every node shows its last real run.{% endblock %}
+{% block body %}
+<div class="section-head"><div><h1>Agents, live</h1><p>Every node is fed by the <code>agent_runs</code> table. Nothing here is decorative: a light is green only if the last run succeeded.</p></div>
+  <div class="row"><span class="live" id="live-badge" role="status"><i></i>Live · updates every 15s</span><button class="btn sm" type="button" id="replay-btn"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#play"/></svg>Replay last run</button></div></div>
+
+<div class="flow card" id="flow" data-state="{{ state_json|e }}">
+  <svg class="flow-svg" viewBox="0 0 960 520" role="img" aria-labelledby="flow-t flow-d">
+    <title id="flow-t">Athena agent pipeline, live</title>
+    <desc id="flow-d">External sources on top, agents that read them, the shared SQLite tables in the middle band, and the agents that consume those tables below. Particles animate along an edge while that step is replayed.</desc>
+    <defs>
+      <marker id="fa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 1L8 5L2 9" class="arrowhead"/></marker>
+      <linearGradient id="fg" x1="0" x2="1"><stop offset="0" stop-color="var(--btn-a)"/><stop offset="1" stop-color="var(--btn-b)"/></linearGradient>
+    </defs>
+    <!-- sources -->
+    <g class="src"><rect fill="#f3f4f8" stroke="#e5e7ee" x="40" y="24" width="240" height="52" rx="12"/><text fill="#0b1220" x="160" y="46" text-anchor="middle" class="t">Company ATS APIs</text><text fill="#0b1220" x="160" y="64" text-anchor="middle" class="sub">Greenhouse · Lever · Ashby · Workday · Oracle</text></g>
+    <g class="src"><rect fill="#f3f4f8" stroke="#e5e7ee" x="360" y="24" width="240" height="52" rx="12"/><text fill="#0b1220" x="480" y="46" text-anchor="middle" class="t">Gmail</text><text fill="#0b1220" x="480" y="64" text-anchor="middle" class="sub">recruiter replies, read-only</text></g>
+    <g class="src"><rect fill="#f3f4f8" stroke="#e5e7ee" x="680" y="24" width="240" height="52" rx="12"/><text fill="#0b1220" x="800" y="46" text-anchor="middle" class="t">LeetCode</text><text fill="#0b1220" x="800" y="64" text-anchor="middle" class="sub">accepted submissions</text></g>
+    <!-- edges row 1 -->
+    <path fill="none" stroke="#6b7387" id="e1" class="edge" d="M160 76 V124" marker-end="url(#fa)"/><path fill="none" stroke="#6b7387" id="e2" class="edge" d="M480 76 V124" marker-end="url(#fa)"/><path fill="none" stroke="#6b7387" id="e3" class="edge" d="M800 76 V124" marker-end="url(#fa)"/>
+    <!-- agents row 1 -->
+    <g class="agent" data-agent="scout"><rect fill="#ffffff" stroke="#d3d7e2" x="40" y="128" width="240" height="64" rx="14"/><circle class="led" fill="#6b7387" cx="262" cy="146" r="5"/><text fill="#0b1220" x="56" y="152" class="t">Scout</text><text fill="#0b1220" x="56" y="172" class="sub" data-sub>—</text></g>
+    <g class="agent" data-agent="inbox"><rect fill="#ffffff" stroke="#d3d7e2" x="360" y="128" width="240" height="64" rx="14"/><circle class="led" fill="#6b7387" cx="582" cy="146" r="5"/><text fill="#0b1220" x="376" y="152" class="t">Inbox</text><text fill="#0b1220" x="376" y="172" class="sub" data-sub>—</text></g>
+    <g class="agent" data-agent="leetcode_sync"><rect fill="#ffffff" stroke="#d3d7e2" x="680" y="128" width="240" height="64" rx="14"/><circle class="led" fill="#6b7387" cx="902" cy="146" r="5"/><text fill="#0b1220" x="696" y="152" class="t">LeetCode sync</text><text fill="#0b1220" x="696" y="172" class="sub" data-sub>—</text></g>
+    <!-- edges to db -->
+    <path fill="none" stroke="#6b7387" id="e4" class="edge" d="M160 192 V236" marker-end="url(#fa)"/><path fill="none" stroke="#6b7387" id="e5" class="edge" d="M480 192 V236" marker-end="url(#fa)"/><path fill="none" stroke="#6b7387" id="e6" class="edge" d="M800 192 V236" marker-end="url(#fa)"/>
+    <!-- db band -->
+    <rect class="db" fill="#e8efff" stroke="#d3d7e2" x="24" y="216" width="912" height="96" rx="16"/><text fill="#0b1220" x="40" y="210" class="sub">SQLite, one database · agents never call each other, they read and write these tables</text>
+    <g class="tbl" data-table="jobs"><rect fill="#ffffff" stroke="#d3d7e2" x="40" y="240" width="200" height="52" rx="10"/><text fill="#0b1220" x="140" y="262" text-anchor="middle" class="t">jobs</text><text fill="#0b1220" x="140" y="280" text-anchor="middle" class="sub" data-count="open_jobs">—</text></g>
+    <g class="tbl" data-table="matches"><rect fill="#ffffff" stroke="#d3d7e2" x="256" y="240" width="184" height="52" rx="10"/><text fill="#0b1220" x="348" y="262" text-anchor="middle" class="t">matches</text><text fill="#0b1220" x="348" y="280" text-anchor="middle" class="sub">fit score · verdict · gaps</text></g>
+    <g class="tbl" data-table="applications"><rect fill="#ffffff" stroke="#d3d7e2" x="456" y="240" width="200" height="52" rx="10"/><text fill="#0b1220" x="556" y="262" text-anchor="middle" class="t">applications</text><text fill="#0b1220" x="556" y="280" text-anchor="middle" class="sub">stage · events</text></g>
+    <g class="tbl" data-table="reviews"><rect fill="#ffffff" stroke="#d3d7e2" x="672" y="240" width="248" height="52" rx="10"/><text fill="#0b1220" x="796" y="262" text-anchor="middle" class="t">attempts · reviews</text><text fill="#0b1220" x="796" y="280" text-anchor="middle" class="sub">FSRS schedule</text></g>
+    <!-- edges from db -->
+    <path fill="none" stroke="#6b7387" id="e7" class="edge" d="M140 292 V340" marker-end="url(#fa)"/><path fill="none" stroke="#6b7387" id="e8" class="edge" d="M348 292 V340" marker-end="url(#fa)"/><path fill="none" stroke="#6b7387" id="e9" class="edge" d="M556 292 V340" marker-end="url(#fa)"/><path fill="none" stroke="#6b7387" id="e10" class="edge" d="M796 292 V340" marker-end="url(#fa)"/>
+    <!-- agents row 2 -->
+    <g class="agent" data-agent="matcher"><rect fill="#ffffff" stroke="#d3d7e2" x="40" y="344" width="200" height="64" rx="14"/><circle class="led" fill="#6b7387" cx="222" cy="362" r="5"/><text fill="#0b1220" x="56" y="368" class="t">Matcher</text><text fill="#0b1220" x="56" y="388" class="sub" data-sub>—</text></g>
+    <g class="agent" data-agent="digest"><rect fill="#ffffff" stroke="#d3d7e2" x="256" y="344" width="184" height="64" rx="14"/><circle class="led" fill="#6b7387" cx="422" cy="362" r="5"/><text fill="#0b1220" x="272" y="368" class="t">Digest</text><text fill="#0b1220" x="272" y="388" class="sub" data-sub>—</text></g>
+    <g class="agent" data-agent="tailor"><rect fill="#ffffff" stroke="#d3d7e2" x="456" y="344" width="200" height="64" rx="14"/><circle class="led" fill="#6b7387" cx="638" cy="362" r="5"/><text fill="#0b1220" x="472" y="368" class="t">Tailor + Analyst</text><text fill="#0b1220" x="472" y="388" class="sub" data-sub>—</text></g>
+    <g class="out"><rect fill="#f3f4f8" stroke="#d3d7e2" x="672" y="344" width="248" height="64" rx="14"/><text fill="#0b1220" x="688" y="368" class="t">Practice queue</text><text fill="#0b1220" x="688" y="388" class="sub">/practice · due today</text></g>
+    <!-- matcher -> matches (feedback) and digest -> email -->
+    <path fill="none" stroke="#6b7387" id="e11" class="edge dashed" d="M240 376 H256" marker-end="url(#fa)"/>
+    <path fill="none" stroke="#6b7387" id="e12" class="edge" d="M348 408 V456" marker-end="url(#fa)"/>
+    <g class="out"><rect fill="#f3f4f8" stroke="#d3d7e2" x="256" y="460" width="184" height="44" rx="12"/><text fill="#0b1220" x="348" y="487" text-anchor="middle" class="t">Morning email</text></g>
+    <!-- particles (SMIL, started by JS during replay) -->
+    {% for e in ['e1','e4','e7','e11','e8','e12','e2','e5','e9','e3','e6','e10'] %}
+    <circle class="particle" r="4" data-edge="{{ e }}"><animateMotion dur="0.9s" begin="indefinite" fill="freeze"><mpath href="#{{ e }}"/></animateMotion></circle>
+    {% endfor %}
+  </svg>
+</div>
+
+<div class="grid g3" style="margin-top:20px">
+  {% for n in state.nodes %}
+  <div class="card node-card" data-agent="{{ n.key }}">
+    <div class="row between"><b>{{ n.label }}</b><span class="status {{ n.status }}" data-status>{{ n.status }}</span></div>
+    <p class="small muted" style="margin:6px 0 10px">{{ n.desc }}</p>
+    <div class="row small"><span><span class="num" data-in>{{ n.items_in }}</span> in</span><span><span class="num" data-out>{{ n.items_out }}</span> out</span>{% if n.llm_calls %}<span><span class="num">{{ n.llm_calls }}</span> LLM calls</span>{% endif %}<span class="faint" data-ago>{{ n.ago or 'no run yet' }}</span></div>
+  </div>
+  {% endfor %}
+</div>
+
+<section class="section">
+  <div class="section-head"><div><h2>Event log</h2><p>The last 20 runs, newest first. This is the same table the status page reads.</p></div><a class="small" href="/system">Full status →</a></div>
+  <div class="tablewrap"><table class="stack" id="events"><thead><tr><th>Agent</th><th>Status</th><th>When</th><th class="num">In</th><th class="num">Out</th><th class="num">LLM</th></tr></thead><tbody>
+  {% for e in state.events %}<tr><td data-label="Agent">{{ e.agent }}</td><td data-label="Status"><span class="status {{ e.status }}">{{ e.status }}</span></td><td data-label="When" class="small">{{ e.ago }}</td><td data-label="In" class="num">{{ e.items_in }}</td><td data-label="Out" class="num">{{ e.items_out }}</td><td data-label="LLM" class="num">{{ e.llm_calls }}</td></tr>{% else %}<tr><td colspan="6" class="muted">No runs recorded yet.</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/agents.js?v={{ static_v }}" defer></script>{% endblock %}

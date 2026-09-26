@@ -10,9 +10,9 @@ from tests.helpers import guest, signed_in
 def test_session_signature_is_required():
     tok = users.issue_session(42)
     assert users.verify_session(tok) == 42
-    uid, ts, sig = tok.split(".")
-    assert users.verify_session(f"{uid}.{ts}.{'0' * len(sig)}") is None
-    assert users.verify_session(f"7.{ts}.{sig}") is None          # uid tampered
+    uid, ts, dh, sig = tok.split(".")
+    assert users.verify_session(f"{uid}.{ts}.{dh}.{'0' * len(sig)}") is None
+    assert users.verify_session(f"7.{ts}.{dh}.{sig}") is None          # uid tampered
     assert users.verify_session("shourjya") is None                # legacy plaintext format
     assert users.verify_session(None) is None
 
@@ -168,3 +168,35 @@ def test_two_users_never_see_each_others_data():
     app_id = db.query_one("SELECT id FROM applications WHERE user_id=?", (a.uid,))["id"]
     b.post(f"/a/applications/{app_id}/status", data={"csrf_token": b.csrf, "status": "rejected"})
     assert db.query_one("SELECT status FROM applications WHERE id=?", (app_id,))["status"] == "submitted"
+
+
+def test_session_is_bound_to_device_and_network():
+    from trackboard.settings import get_settings
+
+    class R:  # minimal request stand-in
+        def __init__(self, ua, ip): self.headers = {"user-agent": ua, "x-forwarded-for": ip}; self.client = None
+    a = users.device_hash(R("Mozilla/5.0 Chrome", "49.36.10.20"))
+    same_net = users.device_hash(R("Mozilla/5.0 Chrome", "49.36.10.99"))   # last octet changed
+    other_net = users.device_hash(R("Mozilla/5.0 Chrome", "8.8.8.8"))
+    other_ua = users.device_hash(R("curl/8.0", "49.36.10.20"))
+    tok = users.issue_session(5, a)
+    assert users.verify_session(tok, a) == 5
+    assert users.verify_session(tok, same_net) == 5
+    assert users.verify_session(tok, other_net) is None
+    assert users.verify_session(tok, other_ua) is None
+    # old three-part tokens are rejected outright
+    assert users.verify_session("5.1700000000.deadbeef", a) is None
+
+
+def test_security_txt_and_step_up_prompt(monkeypatch):
+    from trackboard.settings import get_settings
+
+    c = guest()
+    r = c.get("/.well-known/security.txt")
+    assert r.status_code == 200 and "Contact:" in r.text
+    get_settings.cache_clear(); monkeypatch.setenv("GOOGLE_CLIENT_ID", "x"); get_settings.cache_clear()
+    try:
+        loc = c.get("/auth/google").headers["location"]
+        assert "prompt=login" in loc  # unknown device -> Google must re-verify the password
+    finally:
+        get_settings.cache_clear()

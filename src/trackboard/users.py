@@ -55,20 +55,41 @@ def _sign(payload: str) -> str:
     return hmac.new(_secret(), payload.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
-def issue_session(uid: int) -> str:
-    payload = f"{uid}.{int(time.time())}"
+def device_hash(request: Any) -> str:
+    """Stable fingerprint of the browser + network the session was issued to.
+    IP is reduced to its /24 (IPv4) or /48 (IPv6) so mobile carriers rotating the
+    last octet don't log people out, while a stolen cookie replayed from another
+    network or browser is rejected. Set SESSION_BIND_DEVICE=false to disable."""
+    if request is None or not get_settings().session_bind_device:
+        return "any"
+    ua = request.headers.get("user-agent", "")[:200]
+    fwd = request.headers.get("x-forwarded-for", "")
+    ip = (fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "")) or ""
+    if ":" in ip:
+        prefix = ":".join(ip.split(":")[:3])
+    else:
+        prefix = ".".join(ip.split(".")[:3])
+    return hashlib.sha256(f"{ua}|{prefix}".encode()).hexdigest()[:16]
+
+
+def issue_session(uid: int, dh: str = "any") -> str:
+    payload = f"{uid}.{int(time.time())}.{dh}"
     return f"{payload}.{_sign(payload)}"
 
 
-def verify_session(token: str | None) -> int | None:
+def verify_session(token: str | None, dh: str = "any") -> int | None:
     if not token:
         return None
     parts = token.split(".")
-    if len(parts) != 3:
+    if len(parts) == 3:  # pre-device-binding token: reject, forces one re-login
         return None
-    uid_s, ts_s, sig = parts
-    payload = f"{uid_s}.{ts_s}"
+    if len(parts) != 4:
+        return None
+    uid_s, ts_s, tok_dh, sig = parts
+    payload = f"{uid_s}.{ts_s}.{tok_dh}"
     if not hmac.compare_digest(_sign(payload), sig):
+        return None
+    if tok_dh != "any" and dh != "any" and not hmac.compare_digest(tok_dh, dh):
         return None
     try:
         uid = int(uid_s)
@@ -80,10 +101,10 @@ def verify_session(token: str | None) -> int | None:
     return uid
 
 
-def set_session_cookie(resp: Response, uid: int) -> None:
+def set_session_cookie(resp: Response, uid: int, request: Any = None) -> None:
     resp.set_cookie(
         SESSION_COOKIE,
-        issue_session(uid),
+        issue_session(uid, device_hash(request)),
         max_age=SESSION_MAX_AGE,
         httponly=True,
         secure=not get_settings().insecure_cookies,
@@ -176,7 +197,7 @@ def load_user(uid: int) -> dict[str, Any] | None:
 def current_user(request: Any = None) -> dict[str, Any]:
     """Resolve the user for a request. Never trusts anything unsigned."""
     if request is not None:
-        uid = verify_session(request.cookies.get(SESSION_COOKIE))
+        uid = verify_session(request.cookies.get(SESSION_COOKIE), device_hash(request))
         if uid:
             user = load_user(uid)
             if user:

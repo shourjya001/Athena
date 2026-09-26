@@ -18,9 +18,9 @@
       <span><svg class="i" aria-hidden="true"><use href="/static/icons.svg#shield-check"/></svg>No ads, no trackers</span>
     </div>
   </div>
-  <div class="preview" aria-label="Example of a scored job card">
+  <div class="preview tilt" aria-label="Example of a scored job card">
     <span class="stamp">Sample</span>
-    <article class="job">
+    <article class="job strong">
       <div class="job-head" aria-hidden="true">
         <span class="avatar" data-h="4">{{ (newest[0].company_name if newest else 'A')[:1] }}</span>
         <div>
@@ -62,12 +62,32 @@
 <div class="notice ok" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#circle-check"/></svg>Your account and all of its data have been deleted.</div>
 {% endif %}
 
+
+<section class="section">
+  <div class="section-head"><div><h2>Every career API, one desk</h2><p>Companies publish openings through five different systems. Athena reads all of them and hands you one list.</p></div></div>
+  <div class="card fanin-card">
+    <svg class="fanin" viewBox="0 0 900 300" role="img" aria-label="Greenhouse, Lever, Ashby, Workday, Oracle and SmartRecruiters feeds converge into Athena, which delivers one list to you">
+      <defs><marker id="fi" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#6b7387" stroke-width="1.5"/></marker></defs>
+      {% set srcs = [('Greenhouse',30),('Lever',78),('Ashby',126),('Workday',174),('Oracle',222),('SmartRecruiters',270)] %}
+      {% for name, y in srcs %}
+      <g class="n"><rect x="20" y="{{ y - 16 }}" width="150" height="32" rx="8"/><text x="95" y="{{ y + 5 }}" text-anchor="middle">{{ name }}</text></g>
+      <path id="fi{{ loop.index }}" class="e flow-line" d="M170 {{ y }} C 300 {{ y }}, 300 150, 420 150"/>
+      <circle class="pk" r="4"><animateMotion dur="{{ 2.2 + loop.index * 0.35 }}s" begin="{{ loop.index * 0.3 }}s" repeatCount="indefinite"><mpath href="#fi{{ loop.index }}"/></animateMotion></circle>
+      {% endfor %}
+      <g class="n hot"><rect x="420" y="112" width="160" height="76" rx="14"/><text x="500" y="144" text-anchor="middle" style="font-weight:700">Athena</text><text x="500" y="166" text-anchor="middle" class="sub">dedupe · verify · score</text></g>
+      <path id="fio" class="e flow-line" d="M580 150 H720" marker-end="url(#fi)"/>
+      <circle class="pk alt" r="5"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#fio"/></animateMotion></circle>
+      <g class="n"><rect x="724" y="118" width="156" height="64" rx="12"/><text x="802" y="146" text-anchor="middle">Your list</text><text x="802" y="166" text-anchor="middle" class="sub">{{ '{:,}'.format(stats.open_jobs) }} roles · one place</text></g>
+    </svg>
+  </div>
+</section>
+
 <section class="section" id="how">
-  <div class="section-head"><div><h2>How it works</h2><p>Three agents, one SQLite file, nothing hidden.</p></div><a class="small" href="/system">See live status →</a></div>
+  <div class="section-head"><div><h2>How it works</h2><p>Three agents, one SQLite file, nothing hidden.</p></div><a class="small" href="/agents">Watch the agents live →</a></div>
   <div class="steps">
-    <div class="step"><span class="tile-icon"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#radar"/></svg></span><div><b>Ingest</b><p>A scout agent polls public ATS APIs nightly, de-duplicates by company + title + location, and closes a role after it vanishes from three consecutive runs.</p></div></div>
-    <div class="step"><span class="tile-icon alt"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#target"/></svg></span><div><b>Score</b><p>A BM25 shortlist, then a recruiter-style pass across four pillars: direct skills, transferable depth, adjacent tooling, and quantified impact. If the model is offline you see "Unscored", not a made-up number.</p></div></div>
-    <div class="step"><span class="tile-icon ok"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#brain"/></svg></span><div><b>Prepare</b><p>Tailored résumés are selected from your own bullet bank and rejected if a contact field goes missing. Practice is a spaced-repetition queue across 26 patterns.</p></div></div>
+    <div class="step tilt"><span class="tile-icon"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#radar"/></svg></span><div><b>Ingest</b><p>A scout agent polls public ATS APIs nightly, de-duplicates by company + title + location, and closes a role after it vanishes from three consecutive runs.</p></div></div>
+    <div class="step tilt"><span class="tile-icon alt"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#target"/></svg></span><div><b>Score</b><p>A BM25 shortlist, then a recruiter-style pass across four pillars: direct skills, transferable depth, adjacent tooling, and quantified impact. If the model is offline you see "Unscored", not a made-up number.</p></div></div>
+    <div class="step tilt"><span class="tile-icon ok"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#brain"/></svg></span><div><b>Prepare</b><p>Tailored résumés are selected from your own bullet bank and rejected if a contact field goes missing. Practice is a spaced-repetition queue across 26 patterns.</p></div></div>
   </div>
 </section>
 
@@ -88,11 +108,11 @@
     <div class="card">
       <div class="row between"><div class="kicker">Newest engineering openings in India</div><a class="small" href="/jobs">All jobs →</a></div>
       {% if newest %}
-      <ul class="list">
+      <div class="hscroll compact" tabindex="0" aria-label="Newest openings">
         {% for j in newest %}
-        <li><span><a href="/jobs/{{ j.id }}">{{ j.title }}</a><span class="who"> · {{ j.company_name }}</span></span><span class="faint small">{{ j.seen_label }}</span></li>
+        <a class="mini-job" href="/jobs/{{ j.id }}"><span class="avatar" data-h="{{ (j.company_name|length + j.id) % 8 }}" aria-hidden="true">{{ j.company_name[:1]|upper }}</span><span class="mj-body"><b>{{ j.title|truncate(48) }}</b><span class="small muted">{{ j.company_name }} · {{ j.seen_label }}</span></span></a>
         {% endfor %}
-      </ul>
+      </div>
       {% else %}<p class="muted">Nothing new yet.</p>{% endif %}
     </div>
   </div>

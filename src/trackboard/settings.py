@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     db_url: str = "sqlite:///~/.trackboard/app.db"
+    turso_database_url: str = ""   # libsql://<name>-<org>.turso.io  (set with TURSO_AUTH_TOKEN for hosted DB)
+    turso_auth_token: str = ""
     tz: str = "Asia/Kolkata"
     app_tz: str = ""
     scheduler_mode: str = "local"
@@ -34,7 +36,8 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     email_from: str = ""
-    insecure_cookies: bool = False  # set true only for http://localhost dev
+    insecure_cookies: bool = False
+    session_bind_device: bool = True   # cookie only valid from the browser + network it was issued to  # set true only for http://localhost dev
     site_url: str = "https://athena-phi-one.vercel.app"
 
     @property
