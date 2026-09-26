@@ -1,0 +1,40 @@
+<article class="job" id="job-{{ j.id }}">
+  <button class="job-head" type="button" aria-expanded="false" aria-controls="job-body-{{ j.id }}">
+    <div>
+      <div class="job-co">{{ j.company_name }}</div>
+      <div class="job-title">{{ j.title }}</div>
+      <div class="job-meta">
+        {% if j.location %}<span><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#map-pin"/></svg>{{ j.location|truncate(40, True, '…') }}</span>{% endif %}
+        {% if j.remote %}<span>Remote</span>{% endif %}
+        <span title="Where this listing was read from">{{ j.source_label }}</span>
+        <span title="First seen by Athena">seen {{ j.seen_label }}</span>
+      </div>
+    </div>
+    <div class="job-side">
+      {% if j.scored %}
+        <span class="chip {{ 'ok' if j.verdict=='strong' else ('accent' if j.verdict=='worth_a_shot' else 'warn') }}"><span class="score">{{ j.fit_score }}</span> · {{ (j.verdict or '')|replace('_',' ') }}</span>
+      {% else %}
+        <span class="chip" title="{{ 'Sign in and upload a résumé to score this role' if not user.is_authenticated else 'Run a match to score this role' }}">Unscored</span>
+      {% endif %}
+      <svg class="i chev" aria-hidden="true"><use href="/static/icons.svg#chevron-down"/></svg>
+    </div>
+  </button>
+  <div class="job-body" id="job-body-{{ j.id }}"><div><div class="inner">
+    {% if j.scored %}
+      {% if j.reasoning %}<p class="small" style="margin:12px 0 0">{{ j.reasoning }}</p>{% endif %}
+      {% if j.strengths or j.gaps %}<div class="chips" style="margin-top:10px">{% for s in j.strengths[:3] %}<span class="chip ok">{{ s|truncate(48) }}</span>{% endfor %}{% for g in j.gaps[:3] %}<span class="chip warn">gap: {{ g|truncate(48) }}</span>{% endfor %}</div>{% endif %}
+    {% endif %}
+    <div class="jd" tabindex="0" aria-label="Job description">{{ (j.description_md or 'No description was published with this listing.')|trim }}</div>
+    <div class="job-actions">
+      <a class="btn primary sm" href="/a/jobs/{{ j.id }}/go" target="_blank" rel="noopener noreferrer">Open on company site <svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#external-link"/></svg></a>
+      <a class="btn sm" href="/jobs/{{ j.id }}">Details</a>
+      {% if user.is_authenticated %}
+        <a class="btn sm" href="/jobs/{{ j.id }}/tailor">Tailor résumé</a>
+        <form method="post" action="/a/jobs/{{ j.id }}/mark-applied" hx-post="/a/jobs/{{ j.id }}/mark-applied" hx-target="closest .job" hx-swap="outerHTML" style="margin:0"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn sm" type="submit">Mark applied</button></form>
+        <form method="post" action="/a/jobs/{{ j.id }}/dismiss" hx-post="/a/jobs/{{ j.id }}/dismiss" hx-target="closest .job" hx-swap="outerHTML" style="margin:0"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn sm ghost" type="submit">Dismiss</button></form>
+      {% else %}
+        <a class="btn sm ghost" href="/login?next=/jobs/{{ j.id }}/tailor" title="Sign in to tailor a résumé for this role">Tailor résumé</a>
+      {% endif %}
+    </div>
+  </div></div></div>
+</article>

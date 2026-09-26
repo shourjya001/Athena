@@ -33,7 +33,9 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: str = ""
-    email_from: str = "shourjya.h@gmail.com"
+    email_from: str = ""
+    insecure_cookies: bool = False  # set true only for http://localhost dev
+    site_url: str = "https://athena-phi-one.vercel.app"
 
     @property
     def db_path(self) -> Path:
@@ -50,7 +52,7 @@ class Settings(BaseSettings):
 
     @property
     def user_agent(self) -> str:
-        return f"Trackboard/0.1 (+{self.contact_email})"
+        return f"Athena/1.0 (+{self.site_url})"
 
 
 @lru_cache

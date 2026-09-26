@@ -97,7 +97,15 @@ def migrate(verbose: bool = True) -> list[str]:
         for path in sorted(get_migrations_dir().glob("*.sql")):
             if path.name in done:
                 continue
-            conn.executescript(path.read_text())
+            try:
+                conn.executescript(path.read_text())
+            except sqlite3.OperationalError as e:
+                # A seed DB may already carry this migration's DDL without the ledger row.
+                if "duplicate column" in str(e) or "already exists" in str(e):
+                    if verbose:
+                        print(f"  {path.name}: already applied ({e}); recording")
+                else:
+                    raise
             conn.execute(
                 "INSERT INTO schema_migrations (name, applied_at) VALUES (?, datetime('now'))",
                 (path.name,),

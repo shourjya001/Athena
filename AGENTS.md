@@ -1,3 +1,5 @@
+> **2026-09-26 update.** Auth, CSRF, rate limiting and headers live in `users.py` and `security.py`. All public numbers come from `stats.site_stats()`. Job listing/filtering is `listing.py`. The Playwright applier was removed (BUILD_SPEC §24 forbids auto-apply). See `CHANGES.md` for the full handoff.
+
 # Agent rules — Trackboard
 
 You start every session with no memory of previous ones. This file is your

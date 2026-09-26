@@ -1,0 +1,25 @@
+{% set f = page.filters %}
+<div class="results-head" data-result-count="{{ page.total }}">
+  <div><b>{{ '{:,}'.format(page.total) }}</b> <span class="muted">roles{% if f.q %} matching “{{ f.q }}”{% endif %}</span></div>
+  <div class="chips">
+    {% if f.region != 'all' %}<span class="chip">{{ 'India + remote' if f.region=='india' else 'Remote' }}<a href="/jobs?{{ qs(f, region='all', page=1) }}" aria-label="Remove region filter" hx-get="/jobs?{{ qs(f, region='all', page=1) }}" hx-target="#results" hx-push-url="true">×</a></span>{% endif %}
+    {% if f.track != 'all' %}<span class="chip">{{ 'Engineering' if f.track=='tech' else 'Business' }}<a href="/jobs?{{ qs(f, track='all', page=1) }}" aria-label="Remove track filter" hx-get="/jobs?{{ qs(f, track='all', page=1) }}" hx-target="#results" hx-push-url="true">×</a></span>{% endif %}
+    {% if f.level != 'any' %}<span class="chip">{{ f.level|capitalize }}<a href="/jobs?{{ qs(f, level='any', page=1) }}" aria-label="Remove seniority filter" hx-get="/jobs?{{ qs(f, level='any', page=1) }}" hx-target="#results" hx-push-url="true">×</a></span>{% endif %}
+    {% if f.source %}<span class="chip">{{ f.source|capitalize }}<a href="/jobs?{{ qs(f, source='', page=1) }}" aria-label="Remove source filter" hx-get="/jobs?{{ qs(f, source='', page=1) }}" hx-target="#results" hx-push-url="true">×</a></span>{% endif %}
+  </div>
+</div>
+
+{% if page.jobs %}
+<div class="cards">
+{% for j in page.jobs %}
+{% include "partials/job_card.html" %}
+{% endfor %}
+{% if page.has_next %}
+<div class="loadmore" style="grid-column:1/-1;text-align:center">
+  <a class="btn" href="/jobs?{{ qs(f, page=page.page+1) }}" hx-get="/jobs?{{ qs(f, page=page.page+1) }}" hx-target="closest .loadmore" hx-swap="outerHTML" hx-select=".cards > *" hx-trigger="click, revealed" hx-indicator="this">Load more <span class="muted">({{ page.total - page.page * 20 }} left)</span></a>
+</div>
+{% endif %}
+</div>
+{% else %}
+<div class="empty"><b>No roles match these filters.</b><br><span class="small">{% if f.track == 'tech' %}Engineering-only is on by default. {% endif %}{% if f.region == 'india' %}Region is set to India + remote. {% endif %}</span><br><a class="btn sm" style="margin-top:12px" href="/jobs?region=all&track=all&level=any" hx-get="/jobs?region=all&track=all&level=any" hx-target="#results" hx-push-url="true">Clear filters</a></div>
+{% endif %}

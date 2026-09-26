@@ -1,75 +1,20 @@
 {% extends "base.html" %}
-{% block title %}Sign in — Athena Digital Twin OS{% endblock %}
+{% block title %}Sign in — Athena{% endblock %}
+{% block robots %}noindex, follow{% endblock %}
 {% block body %}
-<div style="max-width:480px;margin:48px auto 80px auto;">
-  <div class="page-head" style="text-align:center;padding-top:0;">
-    <div class="label" style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:rgba(56,139,253,0.12);border:1px solid rgba(56,139,253,0.3);border-radius:12px;color:var(--blue);font-size:11px;font-weight:700;">
-      <span class="pulse-dot" style="width:6px;height:6px;background:var(--blue);border-radius:50%;display:inline-block;"></span>
-      AUTONOMOUS DIGITAL TWIN GATEWAY
-    </div>
-    <h1 style="font-size:26px;font-weight:700;margin-top:12px;color:var(--chalk);">Sign in to Athena</h1>
-    <p class="sub" style="font-size:13px;color:var(--text-3);max-width:400px;margin:6px auto 0 auto;line-height:1.5;">
-      Sign in with your verified Google Account to access your private job radar, tailored bullet bank, and live ATS telemetry.
-    </p>
-  </div>
-
-  {% if notice %}
-  <div class="box info" style="margin-bottom:16px;padding:12px 14px;background:rgba(56,139,253,0.08);border:1px solid rgba(56,139,253,0.3);border-radius:6px;font-size:12.5px;color:var(--blue);line-height:1.4;">
-    <b>ℹ Notice:</b> {{ notice }}
-  </div>
-  {% endif %}
-
-  {% if error %}
-  <div class="box halt" style="margin-bottom:16px;padding:12px 14px;background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.3);border-radius:6px;font-size:12.5px;color:var(--red);line-height:1.4;">
-    <b>Authentication Error:</b> {{ error }}
-  </div>
-  {% endif %}
-
-  {# Primary Google Sign-In Card #}
-  <div class="card" style="padding:28px 24px;background:var(--card-bg);border:1px solid var(--rule);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.25);text-align:center;">
-    
-    <div style="margin-bottom:20px;">
-      <a href="/auth/google?next={{ next|urlencode }}" class="btn" style="width:100%;padding:13px 18px;background:#ffffff;color:#1f1f1f;border:1px solid #dadce0;border-radius:8px;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;gap:12px;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.08);transition:all 0.15s ease;">
-        <svg width="20" height="20" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z"/>
-          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.13C3.27 21.43 7.34 24 12 24z"/>
-          <path fill="#FBBC05" d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.13z"/>
-          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.27 2.57 1.25 6.58l4.03 3.13c.95-2.83 3.6-4.96 6.72-4.96z"/>
-        </svg>
-        <span>Sign in with Google</span>
-      </a>
-    </div>
-
-    <div style="font-size:12px;color:var(--text-3);line-height:1.5;">
-      Strict OAuth 2.0 cryptographic authentication. We verify identity via Google and never store passwords.
-    </div>
-
-    {% if not google_configured %}
-    <div style="margin-top:20px;padding:14px;background:rgba(227,179,65,0.08);border:1px solid rgba(227,179,65,0.3);border-radius:8px;text-align:left;font-size:11.5px;color:var(--amber);">
-      <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
-        <span>⚠️</span> OAuth 2.0 Credentials Pending Setup
-      </div>
-      <p style="margin:0 0 6px 0;line-height:1.4;">
-        To enable Google Sign-In on your Athena deployment, provide your Google Cloud OAuth Client ID &amp; Secret:
-      </p>
-      <code style="display:block;padding:6px 8px;background:rgba(0,0,0,0.4);border-radius:4px;font-family:var(--mono);color:var(--chalk);font-size:11px;">
-        GOOGLE_CLIENT_ID="..."<br>
-        GOOGLE_CLIENT_SECRET="..."
-      </code>
-      <p style="margin:6px 0 0 0;font-size:11px;color:var(--text-3);">
-        Authorized redirect URI: <code style="color:var(--blue);">https://&lt;your-domain&gt;/auth/google/callback</code>
-      </p>
-    </div>
+<div class="card" style="max-width:440px;margin:24px auto">
+  <h1 style="font-size:24px">Sign in to Athena</h1>
+  <p class="muted">Google sign-in only. We store your email and name, nothing else from Google, and we never see a password.</p>
+  {% if error %}<div class="notice danger" role="alert"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#alert-circle"/></svg>{{ error }}</div>{% endif %}
+  <div class="stack" style="margin-top:16px">
+    {% if google_configured %}
+    <a class="btn google block" href="/auth/google?next={{ next|urlencode }}"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true" style="stroke:none"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.7-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1C3.3 21.3 7.3 24 12 24z"/><path fill="#FBBC05" d="M5.3 14.3c-.2-.7-.4-1.5-.4-2.3s.1-1.6.4-2.3V6.6H1.3C.5 8.2 0 10 0 12s.5 3.8 1.3 5.4l4-3.1z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4C18 1.2 15.2 0 12 0 7.3 0 3.3 2.7 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9z"/></svg>Continue with Google</a>
+    {% else %}
+    <div class="notice warn"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#alert-circle"/></svg>Google sign-in isn't configured on this server yet.</div>
     {% endif %}
-
+    <a class="btn block" href="/auth/demo-sandbox?next={{ next|urlencode }}">Try the sandbox instead</a>
+    <p class="help">The sandbox is a temporary account with sample data. It sends no email and is deleted when you sign out.</p>
+    <a class="small" href="/jobs">← Back to jobs</a>
   </div>
-
-  {# Visitor Mode Footer #}
-  <div style="text-align:center;margin-top:24px;">
-    <a href="/" style="font-size:12.5px;color:var(--text-2);text-decoration:none;transition:color 0.15s ease;">
-      ← Return to Public Showcase in Visitor Mode
-    </a>
-  </div>
-
 </div>
 {% endblock %}

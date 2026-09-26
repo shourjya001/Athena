@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }} — Athena{% endblock %}
+{% block robots %}noindex{% endblock %}
+{% block body %}
+<div class="empty" style="margin-top:40px"><h1 style="font-size:24px">{% if code == 403 %}That request was blocked.{% elif code == 429 %}Slow down a little.{% else %}Something went wrong.{% endif %}</h1><p class="muted">{{ detail or '' }}</p><div class="row" style="justify-content:center"><a class="btn" href="/">Home</a><a class="btn" href="/jobs">Jobs</a></div></div>
+{% endblock %}

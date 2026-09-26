@@ -76,14 +76,6 @@ def test_multi_column_heuristic_flags_gappy_text():
     assert any(w["code"] == "multi_column" for w in rep.warnings)
 
 
-def test_applier_field_matching():
-    from trackboard.agents.applier import match_field
-    assert match_field("Expected CTC (INR)") == "expected_ctc"
-    assert match_field("Notice Period") == "notice_period_days"
-    assert match_field("", autocomplete="email") == "email"
-    assert match_field("Favourite colour") is None
-
-
 def test_calculate_multi_factor_fit():
     from trackboard.tailor import calculate_multi_factor_fit
     resume = "Senior Python engineer with PostgreSQL, Redis, Docker, and AWS experience. Reduced latency by 40%."

@@ -155,7 +155,8 @@ def calculate_multi_factor_fit(resume_text: str, jd_text: str) -> dict:
     jd_toks = set(_tok(jd_text))
     
     if not jd_toks:
-        return {"direct": 85, "transferable": 85, "adjacent": 80, "impact": 80, "overall": 84, "confidence_tier": "STRONG"}
+        # No résumé text: refuse to fabricate a score.
+        return {"direct": None, "transferable": None, "adjacent": None, "impact": None, "overall": None, "confidence_tier": "UNSCORED"}
 
     # 1. Direct Match (40%): Overlap on explicit tech skills & domain terms
     tech_keywords = {

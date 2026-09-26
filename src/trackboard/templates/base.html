@@ -2,105 +2,85 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}ATHENA — Autonomous AI Career OS & Digital Twin | Conceived by Shourjya Hazra{% endblock %}</title>
-<meta name="description" content="{% block meta_description %}Athena is an autonomous multi-agent career operating system. Reverse-engineers live ATS job openings from Google, JPMorgan Chase, Morgan Stanley, and Tier-1 FinTechs with real-time match scoring, recruiter SEO, and 26 interactive DSA pattern workbenches.{% endblock %}">
-<meta name="keywords" content="AI career guide, digital twin career OS, autonomous job search agent, ATS resume tailor, distributed systems career, Shourjya Hazra, tech jobs India, FAANG preparation, leetcode patterns, system design">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block title %}Athena{% endblock %}</title>
+<meta name="description" content="{% block meta_description %}Athena reads live job openings straight from company career APIs, scores them honestly against your résumé, and keeps your DSA practice on a spaced-repetition schedule.{% endblock %}">
 <meta name="author" content="Shourjya Hazra">
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="https://athena-phi-one.vercel.app{{ request.url.path if request else '' }}">
-
-<!-- Open Graph / Social Media -->
+<meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<meta name="theme-color" content="#0b0e14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
+<link rel="canonical" href="{{ site_url }}{{ path }}">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://athena-phi-one.vercel.app/">
-<meta property="og:title" content="ATHENA — Autonomous AI Career OS & Digital Twin">
-<meta property="og:description" content="Your 24/7 Agentic Career Co-Pilot. Reverse-engineers 10,900+ real ATS job openings, tailors resumes, and accelerates career growth. Engineered by Shourjya Hazra.">
-<meta property="og:site_name" content="Athena Career OS">
-
-<!-- Twitter Cards -->
+<meta property="og:site_name" content="Athena">
+<meta property="og:url" content="{{ site_url }}{{ path }}">
+<meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
+<meta property="og:description" content="{{ self.meta_description() }}">
+<meta property="og:image" content="{{ site_url }}/static/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ATHENA — Autonomous AI Career OS & Digital Twin">
-<meta name="twitter:description" content="Autonomous Multi-Agent Career Operating System by Shourjya Hazra. Real-time ATS match scoring, recruiter SEO, and interactive DSA pattern visualizers.">
-
-<!-- Structured Data (JSON-LD) for Google Rich Snippets -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Athena Career OS",
-  "applicationCategory": "BusinessApplication",
-  "operatingSystem": "Web",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "description": "Autonomous multi-agent career operating system with live ATS ingestion, AI resume tailoring, and interactive interview pattern visualizers.",
-  "author": {
-    "@type": "Person",
-    "name": "Shourjya Hazra",
-    "jobTitle": "Backend & Distributed Systems Engineer",
-    "url": "https://www.linkedin.com/in/shourjya-hazra-683128200/"
-  }
-}
-</script>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&family=Karla:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/app.css?v=20260917_5">
+<meta name="twitter:title" content="{{ self.og_title() }}">
+<meta name="twitter:description" content="{{ self.meta_description() }}">
+<meta name="twitter:image" content="{{ site_url }}/static/og.png">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/static/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/app.css?v={{ static_v }}">
+{% block head %}{% endblock %}
 </head>
 <body>
-<div class="topbar">
-  <div class="topbar-container">
-    <div style="display:flex;align-items:center;gap:16px;flex-shrink:0;">
-      <a class="brand" href="/">
-        <span style="color:var(--text-0);font-weight:800;letter-spacing:-0.02em;">✦ ATHENA</span>
-        <span class="brand-badge">MAP v2.4</span>
-      </a>
-      <nav>
-        <a href="/" class="{% if nav=='today' %}on{% endif %}">⚡ Radar</a>
-        <a href="/jobs" class="{% if nav=='jobs' %}on{% endif %}">💼 Jobs</a>
-        <a href="/linkedin" class="{% if nav=='linkedin' %}on{% endif %}">🎯 AI Studio</a>
-        {% if not user or user.get('track', 'tech') != 'business' %}
-        <a href="/patterns" class="{% if nav=='patterns' or nav=='practice' or nav=='drill' %}on{% endif %}">🧪 Prep Lab</a>
-        {% endif %}
-        {% if user and user.is_authenticated %}
-        <a href="/pipeline" class="{% if nav=='pipeline' %}on{% endif %}">📋 Pipeline</a>
-        {% endif %}
-        {% if user and user.is_authenticated and (user.email == 'shourjya001@gmail.com' or user.email == 'you@example.com') %}
-        <a href="/system" class="{% if nav=='system' %}on{% endif %}">⚙️ System</a>
-        {% endif %}
-      </nav>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-      <a href="https://www.linkedin.com/in/shourjya-hazra-683128200/" target="_blank" rel="noopener noreferrer" class="btn-linkedin-compact" title="Connect with Shourjya on LinkedIn">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.45a1.64 1.64 0 1 0 0 3.28 1.64 1.64 0 0 0 0-3.28z"/></svg>
-        <span>Connect</span>
-      </a>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Athena home"><span class="dot" aria-hidden="true"></span>Athena</a>
+    <nav class="nav-desktop" aria-label="Primary">
+      <a href="/" {% if nav=='home' %}aria-current="page"{% endif %}>Home</a>
+      <a href="/jobs" {% if nav=='jobs' %}aria-current="page"{% endif %}>Jobs</a>
+      <a href="/prep" {% if nav=='prep' %}aria-current="page"{% endif %}>Prep</a>
+      <a href="/studio" {% if nav=='studio' %}aria-current="page"{% endif %}>Studio</a>
+      <a href="/system" {% if nav=='system' %}aria-current="page"{% endif %}>Status</a>
+    </nav>
+    <div class="actions">
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle light or dark theme">
+        <svg class="i" aria-hidden="true"><use href="/static/icons.svg#sun"/></svg>
+      </button>
       {% if user and user.is_authenticated %}
-      <a href="/profile" class="user-pill-nav" title="My Profile & Digital Twin Config">
-        👤 {{ user.display_name or user.email.split('@')[0] }}
-      </a>
-      <a href="/logout" class="btn-logout-nav" title="Sign out of Athena">
-        Log out
-      </a>
+        <a class="btn sm ghost" href="/profile" title="Your profile"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#user"/></svg><span class="hide-sm">{{ (user.display_name or 'Profile')|truncate(14, True, '…') }}</span></a>
+        <a class="btn sm" href="/logout">Sign out</a>
       {% else %}
-      <a href="/login" class="btn-signin-nav" title="Sign in with Google">
-        Sign in
-      </a>
+        <a class="btn sm primary" href="/login">Sign in</a>
       {% endif %}
     </div>
   </div>
-</div>
-<div class="wrap">{% block body %}{% endblock %}</div>
-<footer style="margin-top:60px;padding:24px 0;border-top:1px solid var(--border);font-size:12px;color:var(--text-2);text-align:center;">
-  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-    <div>✦ <strong>ATHENA Career OS</strong> • Conceived &amp; Engineered by <strong>Shourjya Hazra</strong></div>
-    <div>Zero-ORM SQLite • 24/7 Multi-Agent Protocol • Multi-Provider LLM Cascade</div>
-    <div><a href="https://www.linkedin.com/in/shourjya-hazra-683128200/" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none;">Connect on LinkedIn →</a></div>
+</header>
+
+<main id="main" class="wrap">
+{% if user and user.is_sandbox %}
+<div class="notice warn sample-banner" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#info"/></svg><span><b>Sandbox mode.</b> You are using a temporary account with sample data. Nothing is emailed and everything is wiped when you sign out.</span></div>
+{% endif %}
+{% block body %}{% endblock %}
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="cols">
+      <div><b>Product</b><ul><li><a href="/jobs">Jobs</a></li><li><a href="/prep">Prep</a></li><li><a href="/studio">Studio</a></li><li><a href="/system">System status</a></li></ul></div>
+      <div><b>About</b><ul><li><a href="/about">About Athena</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li><li><a href="/changelog">Changelog</a></li></ul></div>
+      <div><b>Contact</b><ul><li><a href="https://www.linkedin.com/in/shourjya-hazra-683128200/" rel="noopener noreferrer" target="_blank">Shourjya Hazra on LinkedIn</a></li></ul>
+        <form method="post" action="/a/feedback" style="margin-top:10px"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="page" value="{{ path }}"><label for="fb-msg" class="small">Something broken or missing?</label><textarea id="fb-msg" name="message" rows="2" maxlength="2000" placeholder="Tell me in a sentence." style="min-height:64px;font-size:14px"></textarea><button class="btn sm" type="submit" style="margin-top:6px">Send</button></form></div>
+    </div>
+    <div class="fine">Built by Shourjya Hazra · Python, FastAPI, SQLite, no frameworks. Job data comes from public company career APIs; Athena never scrapes.</div>
   </div>
 </footer>
 
+<nav class="bottomnav" aria-label="Primary mobile">
+  <a href="/" {% if nav=='home' %}aria-current="page"{% endif %}><svg class="i" aria-hidden="true"><use href="/static/icons.svg#home"/></svg>Home</a>
+  <a href="/jobs" {% if nav=='jobs' %}aria-current="page"{% endif %}><svg class="i" aria-hidden="true"><use href="/static/icons.svg#briefcase"/></svg>Jobs</a>
+  <a href="/prep" {% if nav=='prep' %}aria-current="page"{% endif %}><svg class="i" aria-hidden="true"><use href="/static/icons.svg#flask-conical"/></svg>Prep</a>
+  <a href="/studio" {% if nav=='studio' %}aria-current="page"{% endif %}><svg class="i" aria-hidden="true"><use href="/static/icons.svg#sparkles"/></svg>Studio</a>
+</nav>
+<div id="live" class="sr-only" aria-live="polite"></div>
+<script src="/static/htmx.min.js?v={{ static_v }}" defer></script>
+<script src="/static/app.js?v={{ static_v }}" defer></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

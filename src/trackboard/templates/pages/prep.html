@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Prep — Athena{% endblock %}
+{% block meta_description %}26 DSA patterns with problems, videos and step-by-step walkthroughs, plus a spaced-repetition practice queue and a pattern-recognition drill.{% endblock %}
+{% block body %}
+<h1>Prep</h1>
+<p class="muted">Pattern-first. Learn the invariant, recognise the cue, then let spaced repetition decide what to revisit.</p>
+<div class="stack">
+  <a class="card" href="/patterns"><div class="row between"><div><b>Patterns</b><p class="muted" style="margin:4px 0 0">{{ stats.patterns }} patterns, {{ stats.problems }} problems, {{ stats.lessons }} mapped videos.</p></div><svg class="i" aria-hidden="true"><use href="/static/icons.svg#chevron-right"/></svg></div></a>
+  <a class="card" href="{{ '/practice' if user.is_authenticated else '/login?next=/practice' }}"><div class="row between"><div><b>Practice queue</b><p class="muted" style="margin:4px 0 0">{% if user.is_authenticated %}{{ due }} review{{ '' if due == 1 else 's' }} due today.{% else %}Sign in for a daily queue built from your weakest pattern.{% endif %}</p></div><svg class="i" aria-hidden="true"><use href="/static/icons.svg#chevron-right"/></svg></div></a>
+  <a class="card" href="{{ '/drill' if user.is_authenticated else '/login?next=/drill' }}"><div class="row between"><div><b>Pattern drill</b><p class="muted" style="margin:4px 0 0">Read a problem, name the pattern in 30 seconds.</p></div><svg class="i" aria-hidden="true"><use href="/static/icons.svg#chevron-right"/></svg></div></a>
+</div>
+{% if potd and potd.pattern %}
+<section class="section"><h2>Pattern of the day</h2><div class="card"><h3><a href="/patterns/{{ potd.pattern.slug }}">{{ potd.pattern.name }}</a></h3><p class="muted">{{ potd.pattern.summary }}</p>{% if potd.problem %}<p class="small">Try: <a href="{{ potd.problem.url }}" target="_blank" rel="noopener">{{ potd.problem.title }}</a></p>{% endif %}</div></section>
+{% endif %}
+{% endblock %}

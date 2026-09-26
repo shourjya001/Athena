@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} at {{ job.company_name }} — Athena{% endblock %}
+{% block meta_description %}{{ job.title }} at {{ job.company_name }}{% if job.location %}, {{ job.location }}{% endif %}. Read from the company's {{ job.source_label }} board; apply directly on their site.{% endblock %}
+{% block body %}
+<div class="crumbs"><a href="/jobs">Jobs</a> / {{ job.company_name }}</div>
+<h1>{{ job.title }}</h1>
+<p class="muted">{{ job.company_name }}{% if job.location %} · {{ job.location }}{% endif %}{% if job.remote %} · Remote{% endif %} · read from {{ job.source_label }} · first seen {{ job.seen_label }}</p>
+<div class="row" style="margin-bottom:20px">
+  <a class="btn primary" href="/a/jobs/{{ job.id }}/go" target="_blank" rel="noopener noreferrer">Open on company site <svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#external-link"/></svg></a>
+  {% if user.is_authenticated %}
+    <a class="btn" href="/jobs/{{ job.id }}/tailor">Tailor résumé</a>
+    <form method="post" action="/a/jobs/{{ job.id }}/mark-applied" style="margin:0"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn" type="submit">Mark applied</button></form>
+  {% else %}
+    <a class="btn" href="/login?next=/jobs/{{ job.id }}/tailor">Sign in to tailor a résumé</a>
+  {% endif %}
+</div>
+{% if match %}
+<div class="card" style="margin-bottom:20px">
+  <div class="row between"><h3 style="margin:0">Your fit</h3><span class="chip {{ 'ok' if match.verdict=='strong' else ('accent' if match.verdict=='worth_a_shot' else 'warn') }}"><span class="score">{{ match.fit_score }}</span> · {{ (match.verdict or '')|replace('_',' ') }}</span></div>
+  {% if match.reasoning %}<p style="margin-top:10px">{{ match.reasoning }}</p>{% endif %}
+  <div class="chips">{% for s in match.strengths %}<span class="chip ok">{{ s }}</span>{% endfor %}{% for g in match.gaps %}<span class="chip warn">gap: {{ g }}</span>{% endfor %}</div>
+  <p class="help">Scored {{ match.scored_at|ist }}.</p>
+</div>
+{% elif user.is_authenticated %}
+<div class="notice info" style="margin-bottom:20px"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#info"/></svg>Not scored yet. Run a match from the jobs page.</div>
+{% endif %}
+<h2>Description</h2>
+<div class="jd" style="max-height:none">{{ (job.description_md or 'No description was published with this listing.')|trim }}</div>
+{% endblock %}

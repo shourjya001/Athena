@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Changelog — Athena{% endblock %}
+{% block meta_description %}What changed in Athena, release by release.{% endblock %}
+{% block body %}
+<div class="prose"><h1>Changelog</h1>{% if changelog %}<pre style="white-space:pre-wrap;font-family:var(--font-ui);font-size:15px;background:transparent;padding:0">{{ changelog }}</pre>{% else %}<p class="muted">Nothing recorded yet.</p>{% endif %}</div>
+{% endblock %}

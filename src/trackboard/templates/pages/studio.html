@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Studio — Athena{% endblock %}
+{% block meta_description %}Résumé tailoring from your own bullet bank and a LinkedIn audit with headline and About rewrites.{% endblock %}
+{% block body %}
+<h1>Studio</h1>
+<p class="muted">Two tools. Both work from what you've actually done; neither invents a claim.</p>
+<div class="stack">
+  <a class="card" href="/linkedin"><div class="row between"><div><b>LinkedIn audit</b><p class="muted" style="margin:4px 0 0">Scored section audit, buzzword scan, three headline variants, an About rewrite.{% if not user.is_authenticated %} Sign in to run it.{% endif %}</p></div><svg class="i" aria-hidden="true"><use href="/static/icons.svg#chevron-right"/></svg></div></a>
+  <a class="card" href="/jobs"><div class="row between"><div><b>Résumé tailoring</b><p class="muted" style="margin:4px 0 0">Pick a job, choose which of your bullets to lead with, download a single-column PDF that passes a parse check.{% if not user.is_authenticated %} Sign in and upload a résumé first.{% endif %}</p></div><svg class="i" aria-hidden="true"><use href="/static/icons.svg#chevron-right"/></svg></div></a>
+</div>
+{% endblock %}

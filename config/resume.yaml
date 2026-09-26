@@ -11,8 +11,8 @@
 
 identity:
   name: Shourjya Hazra
-  email: shourjya001@gmail.com
-  phone: "+91-7679530903"
+  email: ""          # filled at runtime from the signed-in owner profile
+  phone: ""          # filled at runtime from the signed-in owner profile
   linkedin: linkedin.com/in/shourjya-hazra-683128200   # show the URL, not the word
   github: ""            # QUESTION: your github path — the PDF link didn't survive extraction
   location: Mumbai, India
