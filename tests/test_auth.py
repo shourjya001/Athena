@@ -104,3 +104,67 @@ def test_self_delete_removes_all_rows():
     assert r.status_code == 303
     assert db.query_one("SELECT id FROM users WHERE id=?", (c.uid,)) is None
     assert db.query_one("SELECT 1 FROM profile_answers WHERE user_id=?", (c.uid,)) is None
+
+
+def test_oauth_redirect_uses_pkce_and_signed_state(monkeypatch):
+    from trackboard.settings import get_settings
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "test-client")
+    monkeypatch.setenv("SITE_URL", "https://example.test")
+    get_settings.cache_clear()
+    try:
+        c = guest()
+        r = c.get("/auth/google?next=/jobs")
+        assert r.status_code == 303
+        loc = r.headers["location"]
+        assert loc.startswith("https://accounts.google.com/o/oauth2/v2/auth?")
+        assert "code_challenge_method=S256" in loc and "code_challenge=" in loc
+        assert "redirect_uri=https%3A%2F%2Fexample.test%2Fauth%2Fgoogle%2Fcallback" in loc
+        assert "state=" in loc and "athena_oauth" in r.headers.get("set-cookie", "")
+        assert "HttpOnly" in r.headers.get("set-cookie", "")
+        # callback without the verifier cookie or with a bad state is rejected
+        from trackboard.main import _oauth_state, _verify_oauth_state
+
+        assert _verify_oauth_state("garbage") is None
+        st = _oauth_state("/jobs")
+        assert _verify_oauth_state(st) == "/jobs"
+        assert _verify_oauth_state(st[:-1] + ("0" if st[-1] != "0" else "1")) is None
+        r2 = guest().get(f"/auth/google/callback?code=abc&state={st}")
+        assert r2.status_code == 303 and "state_mismatch" in r2.headers["location"]
+    finally:
+        get_settings.cache_clear()
+
+
+def test_sandbox_can_never_be_owner(monkeypatch):
+    from trackboard.settings import get_settings
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("OWNER_EMAIL", "owner@example.com")
+    get_settings.cache_clear()
+    try:
+        uid = users.create_sandbox_user()
+        u = users.load_user(uid)
+        assert u["is_sandbox"] and not u["is_owner"]
+    finally:
+        get_settings.cache_clear()
+
+
+def test_two_users_never_see_each_others_data():
+    from trackboard import db, jobs
+
+    db.migrate(verbose=False)
+    jobs.upsert({"company_name": "IsoCo", "title": "Backend Engineer", "description_md": "", "apply_url": "https://boards.greenhouse.io/iso", "source": "greenhouse"})
+    job = db.query_one("SELECT id FROM jobs WHERE company_name='IsoCo'")
+    a = signed_in("alice@example.com", "Alice")
+    b = signed_in("bob@example.com", "Bob")
+    a.post(f"/a/jobs/{job['id']}/mark-applied", data={"csrf_token": a.csrf})
+    db.execute("INSERT INTO profile_answers (user_id, key, value) VALUES (?, 'phone', '+91-22222-22222') ON CONFLICT DO NOTHING", (a.uid,))
+    assert "IsoCo" in a.get("/pipeline").text
+    bp = b.get("/pipeline").text
+    assert "IsoCo" not in bp and "22222" not in bp
+    assert "22222" not in b.get("/profile").text
+    # Bob cannot download Alice's résumé rows or change her application
+    app_id = db.query_one("SELECT id FROM applications WHERE user_id=?", (a.uid,))["id"]
+    b.post(f"/a/applications/{app_id}/status", data={"csrf_token": b.csrf, "status": "rejected"})
+    assert db.query_one("SELECT status FROM applications WHERE id=?", (app_id,))["status"] == "submitted"

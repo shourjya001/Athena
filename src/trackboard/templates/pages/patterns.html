@@ -3,17 +3,20 @@
 {% block meta_description %}{{ total }} DSA patterns ordered as a curriculum: two pointers, sliding window, monotonic stack, binary search, trees, graphs, DP and more, each with problems and videos.{% endblock %}
 {% block body %}
 <div class="crumbs"><a href="/prep">Prep</a> / Patterns</div>
-<h1>The taxonomy</h1>
-<p class="muted">{{ total }} patterns ordered as a curriculum. Problems, videos and drills all hang off these.</p>
+<div class="section-head"><div><h1>Patterns</h1><p>{{ total }} patterns ordered as a curriculum. Problems, videos and drills all hang off these.</p></div></div>
 {% for fam, pats in families.items() %}
-<section class="family">
-  <h2>{{ fam|replace('-', ' ') }}</h2>
+<section class="family" data-fam="{{ fam }}">
+  <h2>{{ fam|replace('-', ' ') }} <span class="muted small" style="font-weight:400">· {{ pats|length }}</span></h2>
+  <div class="pcards">
   {% for p in pats %}
-  <a class="pattern-row" href="/patterns/{{ p.slug }}">
-    <div><b>{{ p.name }}</b><div class="s">{{ p.summary|truncate(120) }}</div></div>
-    <div class="n">{{ p.problem_count }} problems<br>{{ p.video_count }} videos{% if p.solved_count %}<br><span class="done">{{ p.solved_count }} solved</span>{% endif %}</div>
+  <a class="pcard" href="/patterns/{{ p.slug }}">
+    <div class="top"><b>{{ p.name }}</b>{% if p.solved_count %}<span class="chip ok">{{ p.solved_count }}/{{ p.problem_count }}</span>{% endif %}</div>
+    <div class="s">{{ p.summary }}</div>
+    {% if p.solved_count and p.problem_count %}<div class="prog" aria-label="{{ p.solved_count }} of {{ p.problem_count }} solved"><i style="width:{{ (100 * p.solved_count / p.problem_count)|round|int }}%"></i></div>{% endif %}
+    <div class="badges"><span class="chip">{{ p.problem_count }} problems</span><span class="chip">{{ p.video_count }} videos</span></div>
   </a>
   {% endfor %}
+  </div>
 </section>
 {% endfor %}
 {% endblock %}

@@ -152,6 +152,30 @@ def _delete_user_rows(uid: int) -> None:
             pass
 
 
+OAUTH_COOKIE = "athena_oauth"
+
+
+def _pkce_pair() -> tuple[str, str]:
+    import base64
+
+    verifier = secrets.token_urlsafe(64)[:96]
+    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
+    return verifier, challenge
+
+
+def _sign_verifier(verifier: str) -> str:
+    sig = hmac.new(get_settings().session_secret.encode(), f"pkce:{verifier}".encode(), hashlib.sha256).hexdigest()[:32]
+    return f"{verifier}.{sig}"
+
+
+def _read_verifier(cookie: str | None) -> str | None:
+    if not cookie or "." not in cookie:
+        return None
+    verifier, sig = cookie.rsplit(".", 1)
+    expect = hmac.new(get_settings().session_secret.encode(), f"pkce:{verifier}".encode(), hashlib.sha256).hexdigest()[:32]
+    return verifier if hmac.compare_digest(expect, sig) else None
+
+
 def _oauth_state(nxt: str) -> str:
     nonce = secrets.token_urlsafe(16)
     payload = f"{nonce}|{int(time.time())}|{nxt}"
@@ -459,15 +483,22 @@ def create_app() -> FastAPI:
             return RedirectResponse(f"/login?error=oauth_unconfigured&next={nxt}", status_code=303)
         import urllib.parse
 
+        verifier, challenge = _pkce_pair()
         params = {
             "client_id": s.google_client_id,
             "redirect_uri": f"{s.site_url}/auth/google/callback",
             "response_type": "code",
             "scope": "openid email profile",
             "prompt": "select_account",
+            "access_type": "online",
             "state": _oauth_state(nxt),
+            "code_challenge": challenge,
+            "code_challenge_method": "S256",
         }
-        return RedirectResponse("https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params), status_code=303)
+        resp = RedirectResponse("https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params), status_code=303)
+        resp.set_cookie(OAUTH_COOKIE, _sign_verifier(verifier), max_age=600, httponly=True,
+                        secure=not s.insecure_cookies, samesite="lax", path="/auth/google/callback")
+        return resp
 
     @app.get("/auth/google/callback")
     async def auth_google_callback(request: Request, code: str = "", error: str = "", state: str = ""):
@@ -477,6 +508,9 @@ def create_app() -> FastAPI:
             return RedirectResponse("/login?error=state_mismatch", status_code=303)
         if error or not code:
             return RedirectResponse("/login?error=oauth_cancelled", status_code=303)
+        verifier = _read_verifier(request.cookies.get(OAUTH_COOKIE))
+        if not verifier:
+            return RedirectResponse("/login?error=state_mismatch", status_code=303)
         if not s.google_client_id or not s.google_client_secret:
             return RedirectResponse("/login?error=oauth_unconfigured", status_code=303)
         try:
@@ -485,7 +519,8 @@ def create_app() -> FastAPI:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 tok = await client.post("https://oauth2.googleapis.com/token", data={
                     "code": code, "client_id": s.google_client_id, "client_secret": s.google_client_secret,
-                    "redirect_uri": f"{s.site_url}/auth/google/callback", "grant_type": "authorization_code"})
+                    "redirect_uri": f"{s.site_url}/auth/google/callback", "grant_type": "authorization_code",
+                    "code_verifier": verifier})
                 if tok.status_code != 200:
                     return RedirectResponse("/login?error=oauth_failed", status_code=303)
                 info_r = await client.get("https://www.googleapis.com/oauth2/v2/userinfo",
@@ -497,7 +532,9 @@ def create_app() -> FastAPI:
             return RedirectResponse("/login?error=oauth_failed", status_code=303)
         if not (info.get("verified_email") or info.get("email_verified")):
             return RedirectResponse("/login?error=email_unverified", status_code=303)
-        return _finish_login(info.get("email", ""), info.get("name") or "", dest)
+        resp = _finish_login(info.get("email", ""), info.get("name") or "", dest)
+        resp.delete_cookie(OAUTH_COOKIE, path="/auth/google/callback")
+        return resp
 
     @app.post("/auth/google/verify")
     async def auth_google_verify_token(request: Request):

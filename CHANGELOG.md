@@ -31,3 +31,8 @@
 
 ### Tests
 - 42 → 108 tests: guest safety (no PII, no placeholders, all mutations redirect), CSP and headers, truth (numbers match stats, filters hide non-engineering), accessibility tokens (WCAG AA contrast in both themes), routes, auth.
+
+## 2026-09-26 (later) — Visual layer v2
+- Hero with a labelled sample job card, trust line and larger CTAs; four live stat tiles; feature cards with icon tiles; FAQ; section headers.
+- Prep as icon tiles; patterns as a card grid with per-pattern progress; job cards get company avatar tiles, depth and hover lift.
+- Header blur, accent hairline, gradient primary button, softer 20px radii, second accent for tiles. Still one primary accent, no emoji icons, CSP unchanged.

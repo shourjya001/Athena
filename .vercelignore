@@ -16,6 +16,7 @@ htmlcov/
 *.db-wal
 *.md
 !README.md
+!CHANGELOG.md
 var/
 .vscode/
 uv.lock

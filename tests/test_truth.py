@@ -16,7 +16,9 @@ def test_home_numbers_match_site_stats():
     s = stats.site_stats()
     r = guest().get("/")
     assert f"Browse {s['open_jobs']:,} live jobs" in r.text
-    assert f"{s['companies_active']} companies" in r.text
+    assert f'<div class="val">{s["companies_active"]}</div><div class="lbl">companies</div>' in r.text
+    # the hero preview is a labelled sample, never the user's data
+    assert 'class="stamp">Sample</span>' in r.text
 
 
 def test_templates_have_no_hardcoded_counts_or_old_brand():

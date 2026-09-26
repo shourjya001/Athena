@@ -1,5 +1,6 @@
 <article class="job" id="job-{{ j.id }}">
   <button class="job-head" type="button" aria-expanded="false" aria-controls="job-body-{{ j.id }}">
+    <span class="avatar" data-h="{{ (j.company_name|length + j.id) % 8 }}" aria-hidden="true">{{ j.company_name[:1]|upper }}</span>
     <div>
       <div class="job-co">{{ j.company_name }}</div>
       <div class="job-title">{{ j.title }}</div>

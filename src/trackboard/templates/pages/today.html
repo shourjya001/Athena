@@ -4,14 +4,57 @@
 {% block head %}<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Athena","url":"{{ site_url }}/","description":"Live jobs from company career APIs, scored honestly, with prep that schedules itself.","author":{"@type":"Person","name":"Shourjya Hazra","sameAs":["https://www.linkedin.com/in/shourjya-hazra-683128200/"]}}</script>{% endblock %}
 {% block body %}
 <section class="hero">
-  <h1>Live jobs from company career APIs, scored honestly, with prep that schedules itself.</h1>
-  <p class="lede">Athena reads openings directly from Greenhouse, Lever, Ashby, Workday and Oracle boards, ranks them against your résumé, and keeps your DSA practice on a spaced-repetition schedule. It never invents a bullet and never shows a score it didn't compute.</p>
-  <div class="cta">
-    <a class="btn primary" href="/jobs">Browse {{ '{:,}'.format(stats.open_jobs) }} live jobs</a>
-    <a class="btn" href="#how">See how it works</a>
+  <div>
+    <h1>Live jobs from company career APIs, <span class="hl">scored honestly</span>, with prep that schedules itself.</h1>
+    <p class="lede">Athena reads openings straight from Greenhouse, Lever, Ashby, Workday and Oracle boards, ranks them against your résumé, and keeps your DSA practice on a spaced-repetition schedule.</p>
+    <div class="cta">
+      <a class="btn primary lg" href="/jobs">Browse {{ '{:,}'.format(stats.open_jobs) }} live jobs</a>
+      <a class="btn lg" href="/auth/demo-sandbox">Try the sandbox</a>
+    </div>
+    <div class="trust">
+      <span><svg class="i" aria-hidden="true"><use href="/static/icons.svg#shield-check"/></svg>No scraping</span>
+      <span><svg class="i" aria-hidden="true"><use href="/static/icons.svg#shield-check"/></svg>No invented bullets</span>
+      <span><svg class="i" aria-hidden="true"><use href="/static/icons.svg#shield-check"/></svg>No fake scores</span>
+      <span><svg class="i" aria-hidden="true"><use href="/static/icons.svg#shield-check"/></svg>No ads, no trackers</span>
+    </div>
   </div>
-  <p class="facts">{{ stats.companies_active }} companies · {{ '{:,}'.format(stats.india_jobs) }} roles in India · refreshed {{ stats.last_seen|reldate if stats.last_seen else 'recently' }}</p>
+  <div class="preview" aria-label="Example of a scored job card">
+    <span class="stamp">Sample</span>
+    <article class="job">
+      <div class="job-head" aria-hidden="true">
+        <span class="avatar" data-h="4">{{ (newest[0].company_name if newest else 'A')[:1] }}</span>
+        <div>
+          <div class="job-co">{{ newest[0].company_name if newest else 'Example Fintech' }}</div>
+          <div class="job-title">{{ newest[0].title if newest else 'Backend Engineer, Payments' }}</div>
+          <div class="job-meta"><span><svg class="i sm"><use href="/static/icons.svg#map-pin"/></svg>{{ (newest[0].location if newest else 'Bengaluru, India')|truncate(28, True, '…') }}</span><span>seen {{ newest[0].seen_label if newest else 'today' }}</span></div>
+        </div>
+        <div class="job-side"><span class="chip ok"><span class="score">82</span> · strong</span></div>
+      </div>
+      <div class="job-body open"><div><div class="inner">
+        <p class="small" style="margin:12px 0 4px">Direct match on Python, FastAPI and Kafka; payments scale aligns. Go is the only gap.</p>
+        <div class="pillars">
+          <div class="pillar"><span>Direct skills</span><div class="bar"><i style="width:88%"></i></div><span class="score">88</span></div>
+          <div class="pillar"><span>Transferable</span><div class="bar"><i style="width:76%"></i></div><span class="score">76</span></div>
+          <div class="pillar"><span>Adjacent</span><div class="bar"><i style="width:64%"></i></div><span class="score">64</span></div>
+          <div class="pillar"><span>Impact</span><div class="bar"><i style="width:71%"></i></div><span class="score">71</span></div>
+        </div>
+        <div class="chips"><span class="chip ok">High-throughput payments</span><span class="chip warn">gap: Go</span></div>
+      </div></div></div>
+    </article>
+    <div class="mini">
+      <div class="card flat"><div class="kicker">Reviews due today</div><div class="val">3</div></div>
+      <div class="card flat"><div class="kicker">Median reply, this company</div><div class="val">9 <span class="small muted">days</span></div></div>
+    </div>
+  </div>
 </section>
+
+<div class="stats" aria-label="Live numbers">
+  <div class="stat"><span class="tile-icon"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#briefcase"/></svg></span><div><div class="val">{{ '{:,}'.format(stats.open_jobs) }}</div><div class="lbl">open roles</div></div></div>
+  <div class="stat"><span class="tile-icon alt"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#building-2"/></svg></span><div><div class="val">{{ stats.companies_active }}</div><div class="lbl">companies</div></div></div>
+  <div class="stat"><span class="tile-icon ok"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#map-pin"/></svg></span><div><div class="val">{{ '{:,}'.format(stats.india_jobs) }}</div><div class="lbl">roles in India</div></div></div>
+  <div class="stat"><span class="tile-icon warn"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#layers"/></svg></span><div><div class="val">{{ stats.patterns }}</div><div class="lbl">DSA patterns · {{ stats.lessons }} videos</div></div></div>
+</div>
+<p class="help" style="margin-top:8px">Counts are computed from the database on every page load; last refresh {{ stats.last_seen|reldate if stats.last_seen else 'unknown' }}.</p>
 
 {% if request.query_params.get('subscribed') == '1' %}
 <div class="notice ok" role="status"><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#circle-check"/></svg>Thanks — you're on the list.</div>
@@ -20,11 +63,11 @@
 {% endif %}
 
 <section class="section" id="how">
-  <h2>How it works</h2>
+  <div class="section-head"><div><h2>How it works</h2><p>Three agents, one SQLite file, nothing hidden.</p></div><a class="small" href="/system">See live status →</a></div>
   <div class="steps">
-    <div class="step"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#radar"/></svg><div><b>Ingest</b><p>A scout agent polls public ATS APIs nightly, de-duplicates by company + title + location, and closes a role after it vanishes from three consecutive runs.</p></div></div>
-    <div class="step"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#target"/></svg><div><b>Score</b><p>A BM25 shortlist, then a recruiter-style pass across four pillars: direct skills, transferable depth, adjacent tooling, and quantified impact. If the model is offline you see "Unscored", not a made-up number.</p></div></div>
-    <div class="step"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#brain"/></svg><div><b>Prepare</b><p>Tailored résumés are selected from your own bullet bank and rejected if a contact field goes missing. Practice is a spaced-repetition queue across 26 patterns.</p></div></div>
+    <div class="step"><span class="tile-icon"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#radar"/></svg></span><div><b>Ingest</b><p>A scout agent polls public ATS APIs nightly, de-duplicates by company + title + location, and closes a role after it vanishes from three consecutive runs.</p></div></div>
+    <div class="step"><span class="tile-icon alt"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#target"/></svg></span><div><b>Score</b><p>A BM25 shortlist, then a recruiter-style pass across four pillars: direct skills, transferable depth, adjacent tooling, and quantified impact. If the model is offline you see "Unscored", not a made-up number.</p></div></div>
+    <div class="step"><span class="tile-icon ok"><svg class="i" aria-hidden="true"><use href="/static/icons.svg#brain"/></svg></span><div><b>Prepare</b><p>Tailored résumés are selected from your own bullet bank and rejected if a contact field goes missing. Practice is a spaced-repetition queue across 26 patterns.</p></div></div>
   </div>
 </section>
 
@@ -67,12 +110,12 @@
   {% else %}
     <h2>What signed-in users get</h2>
     <ul class="features">
-      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>Fit scores with the reasoning, strengths and gaps for each role</li>
-      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>A tailored PDF résumé built only from your own bullets</li>
-      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>A LinkedIn audit with headline and About rewrites</li>
-      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>An application pipeline that tracks every stage</li>
-      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>A daily practice queue across 26 DSA patterns</li>
-      <li><svg class="i sm" aria-hidden="true"><use href="/static/icons.svg#check"/></svg>Copy-ready application fields, never a script to paste into a console</li>
+      <li><svg class="i" aria-hidden="true"><use href="/static/icons.svg#target"/></svg><div><b>Honest fit scores</b><span>Four pillars, one line of reasoning, and the gaps named — or "Unscored" when the model is offline.</span></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="/static/icons.svg#file-text"/></svg><div><b>Tailored résumé PDF</b><span>Selected from your own bullet bank, single column, rejected if a contact field fails to parse.</span></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="/static/icons.svg#linkedin"/></svg><div><b>LinkedIn audit</b><span>Scored sections, buzzword replacements, three headlines and an About rewrite.</span></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="/static/icons.svg#layers"/></svg><div><b>Application pipeline</b><span>Every stage from prepared to offer, with email replies tracked when Gmail is connected.</span></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="/static/icons.svg#brain"/></svg><div><b>Practice that schedules itself</b><span>Spaced repetition across 26 patterns; the queue is built from your weakest one.</span></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="/static/icons.svg#copy"/></svg><div><b>Copy-ready application fields</b><span>Your details as one-tap chips on job pages. Never a script to paste into a console.</span></div></li>
     </ul>
     <div class="row" style="margin-top:20px">
       <a class="btn primary" href="/login">Sign in with Google</a>
@@ -85,6 +128,16 @@
       <p class="help">One email when it's ready. No newsletter.</p>
     </form>
   {% endif %}
+</section>
+
+<section class="section faq">
+  <div class="section-head"><div><h2>Questions people ask</h2><p>Straight answers, including the ones that aren't flattering.</p></div></div>
+  <details><summary>Where do the jobs come from?<svg class="i" aria-hidden="true"><use href="/static/icons.svg#chevron-down"/></svg></summary><p>From the public JSON APIs that companies expose through their applicant-tracking systems — Greenhouse, Lever, Ashby, Workday and Oracle — plus a small set of hand-checked careers pages for companies that don't use one. Nothing is scraped from LinkedIn, Naukri or Instahyre.</p></details>
+  <details><summary>Are the links real?<svg class="i" aria-hidden="true"><use href="/static/icons.svg#chevron-down"/></svg></summary><p>Every "Open on company site" link goes to the employer's own page. Before redirecting, Athena checks known ATS hosts for a closed posting and removes it if so. A role is also closed automatically after it disappears from three consecutive nightly runs.</p></details>
+  <details><summary>How is the score calculated?<svg class="i" aria-hidden="true"><use href="/static/icons.svg#chevron-down"/></svg></summary><p>A BM25 shortlist against your résumé text first, then a language model rates the top candidates on direct skills (40%), transferable depth (30%), adjacent tooling (20%) and quantified impact (10%). You see the reasoning, the strengths and the gaps. If the model is unavailable you see "Unscored", never a placeholder.</p></details>
+  <details><summary>Will it write things on my résumé that I didn't do?<svg class="i" aria-hidden="true"><use href="/static/icons.svg#chevron-down"/></svg></summary><p>No. Tailoring selects and reorders bullets from your own bank. When a job asks for something you lack, a short interview asks how you've actually touched it, and you edit the result before it's saved.</p></details>
+  <details><summary>Does it auto-apply for me?<svg class="i" aria-hidden="true"><use href="/static/icons.svg#chevron-down"/></svg></summary><p>No, on purpose. Auto-apply bots violate most job boards' terms and get accounts banned. Athena gives you copy-ready fields and a tailored PDF; you press submit.</p></details>
+  <details><summary>What does it cost, and what happens to my data?<svg class="i" aria-hidden="true"><use href="/static/icons.svg#chevron-down"/></svg></summary><p>It's free while it's in early access. Your data is your email, your résumé text and your activity, stored in one database with no trackers. You can delete everything from your profile in one click. Full details on the <a href="/privacy">privacy page</a>.</p></details>
 </section>
 
 <section class="section">
